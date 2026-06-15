@@ -64,17 +64,34 @@ function validate(step: number, data: { date: string; typeId: string }): string 
 }
 
 async function compressImage(file: File, maxPx: number): Promise<string> {
-  return new Promise((resolve, reject) => {
+  // Fallback FileReader — fiable sur tous les appareils
+  const toBase64 = (): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload  = () => resolve((reader.result as string).split(',')[1])
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
+  // Tentative canvas (compression) avec fallback si indisponible
+  return new Promise((resolve) => {
     const img = new Image()
     img.onload = () => {
-      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
-      const canvas = document.createElement('canvas')
-      canvas.width  = Math.round(img.width  * scale)
-      canvas.height = Math.round(img.height * scale)
-      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
-      resolve(canvas.toDataURL('image/jpeg', 0.85).split(',')[1])
+      try {
+        const scale  = Math.min(1, maxPx / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width  = Math.round(img.width  * scale)
+        canvas.height = Math.round(img.height * scale)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { toBase64().then(resolve); return }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+        if (!dataUrl || dataUrl.length < 200) { toBase64().then(resolve); return }
+        resolve(dataUrl.split(',')[1])
+      } catch {
+        toBase64().then(resolve)
+      }
     }
-    img.onerror = reject
+    img.onerror = () => toBase64().then(resolve)
     img.src = URL.createObjectURL(file)
   })
 }
