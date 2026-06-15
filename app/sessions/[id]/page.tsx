@@ -23,17 +23,14 @@ const SEV_COLORS  = ['','bg-yellow-100 text-yellow-700','bg-orange-100 text-oran
 
 function parseNotes(raw: string | null) {
   if (!raw) return { warmup: null, skill: null, other: null }
-  const warmupMatch = raw.match(/Échauffement:\s*(.+?)(?=\n(?:Skill\/Force:|$)|\n\n|$)/s)
-  const skillMatch  = raw.match(/Skill\/Force:\s*(.+?)(?=\n(?:Échauffement:|Skill\/Force:|$)|\n\n|$)/s)
-  const cleanOther  = raw
-    .replace(/Échauffement:.*?(?=\n(?:Skill\/Force:|[A-ZÉ])|$)/s, '')
-    .replace(/Skill\/Force:.*?(?=\n(?:Échauffement:|[A-ZÉ])|$)/s, '')
-    .trim()
-  return {
-    warmup: warmupMatch?.[1]?.trim() ?? null,
-    skill:  skillMatch?.[1]?.trim()  ?? null,
-    other:  cleanOther || null,
+  let warmup = null, skill = null
+  const others: string[] = []
+  for (const line of raw.split('\n')) {
+    if (line.startsWith('Échauffement:')) warmup = line.replace('Échauffement:', '').trim()
+    else if (line.startsWith('Skill/Force:')) skill = line.replace('Skill/Force:', '').trim()
+    else if (line.trim()) others.push(line.trim())
   }
+  return { warmup, skill, other: others.length > 0 ? others.join('\n') : null }
 }
 
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1) }
