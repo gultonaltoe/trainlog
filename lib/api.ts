@@ -8,7 +8,7 @@ export type BlockInput    = {
   block_type?: 'strength' | 'skill' | 'technique' | 'accessory' | 'warmup' | 'cooldown'
   sets: SetInput[]
 }
-export type WodInput {
+export type WodInput = {
   format_label:   string
   time_cap?:      number    // ← ajouter
   description?:   string
