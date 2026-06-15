@@ -299,7 +299,7 @@ export default function Dashboard() {
                       <div className="h-full rounded-full transition-all"
                         style={{ width: `${pct}%`, background: s?.type_color ?? '#FF6235' }} />
                     </div>
-                    <span className="text-xs text-gray-400 w-20 text-right">{type} · {count}</span>
+                    <span className="text-xs text-gray-400 whitespace-nowrap text-right">{type} · {count}</span>
                   </div>
                 )
               })}
