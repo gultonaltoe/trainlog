@@ -8,7 +8,13 @@ export type BlockInput    = {
   block_type?: 'strength' | 'skill' | 'technique' | 'accessory' | 'warmup' | 'cooldown'
   sets: SetInput[]
 }
-export type WodInput      = { format_label?: string; description?: string; result_detail?: string; is_rx: boolean; time_cap_min?: number }
+export type WodInput {
+  format_label:   string
+  time_cap?:      number    // ← ajouter
+  description?:   string
+  result_detail?: string
+  is_rx:          boolean
+}
 export type PainEntry     = { label: string; severity: 1 | 2 | 3 }
 export type SessionInput  = {
   date: string; session_type_id: string; duration_min?: number
