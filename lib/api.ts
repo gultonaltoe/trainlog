@@ -96,7 +96,7 @@ export async function saveSession(input: SessionInput): Promise<string> {
       session_id: sessionId, format_id: fmt?.id ?? null,
       format_label: input.wod.format_label,
       description: input.wod.description ?? null, result_detail: input.wod.result_detail ?? null,
-      is_rx: input.wod.is_rx, time_cap_min: input.wod.time_cap_min ?? null,
+      is_rx: time_cap_min: input.wod.time_cap ?? null,
     })
     if (error) throw new Error(`saveWod: ${error.message}`)
   }
