@@ -1,11 +1,13 @@
 import { supabase } from './supabase'
+import { getUserId } from './user'
 
 export type SessionType   = { id: string; name: string; color: string; emoji: string; category: string }
 export type Movement      = { id: string; name: string; category: string; subcategory?: string; equipment?: string[] }
-export type SetInput      = { reps?: number; weight_kg?: number; tempo?: string; is_pr?: boolean }
+export type SetInput      = { reps?: number; weight_kg?: number; tempo?: string; pct_rm?: number; execution?: string; is_pr?: boolean }
 export type BlockInput    = {
-  movement_id: string; movement_label: string
+  movement_id?: string; movement_label: string
   block_type?: 'strength' | 'skill' | 'technique' | 'accessory' | 'warmup' | 'cooldown'
+  is_complex?: boolean; complex_label?: string
   sets: SetInput[]
 }
 export type WodInput = {
@@ -57,6 +59,7 @@ export async function getMovementsByCategory(category: string): Promise<Movement
 }
 
 export async function saveSession(input: SessionInput): Promise<string> {
+  const uid = getUserId()
   const { data: session, error: sessionError } = await supabase.from('sessions')
     .insert({
       date: input.date, session_type_id: input.session_type_id,
@@ -67,21 +70,28 @@ export async function saveSession(input: SessionInput): Promise<string> {
       feeling_post:  input.feeling_post  ?? null,
       notes:         input.notes         ?? null,
       meta:          input.meta          ?? {},
+      user_id:       uid,
     }).select('id').single()
   if (sessionError) throw new Error(`saveSession: ${sessionError.message}`)
   const sessionId = session.id
 
   for (let i = 0; i < (input.blocks ?? []).length; i++) {
     const block = input.blocks![i]
-    if (!block.movement_id) continue
+    if (!block.movement_id && !block.is_complex) continue
     const { data: blockRow, error: blockError } = await supabase.from('session_blocks')
-      .insert({ session_id: sessionId, block_order: i + 1, title: block.movement_label, block_type: block.block_type ?? 'strength' })
+      .insert({
+        session_id: sessionId, block_order: i + 1, title: block.movement_label,
+        block_type: block.block_type ?? 'strength',
+        is_complex: block.is_complex ?? false,
+        complex_label: block.complex_label ?? null,
+      })
       .select('id').single()
     if (blockError) throw new Error(`saveBlock[${i}]: ${blockError.message}`)
     const sets = block.sets.filter(s => s.reps || s.weight_kg).map((s, si) => ({
-      block_id: blockRow.id, movement_id: block.movement_id,
+      block_id: blockRow.id, movement_id: block.movement_id ?? null,
       movement_label: block.movement_label, set_number: si + 1,
       reps: s.reps ?? null, weight_kg: s.weight_kg ?? null, is_pr: s.is_pr ?? false,
+      tempo: s.tempo ?? null, pct_rm: s.pct_rm ?? null, execution: s.execution ?? null,
     }))
     if (sets.length > 0) {
       const { error } = await supabase.from('block_sets').insert(sets)
@@ -112,9 +122,41 @@ is_rx: input.wod.is_rx, time_cap_min: input.wod.time_cap ?? null,
 }
 
 export async function getRecentSessions(limit = 30): Promise<SessionSummary[]> {
-  const { data, error } = await supabase.from('v_sessions_summary').select('*').limit(limit)
-  if (error) throw new Error(`getRecentSessions: ${error.message}`)
-  return (data ?? []) as SessionSummary[]
+  const uid = getUserId()
+  type Row = { id: string; date: string; duration_min: number | null; rpe: number | null; feeling_post: number | null; sleep_hours: number | null; energy_level: number | null; notes: string | null; session_types: { name: string; color: string; emoji: string } }
+  const toSummary = (rows: Row[]): SessionSummary[] => rows.map(s => ({
+    id:                s.id,
+    date:              s.date,
+    duration_min:      s.duration_min,
+    rpe:               s.rpe,
+    feeling_post:      s.feeling_post,
+    sleep_hours:       s.sleep_hours,
+    energy_level:      s.energy_level,
+    notes:             s.notes,
+    session_type:      s.session_types?.name  ?? '',
+    type_color:        s.session_types?.color ?? '#F97316',
+    type_emoji:        s.session_types?.emoji ?? '🏋️',
+    blocks_count:      0,
+    wods_count:        0,
+    pain_alerts_count: 0,
+    is_competition:    false,
+  }))
+
+  const SEL = 'id, date, duration_min, rpe, feeling_post, sleep_hours, energy_level, notes, session_types!inner(name, color, emoji)'
+
+  const { data, error } = await supabase.from('sessions')
+    .select(SEL).eq('user_id', uid).is('deleted_at', null)
+    .order('date', { ascending: false }).limit(limit)
+
+  if (!error && data?.length) return toSummary(data as unknown as Row[])
+
+  // Fallback: user_id column may not exist yet, or rows not yet stamped
+  const { data: all, error: err2 } = await supabase.from('sessions')
+    .select(SEL).is('deleted_at', null)
+    .order('date', { ascending: false }).limit(limit)
+
+  if (err2) throw new Error(`getRecentSessions: ${err2.message}`)
+  return toSummary((all ?? []) as unknown as Row[])
 }
 
 export async function getWeeklyVolume(weeks = 12) {
@@ -143,18 +185,73 @@ export type UserProfile = {
 }
 
 export async function getProfile(): Promise<UserProfile | null> {
-  const { data } = await supabase
-    .from('user_profile')
-    .select('*')
-    .limit(1)
-    .maybeSingle()
-  return data as UserProfile | null
+  const uid = getUserId()
+  const { data } = await supabase.from('user_profile').select('*').eq('user_id', uid).limit(1).maybeSingle()
+
+  if (data) {
+    // Always stamp any orphan rows left from before user isolation was added
+    supabase.from('sessions').update({ user_id: uid }).is('user_id', null).then(() => {})
+    supabase.from('personal_records').update({ user_id: uid }).is('user_id', null).then(() => {})
+    return data as UserProfile
+  }
+
+  // No profile for this UUID yet — claim any existing unclaimed profile
+  const { data: fallback } = await supabase.from('user_profile').select('*').limit(1).maybeSingle()
+  if (fallback) {
+    await Promise.all([
+      supabase.from('user_profile')    .update({ user_id: uid }).is('user_id', null),
+      supabase.from('sessions')        .update({ user_id: uid }).is('user_id', null),
+      supabase.from('personal_records').update({ user_id: uid }).is('user_id', null),
+    ])
+    return fallback as UserProfile
+  }
+  return null
 }
 
 export async function upsertProfile(profile: UserProfile, id?: string): Promise<void> {
+  const uid = getUserId()
   if (id) {
     await supabase.from('user_profile').update({ ...profile, updated_at: new Date().toISOString() }).eq('id', id)
   } else {
-    await supabase.from('user_profile').insert(profile)
+    await supabase.from('user_profile').insert({ ...profile, user_id: uid })
   }
+}
+// ── Ajouter à la fin de lib/api.ts ────────────────────────
+
+export type NewPR = { movementName: string; weight: number; unit: string }
+
+export async function detectAndSavePRs(
+  sessionId: string,
+  blocks: BlockInput[]
+): Promise<NewPR[]> {
+  const uid     = getUserId()
+  const today   = new Date().toISOString().split('T')[0]
+  const newPRs: NewPR[] = []
+  if (!blocks?.length) return newPRs
+
+  for (const block of blocks) {
+    if (!block.movement_id || !block.sets?.length) continue
+
+    const weights = block.sets.map(s => s.weight_kg ?? 0).filter(w => w > 0)
+    if (!weights.length) continue
+    const maxWeight = Math.max(...weights)
+
+    const { data: currentPR } = await supabase
+      .from('personal_records')
+      .select('value')
+      .eq('movement_id', block.movement_id)
+      .eq('user_id', uid)
+      .order('value', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const isNew = !currentPR || maxWeight > currentPR.value
+    await supabase.from('personal_records').insert({
+      movement_id: block.movement_id, movement_name: block.movement_label,
+      value: maxWeight, unit: 'kg', date: today,
+      session_id: sessionId, user_id: uid,
+    })
+    if (isNew) newPRs.push({ movementName: block.movement_label, weight: maxWeight, unit: 'kg' })
+  }
+  return newPRs
 }

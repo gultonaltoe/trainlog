@@ -1,273 +1,392 @@
 'use client'
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-type Session = {
-  id: string; date: string; rpe: number | null; duration_min: number | null
+type SessionDetail = {
+  id: string
+  date: string
+  rpe: number | null
+  feeling_post: number | null
+  duration_min: number | null
+  sleep_hours: number | null
+  energy_level: number | null
+  notes: string | null
+  meta: Record<string, unknown> | null
   session_types: { name: string; emoji: string; color: string }
-  session_pain_alerts: Array<{ id: string }>
+  session_pain_alerts: { id: string; body_part_label: string; severity: number }[]
+}
+type Block = {
+  id: string
+  block_order: number
+  title: string
+  block_type: string
+  is_complex: boolean
+  complex_label: string | null
+  block_sets: {
+    id: string; set_number: number; reps: number | null; weight_kg: number | null
+    tempo: string | null; pct_rm: number | null; execution: string | null; is_pr: boolean
+    movement_label: string
+  }[]
+}
+type Wod = {
+  id: string; format_label: string; description: string | null
+  result_detail: string | null; is_rx: boolean; time_cap_min: number | null
 }
 
-const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-const DAYS_FR   = ['L','M','M','J','V','S','D']
 const RPE_COLORS = ['','#3B82F6','#3B82F6','#3B82F6','#F59E0B','#F59E0B','#D97706','#EA580C','#EA580C','#EF4444','#DC2626']
+const SEVERITY_LABEL = ['','Légère','Modérée','Sévère']
+const SEVERITY_COLOR = ['','#F59E0B','#EA580C','#EF4444']
+const EXEC_ICON: Record<string, string> = { good: '✓', ok: '~', fail: '✗' }
+const EXEC_COLOR: Record<string, string> = { good: '#10B981', ok: '#F59E0B', fail: '#EF4444' }
 
-function toDateStr(d: Date) { return d.toISOString().split('T')[0] }
-function formatDateShort(str: string) {
-  const d = new Date(str + 'T00:00:00')
-  const today = new Date(); today.setHours(0,0,0,0)
-  const diff = Math.round((today.getTime() - d.getTime()) / 86400000)
-  if (diff === 0) return "Aujourd'hui"
-  if (diff === 1) return 'Hier'
-  return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
-}
-function getMonth(dateStr: string) {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+function fmtDate(str: string) {
+  return new Date(str + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1) }
 
-function getCalendarDays(year: number, month: number): (number | null)[] {
-  const first   = new Date(year, month, 1)
-  const last    = new Date(year, month + 1, 0)
-  const startDow = (first.getDay() + 6) % 7
-  const days: (number | null)[] = []
-  for (let i = 0; i < startDow; i++) days.push(null)
-  for (let d = 1; d <= last.getDate(); d++) days.push(d)
-  while (days.length % 7 !== 0) days.push(null)
-  return days
+type EditDraft = {
+  date: string; duration_min: string; rpe: string
+  feeling_post: string; sleep_hours: string; energy_level: string; notes: string
 }
 
-export default function SessionsPage() {
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [view, setView]         = useState<'calendar' | 'list'>('calendar')
-  const [filter, setFilter]     = useState('Tout')
+export default function SessionDetailPage() {
+  const params       = useParams()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const id           = Array.isArray(params.id) ? params.id[0] : params.id as string
+  const from         = searchParams.get('from')
 
-  const now   = new Date()
-  const [calYear,  setCalYear]  = useState(now.getFullYear())
-  const [calMonth, setCalMonth] = useState(now.getMonth())
+  const [session, setSession] = useState<SessionDetail | null>(null)
+  const [blocks,  setBlocks]  = useState<Block[]>([])
+  const [wods,    setWods]    = useState<Wod[]>([])
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    supabase.from('sessions')
-      .select('id, date, rpe, duration_min, session_types(name, emoji, color), session_pain_alerts(id)')
-      .is('deleted_at', null)
-      .order('date', { ascending: false })
-      .limit(500)
-      .then(({ data }) => {
-        setSessions((data ?? []) as unknown as Session[])
-        setLoading(false)
-      })
-  }, [])
+  const [showEdit,    setShowEdit]    = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [saving,      setSaving]      = useState(false)
+  const [deleting,    setDeleting]    = useState(false)
+  const [draft,       setDraft]       = useState<EditDraft | null>(null)
 
-  const filtered = filter === 'Tout' ? sessions : sessions.filter(s => s.session_types.name === filter)
-  const presentTypes = ['Tout', ...Array.from(new Set(sessions.map(s => s.session_types.name)))]
-
-  // ── Calendar helpers ────────────────────────────────────
-  const sessionsByDate: Record<string, Session[]> = {}
-  sessions.forEach(s => {
-    if (!sessionsByDate[s.date]) sessionsByDate[s.date] = []
-    sessionsByDate[s.date].push(s)
-  })
-
-  const calDays  = getCalendarDays(calYear, calMonth)
-  const todayStr = toDateStr(now)
-  const prevMonth = () => {
-    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11) }
-    else setCalMonth(m => m - 1)
+  function goBack() {
+    if (from === 'sessions') router.push('/sessions')
+    else router.back()
   }
-  const nextMonth = () => {
-    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0) }
-    else setCalMonth(m => m + 1)
-  }
-  const calMonthSessions = sessions.filter(s => {
-    const d = new Date(s.date + 'T00:00:00')
-    return d.getFullYear() === calYear && d.getMonth() === calMonth
-  })
 
-  // ── List helpers ────────────────────────────────────────
-  const groups: Record<string, Session[]> = {}
-  filtered.forEach(s => {
-    const m = getMonth(s.date)
-    if (!groups[m]) groups[m] = []
-    groups[m].push(s)
-  })
+  function loadSession() {
+    if (!id) return
+    Promise.all([
+      supabase.from('sessions')
+        .select('id, date, rpe, feeling_post, duration_min, sleep_hours, energy_level, notes, meta, session_types(name, emoji, color), session_pain_alerts(id, body_part_label, severity)')
+        .eq('id', id).single(),
+      supabase.from('session_blocks')
+        .select('id, block_order, title, block_type, is_complex, complex_label, block_sets(id, set_number, reps, weight_kg, tempo, pct_rm, execution, is_pr, movement_label)')
+        .eq('session_id', id).order('block_order'),
+      supabase.from('wods')
+        .select('id, format_label, description, result_detail, is_rx, time_cap_min')
+        .eq('session_id', id),
+    ]).then(([sRes, bRes, wRes]) => {
+      const s = sRes.data as unknown as SessionDetail
+      setSession(s)
+      setBlocks((bRes.data ?? []) as unknown as Block[])
+      setWods((wRes.data ?? []) as unknown as Wod[])
+      setLoading(false)
+    })
+  }
+
+  useEffect(() => { loadSession() }, [id])
+
+  function openEdit() {
+    if (!session) return
+    setDraft({
+      date:          session.date,
+      duration_min:  session.duration_min != null  ? String(session.duration_min)  : '',
+      rpe:           session.rpe          != null  ? String(session.rpe)           : '',
+      feeling_post:  session.feeling_post != null  ? String(session.feeling_post)  : '',
+      sleep_hours:   session.sleep_hours  != null  ? String(session.sleep_hours)   : '',
+      energy_level:  session.energy_level != null  ? String(session.energy_level)  : '',
+      notes:         session.notes ?? '',
+    })
+    setShowEdit(true)
+  }
+
+  async function handleSave() {
+    if (!draft || !session) return
+    setSaving(true)
+    await supabase.from('sessions').update({
+      date:          draft.date || session.date,
+      duration_min:  draft.duration_min  ? parseInt(draft.duration_min)    : null,
+      rpe:           draft.rpe           ? parseInt(draft.rpe)             : null,
+      feeling_post:  draft.feeling_post  ? parseInt(draft.feeling_post)    : null,
+      sleep_hours:   draft.sleep_hours   ? parseFloat(draft.sleep_hours)   : null,
+      energy_level:  draft.energy_level  ? parseInt(draft.energy_level)    : null,
+      notes:         draft.notes || null,
+    }).eq('id', session.id)
+    setSaving(false)
+    setShowEdit(false)
+    loadSession()
+  }
+
+  async function handleDelete() {
+    if (!session) return
+    setDeleting(true)
+    await supabase.from('sessions').update({ deleted_at: new Date().toISOString() }).eq('id', session.id)
+    router.push('/sessions')
+  }
+
+  if (loading) return (
+    <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
+      <div className="w-8 h-8 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+    </div>
+  )
+
+  if (!session) return (
+    <div className="flex flex-col items-center justify-center gap-3" style={{ minHeight: '80dvh' }}>
+      <p className="text-3xl">🤷</p>
+      <p className="text-sm text-gray-500">Séance introuvable</p>
+      <button onClick={goBack} className="text-orange-500 text-sm font-semibold">← Retour</button>
+    </div>
+  )
+
+  const st = session.session_types
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-lg mx-auto px-4">
+    <div className="bg-gray-50">
+      <div className="max-w-lg mx-auto px-4 pb-6">
 
-        {/* Header */}
-        <div className="pt-8 pb-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Historique</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{sessions.length} séance{sessions.length > 1 ? 's' : ''} au total</p>
-          </div>
-          {/* Toggle vue */}
-          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
-            <button onClick={() => setView('calendar')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${view === 'calendar' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>
-              📅 Mois
+        {/* Top bar */}
+        <div className="pt-5 flex items-center justify-between">
+          <button onClick={goBack}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-gray-600 transition">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            {from === 'sessions' ? 'Historique' : 'Retour'}
+          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={openEdit}
+              className="text-xs font-semibold text-gray-500 hover:text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-1.5 transition">
+              ✏️ Modifier
             </button>
-            <button onClick={() => setView('list')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${view === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>
-              📋 Liste
+            <button onClick={() => setShowConfirm(true)}
+              className="text-xs font-semibold text-red-500 hover:text-red-700 bg-white border border-red-200 rounded-lg px-3 py-1.5 transition">
+              🗑 Supprimer
             </button>
           </div>
         </div>
 
-        {/* ── VUE CALENDRIER ── */}
-        {view === 'calendar' && (
-          <div>
-            {/* Navigation mois */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition text-lg">←</button>
-                <h2 className="text-base font-black text-gray-900">{MONTHS_FR[calMonth]} {calYear}</h2>
-                <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition text-lg">→</button>
-              </div>
+        {/* Header */}
+        <div className="pt-4 pb-5 flex items-start gap-3">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ background: st.color + '20', border: `2px solid ${st.color}40` }}>
+            {st.emoji}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-xl font-black text-gray-900">{st.name}</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{capitalize(fmtDate(session.date))}</p>
+            {session.duration_min && (
+              <p className="text-xs text-gray-400">{session.duration_min} min</p>
+            )}
+          </div>
+        </div>
 
-              {/* Jours de la semaine */}
-              <div className="grid grid-cols-7 mb-2">
-                {DAYS_FR.map((d, i) => (
-                  <div key={i} className="text-center text-xs font-bold text-gray-400 py-1">{d}</div>
-                ))}
-              </div>
-
-              {/* Grille jours */}
-              <div className="grid grid-cols-7 gap-1">
-                {calDays.map((day, i) => {
-                  if (!day) return <div key={i} />
-                  const dateStr = `${calYear}-${String(calMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-                  const daySessions = sessionsByDate[dateStr] ?? []
-                  const isToday = dateStr === todayStr
-                  const hasSessions = daySessions.length > 0
-                  const mainSession = daySessions[0]
-
-                  return (
-                    <div key={i} className="aspect-square flex flex-col items-center justify-center relative">
-                      {hasSessions ? (
-                        <Link href={daySessions.length === 1 ? `/sessions/${mainSession.id}` : '#'}
-                          className="w-full h-full flex flex-col items-center justify-center rounded-xl transition hover:opacity-80"
-                          style={{ background: mainSession.session_types.color + '20', border: `1.5px solid ${mainSession.session_types.color}40` }}>
-                          <span className="text-lg leading-none">{mainSession.session_types.emoji}</span>
-                          {daySessions.length > 1 && (
-                            <span className="text-xs font-bold" style={{ color: mainSession.session_types.color }}>+{daySessions.length - 1}</span>
-                          )}
-                          <span className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-orange-500' : 'text-gray-500'}`}>{day}</span>
-                        </Link>
-                      ) : (
-                        <div className={`w-full h-full flex items-center justify-center rounded-xl ${isToday ? 'ring-2 ring-orange-400' : ''}`}>
-                          <span className={`text-sm font-medium ${isToday ? 'text-orange-500 font-bold' : 'text-gray-300'}`}>{day}</span>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Résumé du mois */}
-            {calMonthSessions.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-                  {MONTHS_FR[calMonth]} — {calMonthSessions.length} séance{calMonthSessions.length > 1 ? 's' : ''}
-                </p>
-                <div className="space-y-1.5">
-                  {calMonthSessions.map(s => (
-                    <Link key={s.id} href={`/sessions/${s.id}`}
-                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                        style={{ background: s.session_types.color + '15' }}>
-                        {s.session_types.emoji}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800">{s.session_types.name}</p>
-                        <p className="text-xs text-gray-400">{formatDateShort(s.date)}{s.duration_min ? ` · ${s.duration_min} min` : ''}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        {(s.session_pain_alerts?.length ?? 0) > 0 && <span className="text-xs">⚠️</span>}
-                        {s.rpe !== null && (
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: RPE_COLORS[s.rpe] }}>
-                            {s.rpe}
-                          </span>
-                        )}
-                        <span className="text-gray-300">›</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+        {/* Stats row */}
+        {(session.rpe !== null || session.feeling_post !== null || session.sleep_hours !== null || session.energy_level !== null) && (
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            {session.rpe !== null && (
+              <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                <p className="text-lg font-black" style={{ color: RPE_COLORS[session.rpe] }}>{session.rpe}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">RPE</p>
               </div>
             )}
-
-            {calMonthSessions.length === 0 && !loading && (
-              <div className="text-center py-10">
-                <p className="text-3xl mb-2">😴</p>
-                <p className="text-sm text-gray-400">Aucune séance ce mois-ci.</p>
+            {session.feeling_post !== null && (
+              <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                <p className="text-lg font-black text-gray-800">{session.feeling_post}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Feeling</p>
+              </div>
+            )}
+            {session.sleep_hours !== null && (
+              <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                <p className="text-lg font-black text-gray-800">{session.sleep_hours}h</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Sommeil</p>
+              </div>
+            )}
+            {session.energy_level !== null && (
+              <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                <p className="text-lg font-black text-gray-800">{session.energy_level}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Énergie</p>
               </div>
             )}
           </div>
         )}
 
-        {/* ── VUE LISTE ── */}
-        {view === 'list' && (
-          <div>
-            {/* Filtre */}
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-              {presentTypes.map(t => (
-                <button key={t} onClick={() => setFilter(t)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 transition ${
-                    filter === t ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white border-gray-200 text-gray-500'
-                  }`}>{t}</button>
+        {/* WODs */}
+        {wods.map(wod => (
+          <div key={wod.id} className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">WOD — {wod.format_label}</p>
+              <div className="flex items-center gap-2">
+                {wod.time_cap_min && <span className="text-xs text-gray-400">{wod.time_cap_min} min cap</span>}
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${wod.is_rx ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {wod.is_rx ? 'RX' : 'Scaled'}
+                </span>
+              </div>
+            </div>
+            {wod.description && <p className="text-sm text-gray-600 whitespace-pre-wrap mb-2">{wod.description}</p>}
+            {wod.result_detail && (
+              <div className="bg-orange-50 rounded-xl px-3 py-2 mt-2">
+                <p className="text-xs font-bold text-orange-600 mb-0.5">Résultat</p>
+                <p className="text-sm font-semibold text-gray-800">{wod.result_detail}</p>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Blocks */}
+        {blocks.map(block => (
+          <div key={block.id} className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
+            <p className="text-sm font-bold text-gray-800 mb-3">
+              {block.is_complex ? `🔗 ${block.complex_label ?? block.title}` : block.title}
+            </p>
+            <div className="space-y-1.5">
+              {block.block_sets
+                .sort((a, b) => a.set_number - b.set_number)
+                .map(set => (
+                  <div key={set.id} className="flex items-center gap-2 text-sm">
+                    <span className="text-[11px] text-gray-400 w-5 flex-shrink-0">S{set.set_number}</span>
+                    {set.weight_kg !== null && <span className="font-bold text-gray-800">{set.weight_kg} kg</span>}
+                    {set.reps    !== null && <span className="text-gray-500">× {set.reps}</span>}
+                    {set.pct_rm  !== null && <span className="text-xs text-purple-500 font-semibold">{set.pct_rm}%</span>}
+                    {set.tempo && <span className="text-xs text-gray-400 font-mono">@{set.tempo}</span>}
+                    {set.execution && set.execution in EXEC_ICON && (
+                      <span className="text-sm font-bold" style={{ color: EXEC_COLOR[set.execution] }}>
+                        {EXEC_ICON[set.execution]}
+                      </span>
+                    )}
+                    {set.is_pr && <span className="ml-auto text-xs font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full">PR 🏆</span>}
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
+
+        {/* Pain alerts */}
+        {session.session_pain_alerts?.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">⚠️ Alertes douleur</p>
+            <div className="space-y-1.5">
+              {session.session_pain_alerts.map(a => (
+                <div key={a.id} className="flex items-center justify-between">
+                  <p className="text-sm text-gray-700">{a.body_part_label}</p>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                    style={{ background: SEVERITY_COLOR[a.severity] }}>
+                    {SEVERITY_LABEL[a.severity]}
+                  </span>
+                </div>
               ))}
             </div>
+          </div>
+        )}
 
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => <div key={i} className="skeleton h-16 rounded-2xl" />)}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-3xl mb-3">📋</p>
-                <p className="text-sm font-semibold text-gray-700 mb-4">Aucune séance trouvée</p>
-                <Link href="/log" className="inline-block bg-orange-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl">
-                  + Nouvelle séance
-                </Link>
-              </div>
-            ) : (
-              Object.entries(groups).map(([month, items]) => (
-                <div key={month} className="mb-6">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{capitalize(month)}</p>
-                  <div className="space-y-1.5">
-                    {items.map(s => (
-                      <Link key={s.id} href={`/sessions/${s.id}`}
-                        className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:border-gray-300 transition">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                          style={{ background: s.session_types.color + '15', border: `1.5px solid ${s.session_types.color}30` }}>
-                          {s.session_types.emoji}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-800">{s.session_types.name}</p>
-                          <p className="text-xs text-gray-400">{formatDateShort(s.date)}{s.duration_min ? ` · ${s.duration_min} min` : ''}</p>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          {(s.session_pain_alerts?.length ?? 0) > 0 && <span className="text-xs">⚠️</span>}
-                          {s.rpe !== null && (
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: RPE_COLORS[s.rpe] }}>
-                              {s.rpe}
-                            </span>
-                          )}
-                          <span className="text-gray-300 text-sm">›</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
+        {/* Notes */}
+        {session.notes && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Notes</p>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{session.notes}</p>
+          </div>
+        )}
+
+        {blocks.length === 0 && wods.length === 0 && !session.notes && (
+          <div className="text-center py-8">
+            <p className="text-2xl mb-2">📋</p>
+            <p className="text-sm text-gray-400">Aucun détail enregistré pour cette séance</p>
           </div>
         )}
       </div>
+
+      {/* ── Edit modal ─────────────────────────────────────── */}
+      {showEdit && draft && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setShowEdit(false)}>
+          <div className="w-full max-w-lg bg-white rounded-t-3xl p-6 pb-10 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base font-black text-gray-900">Modifier la séance</h2>
+              <button onClick={() => setShowEdit(false)} className="text-gray-400 text-xl leading-none">×</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Date</label>
+                <input type="date" value={draft.date} onChange={e => setDraft(d => d && ({ ...d, date: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Durée (min)</label>
+                <input type="number" placeholder="60" value={draft.duration_min} onChange={e => setDraft(d => d && ({ ...d, duration_min: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">RPE (1-10)</label>
+                <input type="number" min={1} max={10} placeholder="7" value={draft.rpe} onChange={e => setDraft(d => d && ({ ...d, rpe: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Feeling (1-5)</label>
+                <input type="number" min={1} max={5} placeholder="3" value={draft.feeling_post} onChange={e => setDraft(d => d && ({ ...d, feeling_post: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Sommeil (h)</label>
+                <input type="number" step="0.5" placeholder="7.5" value={draft.sleep_hours} onChange={e => setDraft(d => d && ({ ...d, sleep_hours: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Énergie (1-5)</label>
+                <input type="number" min={1} max={5} placeholder="4" value={draft.energy_level} onChange={e => setDraft(d => d && ({ ...d, energy_level: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Notes</label>
+              <textarea rows={3} placeholder="Notes libres…" value={draft.notes} onChange={e => setDraft(d => d && ({ ...d, notes: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+            </div>
+
+            <button onClick={handleSave} disabled={saving}
+              className="w-full py-3 rounded-xl text-sm font-bold text-white transition"
+              style={{ background: 'var(--theme-primary, #F97316)', opacity: saving ? 0.6 : 1 }}>
+              {saving ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete confirm ─────────────────────────────────── */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+          <div className="w-full max-w-sm bg-white rounded-2xl p-6">
+            <p className="text-base font-black text-gray-900 mb-1">Supprimer cette séance ?</p>
+            <p className="text-sm text-gray-400 mb-5">Cette action est irréversible.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100">
+                Annuler
+              </button>
+              <button onClick={handleDelete} disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 transition"
+                style={{ opacity: deleting ? 0.6 : 1 }}>
+                {deleting ? 'Suppression…' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

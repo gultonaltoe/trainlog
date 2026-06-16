@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/lib/toast'
+import { getUserId } from '@/lib/user'
 
 type Profile = {
   first_name: string; email: string; birth_date: string
@@ -44,7 +45,7 @@ export default function ProfilePage() {
   const [pid, setPid]   = useState<string|null>(null)
 
   useEffect(() => {
-    supabase.from('user_profile').select('*').limit(1).maybeSingle().then(({data}) => {
+    supabase.from('user_profile').select('*').eq('user_id', getUserId()).limit(1).maybeSingle().then(({data}) => {
       if (data) {
         setPid(data.id)
         setP({
@@ -92,7 +93,7 @@ export default function ProfilePage() {
     }
     if (pid) await supabase.from('user_profile').update(payload).eq('id', pid)
     else {
-      const { data } = await supabase.from('user_profile').insert(payload).select('id').single()
+      const { data } = await supabase.from('user_profile').insert({ ...payload, user_id: getUserId() }).select('id').single()
       if (data) setPid(data.id)
     }
     document.documentElement.style.setProperty('--theme-primary', p.theme_color)
@@ -107,13 +108,13 @@ export default function ProfilePage() {
     : null
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
       <p className="text-gray-400 text-sm">Chargement...</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
         <div className="pt-8 pb-5">

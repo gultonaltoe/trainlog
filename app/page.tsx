@@ -6,7 +6,9 @@ import { getRecentSessions, getProfile } from '@/lib/api'
 import type { SessionSummary, UserProfile } from '@/lib/api'
 
 // ── Helpers ───────────────────────────────────────────────
-function toDateStr(d: Date) { return d.toISOString().split('T')[0] }
+function toDateStr(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1) }
 
 function getWeekStart(offsetWeeks = 0): Date {
@@ -36,36 +38,22 @@ function avgRpe(sessions: SessionSummary[]) {
   return rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null
 }
 
-function getFatigueScore(sessions: SessionSummary[]) {
-  const cutoff = Date.now() - 7 * 86400000
-  const recent = sessions.filter(s => new Date(s.date + 'T00:00:00').getTime() >= cutoff)
-  const rpes   = recent.map(s => s.rpe).filter((r): r is number => r !== null)
-  if (!rpes.length) return null
-  const score = Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length / 10) * 100)
-  if (score < 35) return { score, label: 'Récupéré',  color: '#10B981', bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700'  }
-  if (score < 60) return { score, label: 'Modéré',    color: '#F59E0B', bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-700'  }
-  if (score < 80) return { score, label: 'Fatigué',   color: '#EA580C', bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700' }
-  return           { score, label: 'Surcharge',  color: '#EF4444', bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700'    }
-}
 
-function formatDate(str: string) {
-  const today     = toDateStr(new Date())
-  const yesterday = toDateStr(new Date(Date.now() - 86400000))
-  if (str === today)     return "Aujourd'hui"
-  if (str === yesterday) return 'Hier'
-  return new Date(str + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
-}
-
-function rpeColor(rpe: number | null) {
-  if (!rpe) return '#9CA3AF'
-  if (rpe <= 4) return '#3B82F6'
-  if (rpe <= 6) return '#F59E0B'
-  if (rpe <= 8) return '#EA580C'
-  return '#EF4444'
-}
 
 const DAY_LABELS = ['L','M','M','J','V','S','D']
+const MONTHS_FR  = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 type Period = '7j' | '30j' | '3m' | 'tout'
+
+function calCells(y: number, m: number): (number | null)[] {
+  const offset = (new Date(y, m, 1).getDay() + 6) % 7
+  const n = new Date(y, m + 1, 0).getDate()
+  const cells: (number | null)[] = Array(offset).fill(null)
+  for (let d = 1; d <= n; d++) cells.push(d)
+  while (cells.length % 7) cells.push(null)
+  return cells
+}
+function p2(n: number) { return String(n).padStart(2, '0') }
+function mkDs(y: number, m: number, d: number) { return `${y}-${p2(m + 1)}-${p2(d)}` }
 
 // ── Composants ─────────────────────────────────────────────
 function Skeleton({ className = '' }: { className?: string }) {
@@ -79,11 +67,15 @@ export default function Dashboard() {
   const [profile, setProfile]   = useState<UserProfile | null>(null)
   const [loading, setLoading]   = useState(true)
   const [period, setPeriod]     = useState<Period>('30j')
+  const [dashCalY, setDashCalY] = useState(new Date().getFullYear())
+  const [dashCalM, setDashCalM] = useState(new Date().getMonth())
 
   const load = useCallback(async () => {
-    const [s, p] = await Promise.all([getRecentSessions(200), getProfile()])
+    const p = await getProfile()
     if (!p?.first_name) { router.push('/welcome'); return }
-    setSessions(s); setProfile(p); setLoading(false)
+    setProfile(p)
+    const s = await getRecentSessions(200)
+    setSessions(s); setLoading(false)
   }, [router])
 
   useEffect(() => { load() }, [load])
@@ -101,20 +93,9 @@ export default function Dashboard() {
   const weekCount    = weekSessions.length
   const weekTarget   = profile?.weekly_target ?? 0
   const weekAvgRpe   = avgRpe(weekSessions)
-  const fatigue      = getFatigueScore(sessions)
 
   const sessionsByDay: Record<string, SessionSummary[]> = {}
   weekDayStrs.forEach(d => { sessionsByDay[d] = weekSessions.filter(s => s.date === d) })
-
-  // ── Données 4 semaines (barres) ───────────────────────────
-  const weekBars = Array.from({ length: 4 }, (_, i) => {
-    const start = getWeekStart(3 - i)
-    const end   = new Date(start); end.setDate(start.getDate() + 6)
-    const count = sessionsBetween(sessions, start, end).length
-    const label = i === 3 ? 'Sem.' : `S-${3 - i}`
-    return { label, count }
-  })
-  const maxBar = Math.max(...weekBars.map(w => w.count), weekTarget, 1)
 
   // ── Comparaison mois ──────────────────────────────────────
   const thisMo   = getMonthRange(0)
@@ -142,11 +123,22 @@ export default function Dashboard() {
   })
   const sortedTypes = Object.entries(typeCounts).sort((a, b) => b[1].count - a[1].count)
 
-  const recent = sessions.slice(0, 5)
+  // ── Calendrier navigable ─────────────────────────────────
+  const calCellArr  = calCells(dashCalY, dashCalM)
+  const calNow      = new Date()
+  const calToday    = mkDs(calNow.getFullYear(), calNow.getMonth(), calNow.getDate())
+  const isCalNow    = dashCalY === calNow.getFullYear() && dashCalM === calNow.getMonth()
+  const calByDate: Record<string, SessionSummary[]> = {}
+  sessions
+    .filter(s => { const d = new Date(s.date + 'T00:00:00'); return d.getFullYear() === dashCalY && d.getMonth() === dashCalM })
+    .forEach(s => { if (!calByDate[s.date]) calByDate[s.date] = []; calByDate[s.date].push(s) })
+  const prevDashCal = () => { if (dashCalM === 0) { setDashCalY(y => y - 1); setDashCalM(11) } else setDashCalM(m => m - 1) }
+  const nextDashCal = () => { if (isCalNow) return; if (dashCalM === 11) { setDashCalY(y => y + 1); setDashCalM(0) } else setDashCalM(m => m + 1) }
+
   const today  = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
         {/* Header */}
@@ -166,6 +158,7 @@ export default function Dashboard() {
             + Séance
           </Link>
         </div>
+
 
         {/* Semaine courante */}
         {loading ? <Skeleton className="h-44 mb-4" /> : (
@@ -220,32 +213,57 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* 4 dernières semaines — barres */}
+        {/* Calendrier navigable */}
         {!loading && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">4 dernières semaines</p>
-            <div className="flex items-end gap-3" style={{ height: 80 }}>
-              {weekBars.map((w, i) => {
-                const h = maxBar > 0 ? Math.max(8, Math.round((w.count / maxBar) * 68)) : 8
-                const atTarget = weekTarget > 0 && w.count >= weekTarget
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <button onClick={prevDashCal} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-lg leading-none">‹</button>
+              <p className="text-xs font-bold text-gray-700">{MONTHS_FR[dashCalM]} {dashCalY}</p>
+              <button onClick={nextDashCal} disabled={isCalNow}
+                className={`w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition ${isCalNow ? 'text-gray-200' : 'hover:bg-gray-100 text-gray-500'}`}>›</button>
+            </div>
+            {/* Jours de la semaine */}
+            <div className="grid grid-cols-7 mb-1">
+              {DAY_LABELS.map((d, i) => (
+                <p key={i} className="text-center text-[10px] font-semibold text-gray-400">{d}</p>
+              ))}
+            </div>
+            {/* Grille */}
+            <div className="grid grid-cols-7 gap-0.5">
+              {calCellArr.map((day, i) => {
+                if (!day) return <div key={i} />
+                const dateStr = mkDs(dashCalY, dashCalM, day)
+                const items   = calByDate[dateStr] ?? []
+                const first   = items[0]
+                const isToday = dateStr === calToday
                 return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-xs font-black text-gray-700">{w.count || ''}</span>
-                    <div className="w-full rounded-lg transition-all"
-                      style={{
-                        height: h,
-                        background: w.count === 0 ? '#F3F4F6' : atTarget ? 'var(--theme-primary, #F97316)' : '#FED7AA'
-                      }} />
-                    <span className="text-xs text-gray-400">{w.label}</span>
-                  </div>
+                  <Link key={i} href={items.length > 0 ? `/sessions/${items[0].id}` : '#'}
+                    className={`flex flex-col items-center justify-center rounded-lg transition ${
+                      items.length > 0 ? 'hover:opacity-75' : 'pointer-events-none'
+                    }`}
+                    style={{
+                      minHeight: 40,
+                      background: first ? first.type_color + '22' : undefined,
+                      outline: isToday ? '2px solid var(--theme-primary, #F97316)' : undefined,
+                    }}>
+                    <span className={`text-[10px] font-bold leading-none mb-0.5 ${
+                      isToday ? 'text-orange-500' : items.length > 0 ? 'text-gray-700' : 'text-gray-300'
+                    }`}>
+                      {day}
+                    </span>
+                    {first && <span className="text-xs leading-none">{first.type_emoji}</span>}
+                    {items.length > 1 && <span className="text-[8px] font-bold text-gray-400">+{items.length - 1}</span>}
+                  </Link>
                 )
               })}
             </div>
-            {weekTarget > 0 && (
-              <p className="text-xs text-gray-400 mt-2 text-center">
-                🎯 Objectif : {weekTarget} séances/semaine
+            {/* Résumé */}
+            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                <span className="font-bold text-gray-700">{Object.values(calByDate).flat().length}</span> séance{Object.values(calByDate).flat().length !== 1 ? 's' : ''}
               </p>
-            )}
+              <Link href="/sessions" className="text-xs font-semibold text-orange-500">Voir tout →</Link>
+            </div>
           </div>
         )}
 
@@ -297,51 +315,18 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Séances récentes */}
-        {loading ? <Skeleton className="h-48 mb-4" /> : (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Séances récentes</p>
-              <Link href="/sessions" className="text-xs font-semibold text-orange-500">Voir tout →</Link>
-            </div>
-            {recent.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-3xl mb-3">🏋️</p>
-                <p className="text-sm font-semibold text-gray-700 mb-1">Aucune séance pour l'instant</p>
-                <Link href="/log"
-                  className="inline-block text-white text-sm font-bold px-5 py-2.5 rounded-xl mt-2"
-                  style={{ background: 'var(--theme-primary, #F97316)' }}>
-                  + Enregistrer une séance
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {recent.map(s => (
-                  <Link key={s.id} href={`/sessions/${s.id}`}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                      style={{ background: s.type_color + '15', border: `1.5px solid ${s.type_color}30` }}>
-                      {s.type_emoji}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-800">{s.session_type}</p>
-                      <p className="text-xs text-gray-400">{formatDate(s.date)}{s.duration_min ? ` · ${s.duration_min} min` : ''}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {s.pain_alerts_count > 0 && <span className="text-xs">⚠️</span>}
-                      {s.rpe !== null && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: rpeColor(s.rpe) }}>
-                          {s.rpe}
-                        </span>
-                      )}
-                      <span className="text-gray-300 text-sm">›</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+<Link href="/prs"
+  className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 p-4 mb-4 hover:shadow-sm transition">
+  <div className="flex items-center gap-3">
+    <span className="text-2xl">🏆</span>
+    <div>
+      <p className="text-sm font-bold text-gray-800">Personal Records</p>
+      <p className="text-xs text-gray-400">Tes charges maximales par mouvement</p>
+    </div>
+  </div>
+  <span className="text-gray-300">›</span>
+</Link>
+
 
         {/* Distribution par période */}
         {!loading && sessions.length > 0 && (

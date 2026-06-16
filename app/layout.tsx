@@ -4,6 +4,7 @@ import BottomNav      from '@/components/BottomNav'
 import ToastContainer from '@/components/ToastContainer'
 import FeedbackButton from '@/components/FeedbackButton'
 import ThemeLoader    from '@/components/ThemeLoader'
+import UserInit       from '@/components/UserInit'
 
 export const metadata: Metadata = {
   title: 'Trainlog',
@@ -43,9 +44,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body>
+        <UserInit />
         <ThemeLoader />
         <ToastContainer />
-        <div className="pb-20 min-h-screen" style={{ background: '#F9FAFB' }}>
+        <div className="pb-20" style={{ background: '#F9FAFB' }}>
           {children}
         </div>
         <BottomNav />

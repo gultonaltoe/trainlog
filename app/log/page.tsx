@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { getSessionTypes, saveSession, getProfile } from '@/lib/api'
+import { getSessionTypes, saveSession, getProfile, detectAndSavePRs } from '@/lib/api'
 import type { SessionType, PainEntry } from '@/lib/api'
 import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
@@ -13,8 +13,17 @@ type PrepBlock = { id: number; kind: 'block'; movementId: string; movementLabel:
 type PrepNote  = { id: number; kind: 'note';  text: string }
 type PrepItem  = PrepBlock | PrepNote
 
-const mkBlock = (id: number): PrepBlock => ({ id, kind: 'block', movementId: '', movementLabel: '', hasWeight: true, sets: [{ reps: '', weight: '' }] })
-const mkNote  = (id: number): PrepNote  => ({ id, kind: 'note',  text: '' })
+// Haltérophilie
+type HSetRow = { reps: string; weight: string; tempo: string; pct_rm: string; execution: 'good' | 'ok' | 'fail' | '' }
+type HBlock  = { id: number; isComplex: boolean; complexLabel: string; movementId: string; movementLabel: string; rm1: string; sets: HSetRow[] }
+
+// Run intervals
+type RunInterval = { distance: string; timeMin: string; timeSec: string; rest: string }
+
+const mkBlock  = (id: number): PrepBlock => ({ id, kind: 'block', movementId: '', movementLabel: '', hasWeight: true, sets: [{ reps: '', weight: '' }] })
+const mkNote   = (id: number): PrepNote  => ({ id, kind: 'note',  text: '' })
+const mkHBlock = (id: number): HBlock    => ({ id, isComplex: false, complexLabel: '', movementId: '', movementLabel: '', rm1: '', sets: [{ reps: '', weight: '', tempo: '', pct_rm: '', execution: '' }] })
+const mkRunIv  = (): RunInterval => ({ distance: '', timeMin: '', timeSec: '', rest: '' })
 
 // ── Constantes ────────────────────────────────────────────
 const WOD_FORMATS    = ['AMRAP','EMOM','E2MOM','For Time','Tabata',"Every X'",'Rounds','Autre']
@@ -34,6 +43,17 @@ const SEV_PILL   = ['','bg-yellow-100 text-yellow-700','bg-orange-100 text-orang
 const RPE_COLORS = ['#3B82F6','#3B82F6','#3B82F6','#F59E0B','#F59E0B','#D97706','#EA580C','#EA580C','#EF4444','#DC2626']
 const RPE_LABELS = ['','Très facile','Facile','Un peu dur','Modéré','Modéré+','Dur','Très dur','Intense','Extrême','Maximum']
 
+const HYROX_STATIONS = [
+  { name: 'SkiErg',             icon: '⛷️', distance: '1 000m',   hasWeight: false },
+  { name: 'Sled Push',          icon: '🛷', distance: '50m',       hasWeight: true  },
+  { name: 'Sled Pull',          icon: '🔗', distance: '50m',       hasWeight: true  },
+  { name: 'Burpee Broad Jumps', icon: '💥', distance: '50m',       hasWeight: false },
+  { name: 'Rowing',             icon: '🚣', distance: '1 000m',    hasWeight: false },
+  { name: 'Farmers Carry',      icon: '🏋️', distance: '200m',      hasWeight: true  },
+  { name: 'Sandbag Lunges',     icon: '🎒', distance: '100m',      hasWeight: true  },
+  { name: 'Wall Balls',         icon: '🏀', distance: '100 reps',  hasWeight: true  },
+]
+
 const STEPS_DEFAULT = [
   { label: 'Date & Sommeil',  key: 'sleep'    },
   { label: 'Type de séance',  key: 'type'     },
@@ -47,6 +67,19 @@ const STEPS_RUN = [
   { label: 'Détails du run', key: 'run'   },
   { label: 'Post-séance',    key: 'post'  },
 ]
+const STEPS_HALTEROPHILIE = [
+  { label: 'Date & Sommeil', key: 'sleep'          },
+  { label: 'Type de séance', key: 'type'           },
+  { label: 'Séance',         key: 'halterophilie'  },
+  { label: 'Post-séance',    key: 'post'           },
+]
+const STEPS_HYROX = [
+  { label: 'Date & Sommeil', key: 'sleep' },
+  { label: 'Type de séance', key: 'type'  },
+  { label: 'Hyrox',          key: 'hyrox' },
+  { label: 'Post-séance',    key: 'post'  },
+]
+
 const SPORT_MAP: Record<string, string[]> = {
   'crossfit':      ['crossfit','team wod','technique'],
   'haltérophilie': ['haltéro','technique'],
@@ -92,6 +125,16 @@ async function compressImage(file: File, maxPx: number): Promise<string> {
   })
 }
 
+function ivPace(distance: string, timeMin: string, timeSec: string): string | null {
+  if (!distance || (!timeMin && !timeSec)) return null
+  const distKm = distance.toLowerCase().includes('km')
+    ? parseFloat(distance) : parseFloat(distance) / 1000
+  const totalSec = (parseInt(timeMin) || 0) * 60 + (parseInt(timeSec) || 0)
+  if (!distKm || !totalSec) return null
+  const paceSecKm = totalSec / distKm
+  return `${Math.floor(paceSecKm / 60)}'${String(Math.round(paceSecKm % 60)).padStart(2,'0')}"/km`
+}
+
 const inputCls = "w-full rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
 const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"
 
@@ -113,25 +156,33 @@ export default function LogPage() {
   const [typeId, setTypeId]     = useState('')
   const [duration, setDuration] = useState('')
 
-  // Step 2 — Séance
-  const [warmupNotes, setWarmupNotes] = useState('')
-  const [prepItems, setPrepItems]     = useState<PrepItem[]>([mkBlock(1)])
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  // Step 2 — Séance (CrossFit / Renfo)
+  const [warmupNotes, setWarmupNotes]       = useState('')
+  const [prepItems, setPrepItems]           = useState<PrepItem[]>([mkBlock(1)])
+  const [photoPreview, setPhotoPreview]     = useState<string | null>(null)
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
+
+  // Step 2 — Haltérophilie
+  const [hBlocks, setHBlocks] = useState<HBlock[]>([mkHBlock(1)])
 
   // Step 2 — Run
   const [runType, setRunType]           = useState('')
   const [runDistance, setRunDistance]   = useState('')
   const [runElevation, setRunElevation] = useState('')
   const [runSurface, setRunSurface]     = useState('')
+  const [runIntervals, setRunIntervals] = useState<RunInterval[]>([mkRunIv()])
+
+  // Step 2 — Hyrox
+  const [hyroxTotalTime, setHyroxTotalTime] = useState('')
+  const [hyroxStations, setHyroxStations]   = useState<{ timeMin: string; timeSec: string; weight: string }[]>(
+    HYROX_STATIONS.map(() => ({ timeMin: '', timeSec: '', weight: '' }))
+  )
 
   // Step 3 — WOD
   const [hasWod, setHasWod]         = useState(true)
   const [wodFormat, setWodFormat]   = useState('')
   const [wodTimeCap, setWodTimeCap] = useState('')
-  const [wodMoves, setWodMoves]     = useState<string[]>([''])
-  const [wodFreeMode, setWodFreeMode] = useState(false)
   const [wodDesc, setWodDesc]       = useState('')
   const [wodResult, setWodResult]   = useState('')
   const [wodRx, setWodRx]           = useState(true)
@@ -162,9 +213,13 @@ export default function LogPage() {
     })
   }, [])
 
-  const isRun  = sessionTypes.find(t => t.id === typeId)?.name === 'Run'
-  const STEPS  = isRun ? STEPS_RUN : STEPS_DEFAULT
-  const curKey = STEPS[step]?.key
+  const selectedType = sessionTypes.find(t => t.id === typeId)
+  const typeName     = selectedType?.name ?? ''
+  const isRun        = typeName === 'Run'
+  const isHaltero    = typeName.toLowerCase().includes('haltéro') || typeName.toLowerCase() === 'halterophilie'
+  const isHyrox      = typeName.toLowerCase() === 'hyrox'
+  const STEPS        = isHaltero ? STEPS_HALTEROPHILIE : isRun ? STEPS_RUN : isHyrox ? STEPS_HYROX : STEPS_DEFAULT
+  const curKey       = STEPS[step]?.key
 
   const paceMinkm = (duration && runDistance && parseFloat(runDistance) > 0)
     ? parseInt(duration) / parseFloat(runDistance) : null
@@ -188,6 +243,24 @@ export default function LogPage() {
       return { ...p, sets: p.sets.map((s, i) => i === si ? { ...s, ...field } : s) }
     }))
   const removeItem = (id: number) => setPrepItems(ps => ps.filter(p => p.id !== id))
+
+  // ── HBlock helpers ──────────────────────────────────────
+  const updHBlock = (id: number, field: Partial<HBlock>) =>
+    setHBlocks(bs => bs.map(b => b.id === id ? { ...b, ...field } : b))
+  const updHSet = (blockId: number, si: number, field: Partial<HSetRow>) =>
+    setHBlocks(bs => bs.map(b => {
+      if (b.id !== blockId) return b
+      return { ...b, sets: b.sets.map((s, i) => i === si ? { ...s, ...field } : s) }
+    }))
+  const removeHBlock = (id: number) => setHBlocks(bs => bs.filter(b => b.id !== id))
+
+  // ── Hyrox helpers ───────────────────────────────────────
+  const updStation = (i: number, field: Partial<{ timeMin: string; timeSec: string; weight: string }>) =>
+    setHyroxStations(ss => ss.map((s, idx) => idx === i ? { ...s, ...field } : s))
+
+  // ── Run interval helpers ────────────────────────────────
+  const updInterval = (i: number, field: Partial<RunInterval>) =>
+    setRunIntervals(ivs => ivs.map((iv, idx) => idx === i ? { ...iv, ...field } : iv))
 
   // ── Photo ───────────────────────────────────────────────
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,28 +288,17 @@ export default function LogPage() {
       if (data.format) { setHasWod(true); setWodFormat(data.format) }
       if (data.time_cap) { setWodTimeCap(String(data.time_cap)) }
       if (data.description) {
-        const moves = data.description.split('\n').filter(Boolean)
-        if (moves.length > 1) setWodMoves(moves)
-        else { setWodDesc(data.description); setWodFreeMode(true) }
+        setWodDesc(data.description)
         filled.push('WOD')
       }
       toast.success(filled.length > 0 ? `Tableau analysé ✓ — ${filled.join(', ')}` : 'Photo analysée ✓')
     } catch (err) {
       console.error('Photo error:', err)
       toast.error('Analyse échouée. Essaie une photo plus nette.')
-      setPhotoPreview(null)
     } finally {
       setAnalyzingPhoto(false)
       if (photoInputRef.current) photoInputRef.current.value = ''
     }
-  }
-
-  // ── WOD description ─────────────────────────────────────
-  const buildWodDescription = () => {
-    const moves = wodMoves.filter(m => m.trim())
-    if (!moves.length) return undefined
-    const header = wodTimeCap ? `${wodFormat} ${wodTimeCap}'\n` : ''
-    return header + moves.join('\n')
   }
 
   // ── Pain ────────────────────────────────────────────────
@@ -252,9 +314,12 @@ export default function LogPage() {
     setDate(new Date().toISOString().split('T')[0])
     setSleepHours(7); setEnergy(3); setTypeId(''); setDuration('')
     setWarmupNotes(''); setPrepItems([mkBlock(Date.now())]); setPhotoPreview(null)
+    setHBlocks([mkHBlock(Date.now())])
     setRunType(''); setRunDistance(''); setRunElevation(''); setRunSurface('')
-    setHasWod(true); setWodFormat(''); setWodTimeCap(''); setWodMoves([''])
-    setWodFreeMode(false); setWodDesc(''); setWodResult(''); setWodRx(true)
+    setRunIntervals([mkRunIv()])
+    setHyroxTotalTime(''); setHyroxStations(HYROX_STATIONS.map(() => ({ timeMin: '', timeSec: '', weight: '' })))
+    setHasWod(true); setWodFormat(''); setWodTimeCap('')
+    setWodDesc(''); setWodResult(''); setWodRx(true)
     setRpe(7); setFeeling(3); setPainEntries([]); setNotes(''); setShowRpeInfo(false)
   }
 
@@ -272,24 +337,75 @@ export default function LogPage() {
         notes,
       ].filter(Boolean).join('\n') || undefined
 
-      const wodDescription = wodFreeMode ? (wodDesc || undefined) : buildWodDescription()
+      const wodDescription = wodDesc || undefined
+
+      const hyroxMeta = isHyrox ? {
+        total_time: hyroxTotalTime || undefined,
+        stations: hyroxStations
+          .map((s, i) => ({
+            name: HYROX_STATIONS[i].name,
+            time_min: s.timeMin ? parseInt(s.timeMin) : null,
+            time_sec: s.timeSec ? parseInt(s.timeSec) : null,
+            weight_kg: s.weight ? parseFloat(s.weight) : null,
+          }))
+          .filter(s => s.time_min !== null || s.time_sec !== null || s.weight_kg !== null),
+      } : undefined
+
+      const runMeta = isRun ? {
+        run_type:    runType    || undefined,
+        distance_km: runDistance  ? parseFloat(runDistance)  : undefined,
+        elevation_m: runElevation ? parseInt(runElevation)   : undefined,
+        surface:     runSurface   || undefined,
+        pace_min_km: paceMinkm    ? parseFloat(paceMinkm.toFixed(2)) : undefined,
+        intervals: runType === 'Fractionné'
+          ? runIntervals
+              .filter(iv => iv.distance || iv.timeMin || iv.timeSec)
+              .map(iv => ({
+                distance: iv.distance || null,
+                time_min: iv.timeMin ? parseInt(iv.timeMin) : null,
+                time_sec: iv.timeSec ? parseInt(iv.timeSec) : null,
+                rest: iv.rest || null,
+              }))
+          : undefined,
+      } : undefined
+
+      const defaultBlocks = isRun || isHyrox ? [] : prepItems
+        .filter((p): p is PrepBlock => p.kind === 'block' && !!p.movementId)
+        .map(b => ({
+          movement_id: b.movementId, movement_label: b.movementLabel,
+          block_type: 'strength' as const,
+          sets: b.sets.filter(s => s.reps || s.weight).map(s => ({
+            reps:      s.reps   ? parseInt(s.reps)              : undefined,
+            weight_kg: s.weight && b.hasWeight ? parseFloat(s.weight) : undefined,
+          }))
+        }))
+
+      const halteroBlocks = isHaltero ? hBlocks
+        .filter(b => b.movementId || b.isComplex)
+        .map(b => ({
+          movement_id:   b.isComplex ? undefined : b.movementId,
+          movement_label: b.isComplex ? b.complexLabel : b.movementLabel,
+          block_type: 'strength' as const,
+          is_complex:   b.isComplex,
+          complex_label: b.isComplex ? b.complexLabel : undefined,
+          sets: b.sets.filter(s => s.reps || s.weight).map(s => ({
+            reps:      s.reps   ? parseInt(s.reps)   : undefined,
+            weight_kg: s.weight ? parseFloat(s.weight) : undefined,
+            tempo:     s.tempo  || undefined,
+            pct_rm:    s.pct_rm ? parseInt(s.pct_rm) : undefined,
+            execution: s.execution || undefined,
+          }))
+        })) : []
+
+      const blocks = isHaltero ? halteroBlocks : defaultBlocks
 
       const id = await saveSession({
         date, session_type_id: typeId,
         duration_min:  duration ? parseInt(duration) : undefined,
         sleep_hours:   sleepHours, energy_level: energy,
         rpe, feeling_post: feeling, notes: allNotes,
-        blocks: isRun ? [] : prepItems
-          .filter((p): p is PrepBlock => p.kind === 'block' && !!p.movementId)
-          .map(b => ({
-            movement_id: b.movementId, movement_label: b.movementLabel,
-            block_type: 'strength' as const,
-            sets: b.sets.filter(s => s.reps || s.weight).map(s => ({
-              reps:      s.reps   ? parseInt(s.reps)              : undefined,
-              weight_kg: s.weight && b.hasWeight ? parseFloat(s.weight) : undefined,
-            }))
-          })),
-        wod: !isRun && hasWod && wodFormat ? {
+        blocks,
+        wod: !isRun && !isHaltero && !isHyrox && hasWod && wodFormat ? {
           format_label:  wodFormat,
           time_cap:      wodTimeCap ? parseInt(wodTimeCap) : undefined,
           description:   wodDescription,
@@ -297,67 +413,98 @@ export default function LogPage() {
           is_rx:         wodRx,
         } : undefined,
         pain_entries: painEntries.length > 0 ? painEntries : undefined,
-        meta: isRun ? {
-          run_type:    runType    || undefined,
-          distance_km: runDistance  ? parseFloat(runDistance)  : undefined,
-          elevation_m: runElevation ? parseInt(runElevation)   : undefined,
-          surface:     runSurface   || undefined,
-          pace_min_km: paceMinkm    ? parseFloat(paceMinkm.toFixed(2)) : undefined,
-        } : undefined,
+        meta: hyroxMeta ?? runMeta,
       })
-      toast.success('Séance enregistrée ! 🎉')
       setSavedId(id)
+
+      // Détecter les PRs
+      const prBlocks = isHaltero ? halteroBlocks
+        .filter(b => (b.movement_id || b.is_complex) && b.sets.some(s => s.weight_kg))
+        .map(b => ({
+          movement_id: b.movement_id ?? '', movement_label: b.movement_label,
+          block_type: 'strength' as const,
+          sets: b.sets.filter(s => s.weight_kg).map(s => ({ reps: s.reps, weight_kg: s.weight_kg }))
+        })) : prepItems
+          .filter((p): p is PrepBlock => p.kind === 'block' && !!p.movementId)
+          .map(b => ({
+            movement_id: b.movementId, movement_label: b.movementLabel,
+            block_type: 'strength' as const,
+            sets: b.sets.filter(s => s.weight).map(s => ({
+              reps: s.reps ? parseInt(s.reps) : undefined,
+              weight_kg: parseFloat(s.weight)
+            }))
+          }))
+
+      if (prBlocks.length > 0) {
+        const newPRs = await detectAndSavePRs(id, prBlocks)
+        if (newPRs.length > 0) {
+          toast.success(`🏆 ${newPRs.length > 1 ? 'Nouveaux PRs' : 'Nouveau PR'} : ${newPRs.map(p => `${p.movementName} ${p.weight}kg`).join(', ')}`)
+        } else {
+          toast.success('Séance enregistrée ! 🎉')
+        }
+      } else {
+        toast.success('Séance enregistrée ! 🎉')
+      }
     } catch (e) { console.error(e); toast.error('Erreur lors de la sauvegarde.') }
     finally { setSaving(false) }
   }
 
   // ── Loading ─────────────────────────────────────────────
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-gray-400 text-sm">Chargement...</p>
+    <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+      <div className="w-8 h-8 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
     </div>
   )
 
-  // ── Confirmation ─────────────────────────────────────────
-  if (savedId) {
-    const t = sessionTypes.find(t => t.id === typeId)
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="max-w-sm w-full bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100">
-          <div className="text-5xl mb-4">✅</div>
-          <h2 className="text-xl font-bold mb-2">Séance enregistrée !</h2>
-          <p className="text-gray-500 text-sm mb-1">{t?.emoji} {t?.name}</p>
-          <p className="text-gray-400 text-sm mb-6">{date}{duration ? ` · ${duration} min` : ''}{isRun && runDistance ? ` · ${runDistance} km` : ''}</p>
-          <div className="flex gap-3">
-            <Link href="/" className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold text-center">← Dashboard</Link>
-            <button onClick={reset} className="flex-1 text-white rounded-xl py-3 font-bold text-sm" style={{ background: 'var(--theme-primary, #F97316)' }}>+ Nouvelle</button>
-          </div>
+  // ── Saved ───────────────────────────────────────────────
+  if (savedId) return (
+    <div className="flex items-center justify-center px-4" style={{ minHeight: '80dvh' }}>
+      <div className="w-full max-w-sm text-center space-y-5">
+        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-4xl mx-auto">✓</div>
+        <div>
+          <h2 className="text-2xl font-black text-gray-900 mb-1">Séance enregistrée</h2>
+          <p className="text-sm text-gray-400">Beau travail !</p>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={reset}
+            className="flex-1 py-3.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-700 hover:bg-gray-100 transition">
+            + Nouvelle
+          </button>
+          <Link href={`/sessions/${savedId}`}
+            className="flex-1 py-3.5 rounded-xl text-sm font-bold text-white text-center transition"
+            style={{ background: 'var(--theme-primary, #F97316)' }}>
+            Voir la séance →
+          </Link>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 
-  // ── Formulaire ───────────────────────────────────────────
+  // ── Steps bar ───────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50 pb-24">
       <div className="max-w-lg mx-auto px-4">
 
-        {/* Top bar */}
-        <div className="flex items-center justify-between pt-5 pb-4 border-b border-gray-100">
-          <Link href="/" className="text-sm text-gray-400 hover:text-gray-700 transition">← Dashboard</Link>
-          <span className="text-sm font-bold text-gray-700">Nouvelle séance</span>
-          <div className="w-24" />
-        </div>
-
-        {/* Progress */}
-        <div className="pt-4 pb-5">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-bold text-gray-700">{STEPS[step].label}</span>
-            <span className="text-sm text-gray-400">{step + 1} / {STEPS.length}</span>
+        {/* Header */}
+        <div className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-xl font-black text-gray-900">
+              {curKey === 'sleep' && 'Nouvelle séance'}
+              {curKey === 'type'  && 'Type de séance'}
+              {curKey === 'strength'     && 'Séance'}
+              {curKey === 'halterophilie'&& 'Haltérophilie'}
+              {curKey === 'run'          && 'Run'}
+              {curKey === 'hyrox'        && 'Hyrox'}
+              {curKey === 'wod'          && 'WOD'}
+              {curKey === 'post'         && 'Post-séance'}
+            </h1>
+            <span className="text-xs text-gray-400 font-medium">{step + 1} / {STEPS.length}</span>
           </div>
-          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${((step + 1) / STEPS.length) * 100}%`, background: 'var(--theme-primary, #F97316)' }} />
+          <div className="flex gap-1">
+            {STEPS.map((_, i) => (
+              <div key={i} className="flex-1 h-1 rounded-full transition-colors"
+                style={{ background: i <= step ? 'var(--theme-primary, #F97316)' : '#E5E7EB' }} />
+            ))}
           </div>
         </div>
 
@@ -366,19 +513,20 @@ export default function LogPage() {
           <div className="space-y-6">
             <div>
               <label className={labelCls}>Date <span className="text-orange-400">*</span></label>
-              <input type="date" value={date} onChange={e => { setDate(e.target.value); setError(null) }}
-                className="rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>Sommeil — {sleepHours}h</label>
-              <input type="range" min="2" max="12" step="0.5" value={sleepHours}
-                onChange={e => setSleepHours(parseFloat(e.target.value))} className="w-full accent-orange-500" />
-              <div className="flex justify-between text-xs text-gray-400 mt-1"><span>2h</span><span>12h</span></div>
+              <label className={labelCls}>Nuit de sommeil — {sleepHours}h</label>
+              <input type="range" min={3} max={12} step={0.5} value={sleepHours} onChange={e => setSleepHours(parseFloat(e.target.value))}
+                className="w-full accent-orange-400" />
+              <div className="flex justify-between text-xs text-gray-400 mt-1"><span>3h</span><span>12h</span></div>
             </div>
             <div>
-              <label className={labelCls}>Énergie avant séance</label>
+              <label className={labelCls}>Énergie au réveil</label>
               <div className="flex gap-2">
-                {[{v:1,l:'💤'},{v:2,l:'😪'},{v:3,l:'😐'},{v:4,l:'⚡'},{v:5,l:'🔥'}].map(o => (
+                {[
+                  { v: 1, l: '😴' }, { v: 2, l: '😕' }, { v: 3, l: '😐' }, { v: 4, l: '😊' }, { v: 5, l: '⚡' }
+                ].map(o => (
                   <button key={o.v} onClick={() => setEnergy(o.v)}
                     className={`flex-1 py-2.5 rounded-xl border text-xl transition ${energy === o.v ? 'border-orange-400 bg-orange-50' : 'border-gray-300 bg-white'}`}>
                     {o.l}
@@ -451,6 +599,289 @@ export default function LogPage() {
                 ))}
               </div>
             </div>
+
+            {/* Intervals — Fractionné */}
+            {runType === 'Fractionné' && (
+              <div>
+                <label className={labelCls}>Intervals</label>
+                <div className="space-y-3">
+                  {runIntervals.map((iv, i) => {
+                    const pace = ivPace(iv.distance, iv.timeMin, iv.timeSec)
+                    return (
+                      <div key={i} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Rep {i+1}</span>
+                          {runIntervals.length > 1 && (
+                            <button onClick={() => setRunIntervals(iv => iv.filter((_,idx) => idx !== i))} className="text-gray-300 hover:text-red-400 text-base">×</button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Distance</label>
+                            <input type="text" placeholder="400m" value={iv.distance}
+                              onChange={e => updInterval(i, { distance: e.target.value })}
+                              className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Temps mm:ss</label>
+                            <div className="flex items-center gap-0.5">
+                              <input type="number" placeholder="mm" value={iv.timeMin}
+                                onChange={e => updInterval(i, { timeMin: e.target.value })}
+                                className="w-full rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              <span className="text-gray-400 text-xs">:</span>
+                              <input type="number" placeholder="ss" value={iv.timeSec}
+                                onChange={e => updInterval(i, { timeSec: e.target.value })}
+                                className="w-full rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-1">Repos</label>
+                            <input type="text" placeholder="2'" value={iv.rest}
+                              onChange={e => updInterval(i, { rest: e.target.value })}
+                              className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                          </div>
+                        </div>
+                        {pace && (
+                          <p className="text-xs font-bold text-green-600">⏱ Allure : {pace}</p>
+                        )}
+                      </div>
+                    )
+                  })}
+                  <button onClick={() => setRunIntervals(ivs => [...ivs, mkRunIv()])}
+                    className="w-full py-2.5 border border-dashed border-gray-300 text-gray-400 rounded-xl text-xs font-bold hover:border-orange-300 hover:text-orange-400 transition">
+                    + Rep
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ HALTÉROPHILIE ══════════════════════════════ */}
+        {curKey === 'halterophilie' && (
+          <div className="space-y-4">
+
+            {/* Photo */}
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            {photoPreview ? (
+              <div className="relative rounded-xl overflow-hidden border border-gray-200">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoPreview} alt="Tableau" className="w-full max-h-44 object-cover" />
+                {analyzingPhoto && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center gap-2">
+                    <span className="animate-spin text-xl">⏳</span>
+                    <span className="text-sm font-semibold text-gray-700">Analyse en cours...</span>
+                  </div>
+                )}
+                {!analyzingPhoto && (
+                  <button onClick={() => { setPhotoPreview(null); if (photoInputRef.current) photoInputRef.current.value = '' }}
+                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-400 transition text-sm">×</button>
+                )}
+              </div>
+            ) : (
+              <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
+                className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md"
+                style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
+                <span className="text-2xl">📷</span>
+                <div className="text-left">
+                  <p className="text-sm font-black">Analyser le tableau</p>
+                  <p className="text-xs font-normal opacity-80">Pré-remplit la séance automatiquement</p>
+                </div>
+              </button>
+            )}
+
+            {/* Échauffement */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔥</span>
+                  <span className="text-sm font-bold text-gray-700">Échauffement</span>
+                </div>
+                <span className="text-xs text-gray-400">optionnel</span>
+              </div>
+              <textarea rows={2} value={warmupNotes} onChange={e => setWarmupNotes(e.target.value)}
+                placeholder="Ex: Activation épaules, snatch balance, 3×3 à 60%..."
+                className={inputCls + ' resize-none'} />
+            </div>
+
+            {/* Notation tempo (aide) */}
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3">
+              <p className="text-xs font-bold text-blue-700 mb-1">Notation tempo @XXXX</p>
+              <p className="text-xs text-blue-600">Ex: <span className="font-mono font-bold">@30X1</span> → 3s descente · 0 bas · explosif haut · 1s haut</p>
+            </div>
+
+            {/* Blocs */}
+            {hBlocks.map((block, bi) => (
+              <div key={block.id} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+                {/* Header */}
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {bi + 1}
+                  </span>
+                  <span className="text-sm font-bold text-gray-700 flex-1">
+                    {block.isComplex ? (block.complexLabel || 'Complexe') : (block.movementLabel || 'Mouvement')}
+                  </span>
+                  {hBlocks.length > 1 && (
+                    <button onClick={() => removeHBlock(block.id)} className="text-gray-300 hover:text-red-400 text-xl leading-none">×</button>
+                  )}
+                </div>
+
+                {/* Simple / Complex toggle */}
+                <div className="flex gap-2">
+                  <button onClick={() => updHBlock(block.id, { isComplex: false })}
+                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${!block.isComplex ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-400'}`}>
+                    Mouvement unique
+                  </button>
+                  <button onClick={() => updHBlock(block.id, { isComplex: true })}
+                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${block.isComplex ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-400'}`}>
+                    Complexe
+                  </button>
+                </div>
+
+                {/* Movement or complex input */}
+                {block.isComplex ? (
+                  <input type="text"
+                    placeholder="ex: Clean + Front Squat ×2 + Jerk"
+                    value={block.complexLabel}
+                    onChange={e => updHBlock(block.id, { complexLabel: e.target.value })}
+                    className={inputCls} />
+                ) : (
+                  <MovementSearch value={block.movementLabel}
+                    onChange={m => updHBlock(block.id, { movementId: m.id, movementLabel: m.name })} />
+                )}
+
+                {/* 1RM référence */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 flex-shrink-0">1RM réf :</span>
+                  <input type="number" placeholder="—" value={block.rm1}
+                    onChange={e => updHBlock(block.id, { rm1: e.target.value })}
+                    className="w-20 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <span className="text-xs text-gray-400">kg</span>
+                  <span className="text-xs text-gray-300 ml-1">→ auto %RM</span>
+                </div>
+
+                {/* Sets */}
+                <div>
+                  {/* Column headers */}
+                  <div className="grid grid-cols-[18px_1fr_1fr_56px_36px_68px_20px] gap-1 text-[9px] text-gray-400 uppercase font-semibold px-0.5 mb-1.5">
+                    <span /><span>Reps</span><span>Poids</span><span>Tempo</span><span>%</span><span>Exec</span><span />
+                  </div>
+                  <div className="space-y-1.5">
+                    {block.sets.map((set, si) => {
+                      const autoKg = block.rm1 && set.pct_rm
+                        ? Math.round(parseFloat(block.rm1) * parseInt(set.pct_rm) / 100 * 2) / 2
+                        : null
+                      return (
+                        <div key={si}>
+                          <div className="grid grid-cols-[18px_1fr_1fr_56px_36px_68px_20px] gap-1 items-center">
+                            <span className="text-[10px] text-gray-300 font-bold text-center">S{si+1}</span>
+                            <input type="number" placeholder="—" value={set.reps}
+                              onChange={e => updHSet(block.id, si, { reps: e.target.value })}
+                              className="rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                            <div>
+                              <input type="number" step="0.5" placeholder="—" value={set.weight}
+                                onChange={e => updHSet(block.id, si, { weight: e.target.value })}
+                                className="w-full rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              {autoKg !== null && !set.weight && (
+                                <p className="text-[9px] text-orange-400 text-center mt-0.5">{autoKg}kg</p>
+                              )}
+                            </div>
+                            <input type="text" placeholder="@30X1" value={set.tempo}
+                              onChange={e => updHSet(block.id, si, { tempo: e.target.value })}
+                              className="rounded-lg border border-gray-300 px-1 py-1.5 text-[11px] text-center font-mono focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                            <input type="number" placeholder="%" value={set.pct_rm}
+                              onChange={e => updHSet(block.id, si, { pct_rm: e.target.value })}
+                              className="rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                            <div className="flex gap-0.5">
+                              {([
+                                { v: 'good', l: '✓', active: 'bg-green-100 text-green-600 border-green-300' },
+                                { v: 'ok',   l: '~', active: 'bg-amber-100 text-amber-600 border-amber-300' },
+                                { v: 'fail', l: '✗', active: 'bg-red-100 text-red-600 border-red-300'       },
+                              ] as { v: 'good'|'ok'|'fail'; l: string; active: string }[]).map(o => (
+                                <button key={o.v}
+                                  onClick={() => updHSet(block.id, si, { execution: set.execution === o.v ? '' : o.v })}
+                                  className={`flex-1 py-1 text-xs font-bold rounded border transition ${set.execution === o.v ? o.active : 'border-gray-200 bg-white text-gray-300'}`}>
+                                  {o.l}
+                                </button>
+                              ))}
+                            </div>
+                            <button onClick={() => {
+                              if (block.sets.length > 1)
+                                updHBlock(block.id, { sets: block.sets.filter((_, i) => i !== si) })
+                            }} className="text-gray-300 hover:text-gray-500 text-base text-center">×</button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <button onClick={() => updHBlock(block.id, { sets: [...block.sets, { reps: '', weight: '', tempo: '', pct_rm: '', execution: '' }] })}
+                    className="w-full mt-2 py-1.5 text-xs text-gray-400 border border-dashed border-gray-300 rounded-lg hover:border-orange-300 hover:text-orange-400 transition">
+                    + Série
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <button onClick={() => setHBlocks(bs => [...bs, mkHBlock(Date.now())])}
+              className="w-full py-3 border-2 border-dashed border-orange-200 text-orange-400 rounded-2xl text-sm font-bold hover:border-orange-400 transition flex items-center justify-center gap-2">
+              <span>🏋️</span> Ajouter un exercice
+            </button>
+          </div>
+        )}
+
+        {/* ══ HYROX ══════════════════════════════════════ */}
+        {curKey === 'hyrox' && (
+          <div className="space-y-4">
+
+            {/* Total time */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <label className={labelCls}>Temps total</label>
+              <input type="text" placeholder="ex: 1:12:45" value={hyroxTotalTime}
+                onChange={e => setHyroxTotalTime(e.target.value)}
+                className={inputCls} />
+            </div>
+
+            {/* Format reminder */}
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
+              <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mb-0.5">Format Hyrox</p>
+              <p className="text-xs text-gray-500">1km run → station → 1km run → station × 8</p>
+            </div>
+
+            {/* Stations */}
+            {HYROX_STATIONS.map((station, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-200 p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">{station.icon}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-gray-800">{station.name}</p>
+                    <p className="text-xs text-gray-400">{station.distance}</p>
+                  </div>
+                  <span className="text-xs font-bold text-gray-300 bg-gray-100 rounded-full px-2 py-0.5">#{i+1}</span>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-400 mb-1">Temps station</label>
+                    <div className="flex items-center gap-1">
+                      <input type="number" placeholder="mm" value={hyroxStations[i].timeMin}
+                        onChange={e => updStation(i, { timeMin: e.target.value })}
+                        className="w-14 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                      <span className="text-gray-400 font-bold">:</span>
+                      <input type="number" placeholder="ss" value={hyroxStations[i].timeSec}
+                        onChange={e => updStation(i, { timeSec: e.target.value })}
+                        className="w-14 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    </div>
+                  </div>
+                  {station.hasWeight && (
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Charge (kg)</label>
+                      <input type="number" placeholder="—" value={hyroxStations[i].weight}
+                        onChange={e => updStation(i, { weight: e.target.value })}
+                        className="w-20 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -458,7 +889,7 @@ export default function LogPage() {
         {curKey === 'strength' && (
           <div className="space-y-4">
 
-            {/* ── Photo ── */}
+            {/* Photo */}
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
             {photoPreview ? (
               <div className="relative rounded-xl overflow-hidden border border-gray-200">
@@ -487,7 +918,7 @@ export default function LogPage() {
               </button>
             )}
 
-            {/* ── Échauffement ── */}
+            {/* Échauffement */}
             <div className="bg-white rounded-2xl border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -501,12 +932,11 @@ export default function LogPage() {
                 className={inputCls + ' resize-none'} />
             </div>
 
-            {/* ── Préparation (notes + blocs) ── */}
+            {/* Préparation */}
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Préparation technique & Force — optionnel</p>
               <div className="space-y-3">
                 {prepItems.map((item, idx) => item.kind === 'note' ? (
-                  /* ─ Note libre ─ */
                   <div key={item.id} className="bg-white rounded-2xl border border-blue-100 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">🎯</span>
@@ -519,7 +949,6 @@ export default function LogPage() {
                       className={inputCls + ' resize-none'} autoFocus={idx === prepItems.length - 1 && item.text === ''} />
                   </div>
                 ) : (
-                  /* ─ Bloc force ─ */
                   <div key={item.id} className="bg-white rounded-2xl border border-gray-200 p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
@@ -586,12 +1015,13 @@ export default function LogPage() {
 
         {/* ══ WOD ════════════════════════════════════════ */}
         {curKey === 'wod' && (
-          <div className="space-y-5">
+          <div className="space-y-4">
+
             {/* Toggle WOD */}
             <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
               <div>
                 <p className="font-bold text-sm text-gray-800">WOD aujourd&apos;hui ?</p>
-                <p className="text-xs text-gray-400 mt-0.5">Conditioning, partie métabolique</p>
+                <p className="text-xs text-gray-400 mt-0.5">Conditioning / partie métabolique</p>
               </div>
               <button onClick={() => setHasWod(v => !v)}
                 className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ${hasWod ? 'bg-orange-500' : 'bg-gray-200'}`}>
@@ -599,112 +1029,93 @@ export default function LogPage() {
               </button>
             </div>
 
-            {hasWod && (
-              <>
-                {/* Format */}
+            {hasWod && (<>
+
+              {/* ① Format + durée */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
                 <div>
-                  <label className={labelCls}>Format</label>
+                  <label className={labelCls}>① Format</label>
                   <div className="flex flex-wrap gap-2">
                     {WOD_FORMATS.map(f => (
-                      <button key={f} onClick={() => setWodFormat(f)}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${wodFormat === f ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-300 bg-white text-gray-600'}`}>{f}</button>
+                      <button key={f} onClick={() => setWodFormat(f === wodFormat ? '' : f)}
+                        className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition ${
+                          wodFormat === f
+                            ? 'bg-orange-500 border-orange-500 text-white'
+                            : 'border-gray-200 bg-white text-gray-600'
+                        }`}>
+                        {f}
+                      </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Durée (si format timed) */}
                 {TIMED_FORMATS.includes(wodFormat) && (
                   <div>
                     <label className={labelCls}>Durée</label>
                     <div className="flex flex-wrap gap-2">
                       {DURATION_CHIPS.map(d => (
-                        <button key={d} onClick={() => setWodTimeCap(String(d))}
+                        <button key={d} onClick={() => setWodTimeCap(wodTimeCap === String(d) ? '' : String(d))}
                           className={`px-3 py-2 rounded-xl border font-bold text-sm transition ${wodTimeCap === String(d) ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-600'}`}>
                           {d}&apos;
                         </button>
                       ))}
-                      <input type="number" placeholder="autre" value={DURATION_CHIPS.includes(parseInt(wodTimeCap)) ? '' : wodTimeCap}
+                      <input type="number" placeholder="autre"
+                        value={DURATION_CHIPS.includes(parseInt(wodTimeCap)) ? '' : wodTimeCap}
                         onChange={e => setWodTimeCap(e.target.value)}
                         className="w-20 rounded-xl border border-gray-400 bg-white px-2 py-2 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                     </div>
                   </div>
                 )}
+              </div>
 
-                {/* Mouvements — mode guidé ou libre */}
-                {wodFreeMode ? (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className={labelCls + ' mb-0'}>Description</label>
-                      <button onClick={() => setWodFreeMode(false)} className="text-xs text-orange-500 font-semibold">← Mode guidé</button>
-                    </div>
-                    <textarea rows={5} value={wodDesc} onChange={e => setWodDesc(e.target.value)}
-                      placeholder="Ex: 4 rounds — 10 Thrusters 43kg / 10 TTB / 20 DU..."
-                      className={inputCls + ' resize-none'} />
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className={labelCls + ' mb-0'}>Mouvements</label>
-                      <button onClick={() => setWodFreeMode(true)} className="text-xs text-orange-500 font-semibold">Saisie libre →</button>
-                    </div>
-
-                    {/* Chips suggestions */}
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {COMMON_MOVES.map(m => (
-                        <button key={m} onClick={() => {
-                          const lastEmpty = wodMoves.findIndex(mv => !mv.trim())
-                          if (lastEmpty >= 0) {
-                            setWodMoves(ms => ms.map((mv, i) => i === lastEmpty ? m : mv))
-                          } else {
-                            setWodMoves(ms => [...ms, m])
-                          }
-                        }}
-                          className="px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-500 hover:border-orange-300 hover:text-orange-500 transition">
-                          {m}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Liste des mouvements */}
-                    <div className="space-y-2">
-                      {wodMoves.map((move, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="text-xs text-gray-300 font-bold w-5 text-center">{i + 1}</span>
-                          <input type="text" value={move}
-                            onChange={e => setWodMoves(ms => ms.map((m, j) => j === i ? e.target.value : m))}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') { e.preventDefault(); setWodMoves(ms => [...ms, '']) }
-                            }}
-                            placeholder="Ex: 15 Thrusters 43kg"
-                            className="flex-1 rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                          {wodMoves.length > 1 && (
-                            <button onClick={() => setWodMoves(ms => ms.filter((_, j) => j !== i))}
-                              className="text-gray-300 hover:text-red-400 text-xl leading-none flex-shrink-0">×</button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={() => setWodMoves(ms => [...ms, ''])}
-                      className="w-full mt-2 py-2 text-xs text-gray-400 border border-dashed border-gray-300 rounded-xl hover:border-orange-300 hover:text-orange-400 transition">
-                      + Mouvement
+              {/* ② Description */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <label className={labelCls}>② Mouvements du WOD</label>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {COMMON_MOVES.map(m => (
+                    <button key={m} onClick={() => setWodDesc(d => d ? d + '\n' + m : m)}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-500 hover:border-orange-300 hover:text-orange-500 transition">
+                      + {m}
                     </button>
-                  </div>
-                )}
-
-                {/* Résultat + RX */}
-                <div>
-                  <label className={labelCls}>Résultat / Score</label>
-                  <input type="text" value={wodResult} onChange={e => setWodResult(e.target.value)}
-                    placeholder="Ex: 4+12, 12'35, 187 reps..." className={inputCls} />
-                </div>
-                <div className="flex gap-2">
-                  {[{v:true,l:'RX',a:'border-green-400 bg-green-50 text-green-700'},{v:false,l:'Scaled',a:'border-amber-400 bg-amber-50 text-amber-700'}].map(o => (
-                    <button key={o.l} onClick={() => setWodRx(o.v)}
-                      className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition ${wodRx === o.v ? o.a : 'border-gray-300 bg-white text-gray-400'}`}>{o.l}</button>
                   ))}
                 </div>
-              </>
-            )}
+                <textarea rows={5} value={wodDesc} onChange={e => setWodDesc(e.target.value)}
+                  placeholder={
+                    wodFormat === 'AMRAP'    ? `AMRAP ${wodTimeCap || '15'}'\n21 Thrusters 43kg\n21 Pull-ups\n21 Box Jumps 60cm` :
+                    wodFormat === 'EMOM'     ? `EMOM ${wodTimeCap || '12'}\nMin paire : 10 KB Swings 24kg\nMin impaire : 15 Squats` :
+                    wodFormat === 'For Time' ? `For Time (cap ${wodTimeCap || '20'}')\n3 rounds :\n21 Thrusters 43kg\n21 Pull-ups` :
+                    wodFormat === 'Rounds'   ? `5 rounds :\n10 Deadlift 100kg\n15 Burpees\n20 Box Jumps` :
+                    wodFormat === 'Tabata'   ? `Tabata ${wodTimeCap || '20'}/10\nMouvement 1\nMouvement 2` :
+                    '3 rounds :\n15 Thrusters 43kg\n15 Pull-ups\n15 Box Jumps 60cm'
+                  }
+                  className={inputCls + ' resize-none'} />
+              </div>
+
+              {/* ③ Résultat + RX */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+                <label className={labelCls}>③ Résultat</label>
+                <input type="text" value={wodResult} onChange={e => setWodResult(e.target.value)}
+                  placeholder={
+                    wodFormat === 'AMRAP'    ? 'Rounds + reps  ex : 4 rounds + 12 reps' :
+                    wodFormat === 'For Time' ? 'Temps  ex : 12\'35"' :
+                    wodFormat === 'EMOM'     ? 'ex : Complété / Raté min 9' :
+                    'Score, temps ou reps...'
+                  }
+                  className={inputCls} />
+                <div className="flex gap-2">
+                  {[
+                    { v: true,  l: '✓ RX',   a: 'border-green-400 bg-green-50 text-green-700' },
+                    { v: false, l: 'Scaled', a: 'border-amber-400 bg-amber-50 text-amber-700' },
+                  ].map(o => (
+                    <button key={String(o.v)} onClick={() => setWodRx(o.v)}
+                      className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition ${wodRx === o.v ? o.a : 'border-gray-300 bg-white text-gray-400'}`}>
+                      {o.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </>)}
           </div>
         )}
 
