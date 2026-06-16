@@ -167,26 +167,6 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Fatigue */}
-        {!loading && fatigue && (
-          <div className={`rounded-2xl border p-4 mb-4 flex items-center gap-4 ${fatigue.bg} ${fatigue.border}`}>
-            <div className="relative w-12 h-12 flex-shrink-0">
-              <svg viewBox="0 0 36 36" className="w-12 h-12 -rotate-90">
-                <circle cx="18" cy="18" r="15" fill="none" stroke="#E5E7EB" strokeWidth="3" />
-                <circle cx="18" cy="18" r="15" fill="none" stroke={fatigue.color} strokeWidth="3"
-                  strokeDasharray={`${(fatigue.score / 100) * 94} 94`} strokeLinecap="round" />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-black" style={{ color: fatigue.color }}>
-                {fatigue.score}
-              </span>
-            </div>
-            <div>
-              <p className={`text-sm font-bold ${fatigue.text}`}>Charge actuelle · {fatigue.label}</p>
-              <p className={`text-xs mt-0.5 ${fatigue.text} opacity-70`}>RPE moyen des 7 derniers jours</p>
-            </div>
-          </div>
-        )}
-
         {/* Semaine courante */}
         {loading ? <Skeleton className="h-44 mb-4" /> : (
           <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">

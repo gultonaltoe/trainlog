@@ -1,416 +1,272 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
-type SessionType = { name: string; emoji: string; color: string }
-type Movement    = { name: string; category: string }
-type BlockSet    = { set_number: number; reps: number | null; weight_kg: number | null }
-type Block       = { id: string; order_index: number; movements: Movement | null; block_sets: BlockSet[] }
-type Wod         = { id: string; format_label: string; time_cap_min: number | null; description: string | null; result_detail: string | null; is_rx: boolean }
-type PainAlert   = { body_part_label: string; severity: number }
-type Session     = {
-  id: string; date: string; notes: string | null; duration_min: number | null
-  sleep_hours: number | null; energy_level: number | null; rpe: number | null; feeling_post: number | null
-  session_types: SessionType
+type Session = {
+  id: string; date: string; rpe: number | null; duration_min: number | null
+  session_types: { name: string; emoji: string; color: string }
+  session_pain_alerts: Array<{ id: string }>
 }
 
-const RPE_LABELS  = ['','Très facile','Facile','Un peu dur','Modéré','Modéré+','Dur','Très dur','Intense','Extrême','Maximum']
-const RPE_COLORS  = ['','#3B82F6','#3B82F6','#3B82F6','#F59E0B','#F59E0B','#D97706','#EA580C','#EA580C','#EF4444','#DC2626']
-const FEEL_EMOJIS = ['','😩','😕','😐','😊','🤩']
-const FEEL_LABELS = ['','Mauvais','Passable','Correct','Bien','Excellent']
-const SEV_COLORS  = ['','bg-yellow-100 text-yellow-700','bg-orange-100 text-orange-700','bg-red-100 text-red-700']
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+const DAYS_FR   = ['L','M','M','J','V','S','D']
+const RPE_COLORS = ['','#3B82F6','#3B82F6','#3B82F6','#F59E0B','#F59E0B','#D97706','#EA580C','#EA580C','#EF4444','#DC2626']
 
-function parseNotes(raw: string | null) {
-  if (!raw) return { warmup: null, skill: null, other: null }
-  let warmup = null, skill = null
-  const others: string[] = []
-  for (const line of raw.split('\n')) {
-    if (line.startsWith('Échauffement:'))   warmup = line.replace('Échauffement:', '').trim()
-    else if (line.startsWith('Skill/Force:')) skill  = line.replace('Skill/Force:', '').trim()
-    else if (line.trim()) others.push(line.trim())
-  }
-  return { warmup, skill, other: others.length > 0 ? others.join('\n') : null }
+function toDateStr(d: Date) { return d.toISOString().split('T')[0] }
+function formatDateShort(str: string) {
+  const d = new Date(str + 'T00:00:00')
+  const today = new Date(); today.setHours(0,0,0,0)
+  const diff = Math.round((today.getTime() - d.getTime()) / 86400000)
+  if (diff === 0) return "Aujourd'hui"
+  if (diff === 1) return 'Hier'
+  return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
 }
-
+function getMonth(dateStr: string) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+}
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1) }
-function formatDate(str: string) {
-  return new Date(str + 'T00:00:00').toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-  })
+
+function getCalendarDays(year: number, month: number): (number | null)[] {
+  const first   = new Date(year, month, 1)
+  const last    = new Date(year, month + 1, 0)
+  const startDow = (first.getDay() + 6) % 7
+  const days: (number | null)[] = []
+  for (let i = 0; i < startDow; i++) days.push(null)
+  for (let d = 1; d <= last.getDate(); d++) days.push(d)
+  while (days.length % 7 !== 0) days.push(null)
+  return days
 }
 
-const card = "bg-white rounded-2xl border border-gray-200 p-4 mb-3"
-const inputCls = "w-full rounded-xl border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
-const labelCls = "text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 block"
+export default function SessionsPage() {
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [view, setView]         = useState<'calendar' | 'list'>('calendar')
+  const [filter, setFilter]     = useState('Tout')
 
-export default function SessionDetailPage() {
-  const params = useParams()
-  const id     = Array.isArray(params.id) ? params.id[0] : params.id as string
-  const router = useRouter()
+  const now   = new Date()
+  const [calYear,  setCalYear]  = useState(now.getFullYear())
+  const [calMonth, setCalMonth] = useState(now.getMonth())
 
-  const [session,    setSession]    = useState<Session | null>(null)
-  const [blocks,     setBlocks]     = useState<Block[]>([])
-  const [wod,        setWod]        = useState<Wod | null>(null)
-  const [painAlerts, setPainAlerts] = useState<PainAlert[]>([])
-  const [loading,    setLoading]    = useState(true)
-  const [notFound,   setNotFound]   = useState(false)
+  useEffect(() => {
+    supabase.from('sessions')
+      .select('id, date, rpe, duration_min, session_types(name, emoji, color), session_pain_alerts(id)')
+      .is('deleted_at', null)
+      .order('date', { ascending: false })
+      .limit(500)
+      .then(({ data }) => {
+        setSessions((data ?? []) as unknown as Session[])
+        setLoading(false)
+      })
+  }, [])
 
-  // Edit
-  const [editing,      setEditing]      = useState(false)
-  const [editDuration, setEditDuration] = useState('')
-  const [editRpe,      setEditRpe]      = useState(7)
-  const [editFeeling,  setEditFeeling]  = useState(3)
-  const [editWarmup,   setEditWarmup]   = useState('')
-  const [editSkill,    setEditSkill]    = useState('')
-  const [editNotes,    setEditNotes]    = useState('')
-  const [editResult,   setEditResult]   = useState('')
-  const [editRx,       setEditRx]       = useState(true)
-  const [saving,       setSaving]       = useState(false)
+  const filtered = filter === 'Tout' ? sessions : sessions.filter(s => s.session_types.name === filter)
+  const presentTypes = ['Tout', ...Array.from(new Set(sessions.map(s => s.session_types.name)))]
 
-  // Delete
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting,      setDeleting]      = useState(false)
+  // ── Calendar helpers ────────────────────────────────────
+  const sessionsByDate: Record<string, Session[]> = {}
+  sessions.forEach(s => {
+    if (!sessionsByDate[s.date]) sessionsByDate[s.date] = []
+    sessionsByDate[s.date].push(s)
+  })
 
-  const loadData = () => {
-    if (!id) return
-    Promise.all([
-      supabase.from('sessions')
-        .select('id, date, notes, duration_min, sleep_hours, energy_level, rpe, feeling_post, session_types(name, emoji, color)')
-        .eq('id', id).maybeSingle(),
-      supabase.from('session_blocks')
-        .select('id, order_index, movements(name, category), block_sets(set_number, reps, weight_kg)')
-        .eq('session_id', id).order('order_index', { ascending: true }),
-      supabase.from('wods')
-        .select('id, format_label, time_cap_min, description, result_detail, is_rx')
-        .eq('session_id', id).limit(1).maybeSingle(),
-      supabase.from('session_pain_alerts')
-        .select('body_part_label, severity').eq('session_id', id),
-    ]).then(([s, b, w, p]) => {
-      if (!s.data) { setNotFound(true); setLoading(false); return }
-      const sess = s.data as unknown as Session
-      const wodData = w.data as Wod | null
-      const parsed  = parseNotes(sess.notes)
-      setSession(sess)
-      setBlocks((b.data ?? []) as unknown as Block[])
-      setWod(wodData)
-      setPainAlerts((p.data ?? []) as PainAlert[])
-      setEditDuration(sess.duration_min ? String(sess.duration_min) : '')
-      setEditRpe(sess.rpe ?? 7)
-      setEditFeeling(sess.feeling_post ?? 3)
-      setEditWarmup(parsed.warmup ?? '')
-      setEditSkill(parsed.skill   ?? '')
-      setEditNotes(parsed.other   ?? '')
-      setEditResult(wodData?.result_detail ?? '')
-      setEditRx(wodData?.is_rx ?? true)
-      setLoading(false)
-    })
+  const calDays  = getCalendarDays(calYear, calMonth)
+  const todayStr = toDateStr(now)
+  const prevMonth = () => {
+    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11) }
+    else setCalMonth(m => m - 1)
   }
-
-  useEffect(() => { loadData() }, [id])
-
-  const handleSave = async () => {
-    if (!session) return
-    setSaving(true)
-    const newNotes = [
-      editWarmup ? `Échauffement: ${editWarmup}` : '',
-      editSkill  ? `Skill/Force: ${editSkill}`   : '',
-      editNotes,
-    ].filter(Boolean).join('\n') || null
-
-    await supabase.from('sessions').update({
-      rpe:          editRpe,
-      feeling_post: editFeeling,
-      duration_min: editDuration ? parseInt(editDuration) : null,
-      notes:        newNotes,
-      updated_at:   new Date().toISOString(),
-    }).eq('id', session.id)
-
-    if (wod) {
-      await supabase.from('wods').update({
-        result_detail: editResult || null,
-        is_rx:         editRx,
-      }).eq('id', wod.id)
-    }
-    setSaving(false)
-    setEditing(false)
-    loadData()
+  const nextMonth = () => {
+    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0) }
+    else setCalMonth(m => m + 1)
   }
+  const calMonthSessions = sessions.filter(s => {
+    const d = new Date(s.date + 'T00:00:00')
+    return d.getFullYear() === calYear && d.getMonth() === calMonth
+  })
 
-  const handleDelete = async () => {
-    if (!session) return
-    setDeleting(true)
-    await supabase.from('sessions')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', session.id)
-    router.push('/sessions')
-  }
-
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-400 text-sm">Chargement...</p>
-    </div>
-  )
-  if (notFound || !session) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-gray-400 text-sm mb-3">Séance introuvable.</p>
-        <button onClick={() => router.back()} className="text-orange-500 text-sm font-semibold">← Retour</button>
-      </div>
-    </div>
-  )
-
-  const t = session.session_types
-  const { warmup, skill, other } = parseNotes(session.notes)
-  const hasBlocks = blocks.some(b => b.movements)
+  // ── List helpers ────────────────────────────────────────
+  const groups: Record<string, Session[]> = {}
+  filtered.forEach(s => {
+    const m = getMonth(s.date)
+    if (!groups[m]) groups[m] = []
+    groups[m].push(s)
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-lg mx-auto px-4">
 
         {/* Header */}
-        <div className="pt-6 pb-4 flex items-center gap-3">
-          <button onClick={() => router.back()}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 flex-shrink-0">
-            ←
-          </button>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-            style={{ background: t?.color + '15', border: `1.5px solid ${t?.color}30` }}>
-            {t?.emoji}
+        <div className="pt-8 pb-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Historique</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{sessions.length} séance{sessions.length > 1 ? 's' : ''} au total</p>
           </div>
-          <div className="flex-1">
-            <h1 className="text-lg font-black text-gray-900">{t?.name}</h1>
-            <p className="text-sm text-gray-400">{capitalize(formatDate(session.date))}</p>
+          {/* Toggle vue */}
+          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+            <button onClick={() => setView('calendar')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${view === 'calendar' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>
+              📅 Mois
+            </button>
+            <button onClick={() => setView('list')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${view === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}>
+              📋 Liste
+            </button>
           </div>
-          <button onClick={() => setEditing(true)}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:text-orange-500 transition text-base">
-            ✏️
-          </button>
-          <button onClick={() => setConfirmDelete(true)}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:text-red-400 transition text-base">
-            🗑️
-          </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {[
-            { l: 'Durée',    v: session.duration_min ? `${session.duration_min}'` : '—', c: undefined },
-            { l: 'RPE',      v: String(session.rpe ?? '—'), sub: session.rpe ? RPE_LABELS[session.rpe] : null, c: session.rpe ? RPE_COLORS[session.rpe] : undefined },
-            { l: 'Ressenti', v: session.feeling_post ? FEEL_EMOJIS[session.feeling_post] : '—', c: undefined },
-            { l: 'Sommeil',  v: session.sleep_hours ? `${session.sleep_hours}h` : '—', c: undefined },
-          ].map(s => (
-            <div key={s.l} className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-              <p className="text-xl font-black" style={s.c ? { color: s.c } : { color: '#111827' }}>{s.v}</p>
-              {s.sub && <p className="text-xs text-gray-400 leading-tight mt-0.5 truncate">{s.sub}</p>}
-              <p className="text-xs text-gray-400 mt-0.5">{s.l}</p>
-            </div>
-          ))}
-        </div>
-
-        {warmup && (
-          <div className={card}>
-            <div className="flex items-center gap-2 mb-2"><span>🔥</span><span className="text-sm font-bold text-gray-700">Échauffement</span></div>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{warmup}</p>
-          </div>
-        )}
-        {skill && (
-          <div className={card}>
-            <div className="flex items-center gap-2 mb-2"><span>🎯</span><span className="text-sm font-bold text-gray-700">Skill & Technique</span></div>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{skill}</p>
-          </div>
-        )}
-        {hasBlocks && (
-          <div className={card}>
-            <div className="flex items-center gap-2 mb-3"><span>🏋️</span><span className="text-sm font-bold text-gray-700">Force & Technique</span></div>
-            <div className="space-y-3">
-              {blocks.filter(b => b.movements).map((block, bi, arr) => (
-                <div key={block.id}>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">{block.movements!.name}</p>
-                  {block.block_sets.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {[...block.block_sets].sort((a, b) => (a.set_number ?? 0) - (b.set_number ?? 0)).map((set, si) => (
-                        <div key={si} className="flex items-center gap-3 text-sm">
-                          <span className="text-xs text-gray-300 font-bold w-5">S{si+1}</span>
-                          <span className="font-semibold text-gray-700">{set.reps ? `${set.reps} reps` : '—'}</span>
-                          {set.weight_kg && <span className="text-gray-400">@ {set.weight_kg} kg</span>}
-                        </div>
-                      ))}
-                    </div>
-                  ) : <p className="text-sm text-gray-400 italic">Aucune série</p>}
-                  {bi < arr.length - 1 && <div className="border-t border-gray-100 mt-3" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {wod && (
-          <div className="rounded-2xl border p-4 mb-3" style={{ background: (t?.color ?? '#F97316') + '08', borderColor: (t?.color ?? '#F97316') + '30' }}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span>⚡</span>
-                <span className="text-sm font-bold text-gray-700">WOD</span>
-                {wod.format_label && (
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: t?.color ?? '#F97316' }}>
-                    {wod.format_label}{wod.time_cap_min ? ` ${wod.time_cap_min}'` : ''}
-                  </span>
-                )}
+        {/* ── VUE CALENDRIER ── */}
+        {view === 'calendar' && (
+          <div>
+            {/* Navigation mois */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition text-lg">←</button>
+                <h2 className="text-base font-black text-gray-900">{MONTHS_FR[calMonth]} {calYear}</h2>
+                <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition text-lg">→</button>
               </div>
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${wod.is_rx ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                {wod.is_rx ? 'RX' : 'Scaled'}
-              </span>
+
+              {/* Jours de la semaine */}
+              <div className="grid grid-cols-7 mb-2">
+                {DAYS_FR.map((d, i) => (
+                  <div key={i} className="text-center text-xs font-bold text-gray-400 py-1">{d}</div>
+                ))}
+              </div>
+
+              {/* Grille jours */}
+              <div className="grid grid-cols-7 gap-1">
+                {calDays.map((day, i) => {
+                  if (!day) return <div key={i} />
+                  const dateStr = `${calYear}-${String(calMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                  const daySessions = sessionsByDate[dateStr] ?? []
+                  const isToday = dateStr === todayStr
+                  const hasSessions = daySessions.length > 0
+                  const mainSession = daySessions[0]
+
+                  return (
+                    <div key={i} className="aspect-square flex flex-col items-center justify-center relative">
+                      {hasSessions ? (
+                        <Link href={daySessions.length === 1 ? `/sessions/${mainSession.id}` : '#'}
+                          className="w-full h-full flex flex-col items-center justify-center rounded-xl transition hover:opacity-80"
+                          style={{ background: mainSession.session_types.color + '20', border: `1.5px solid ${mainSession.session_types.color}40` }}>
+                          <span className="text-lg leading-none">{mainSession.session_types.emoji}</span>
+                          {daySessions.length > 1 && (
+                            <span className="text-xs font-bold" style={{ color: mainSession.session_types.color }}>+{daySessions.length - 1}</span>
+                          )}
+                          <span className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-orange-500' : 'text-gray-500'}`}>{day}</span>
+                        </Link>
+                      ) : (
+                        <div className={`w-full h-full flex items-center justify-center rounded-xl ${isToday ? 'ring-2 ring-orange-400' : ''}`}>
+                          <span className={`text-sm font-medium ${isToday ? 'text-orange-500 font-bold' : 'text-gray-300'}`}>{day}</span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            {wod.description && <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{wod.description}</p>}
-            {wod.result_detail && (
-              <div className="bg-white rounded-xl px-3 py-2 mt-2">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-0.5">Résultat</p>
-                <p className="text-base font-black text-gray-900">{wod.result_detail}</p>
+
+            {/* Résumé du mois */}
+            {calMonthSessions.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                  {MONTHS_FR[calMonth]} — {calMonthSessions.length} séance{calMonthSessions.length > 1 ? 's' : ''}
+                </p>
+                <div className="space-y-1.5">
+                  {calMonthSessions.map(s => (
+                    <Link key={s.id} href={`/sessions/${s.id}`}
+                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
+                        style={{ background: s.session_types.color + '15' }}>
+                        {s.session_types.emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-800">{s.session_types.name}</p>
+                        <p className="text-xs text-gray-400">{formatDateShort(s.date)}{s.duration_min ? ` · ${s.duration_min} min` : ''}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {(s.session_pain_alerts?.length ?? 0) > 0 && <span className="text-xs">⚠️</span>}
+                        {s.rpe !== null && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: RPE_COLORS[s.rpe] }}>
+                            {s.rpe}
+                          </span>
+                        )}
+                        <span className="text-gray-300">›</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {calMonthSessions.length === 0 && !loading && (
+              <div className="text-center py-10">
+                <p className="text-3xl mb-2">😴</p>
+                <p className="text-sm text-gray-400">Aucune séance ce mois-ci.</p>
               </div>
             )}
           </div>
         )}
-        {painAlerts.length > 0 && (
-          <div className={card}>
-            <div className="flex items-center gap-2 mb-2"><span>⚠️</span><span className="text-sm font-bold text-gray-700">Alertes douleur</span></div>
-            <div className="flex flex-wrap gap-2">
-              {painAlerts.map((p, i) => (
-                <span key={i} className={`px-3 py-1.5 rounded-full text-xs font-semibold ${SEV_COLORS[p.severity]}`}>{p.body_part_label}</span>
+
+        {/* ── VUE LISTE ── */}
+        {view === 'list' && (
+          <div>
+            {/* Filtre */}
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+              {presentTypes.map(t => (
+                <button key={t} onClick={() => setFilter(t)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 transition ${
+                    filter === t ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white border-gray-200 text-gray-500'
+                  }`}>{t}</button>
               ))}
             </div>
-          </div>
-        )}
-        {other && (
-          <div className={card}>
-            <div className="flex items-center gap-2 mb-2"><span>📝</span><span className="text-sm font-bold text-gray-700">Notes</span></div>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{other}</p>
-          </div>
-        )}
-        <div className="h-4" />
 
-        {/* ── Modal édition ── */}
-        {editing && (
-          <div className="fixed inset-0 z-50" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setEditing(false)}>
-            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl"
-              style={{ maxHeight: '92vh', overflowY: 'auto', paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
-              onClick={e => e.stopPropagation()}>
-              <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 bg-gray-300 rounded-full" /></div>
-              <div className="px-5 pt-3 pb-4">
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-base font-black text-gray-900">Modifier la séance</h3>
-                  <button onClick={() => setEditing(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-lg">×</button>
-                </div>
-
-                {/* Durée */}
-                <div className="mb-4">
-                  <label className={labelCls}>Durée (min)</label>
-                  <input type="number" value={editDuration} onChange={e => setEditDuration(e.target.value)}
-                    placeholder="ex: 75" className="w-28 rounded-xl border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                </div>
-
-                {/* RPE */}
-                <div className="mb-4">
-                  <label className={labelCls}>
-                    RPE — {editRpe}/10 · <span className="text-orange-500 normal-case font-normal">{RPE_LABELS[editRpe]}</span>
-                  </label>
-                  <div className="flex gap-1 items-end" style={{ height: 52 }}>
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-                      <button key={n} onClick={() => setEditRpe(n)}
-                        className="flex-1 rounded-md transition-all duration-100"
-                        style={{ height: n === editRpe ? '100%' : `${35 + n * 6}%`, background: n <= editRpe ? RPE_COLORS[n-1] : '#E5E7EB', opacity: n <= editRpe ? 1 : 0.4 }} />
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => <div key={i} className="skeleton h-16 rounded-2xl" />)}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-3xl mb-3">📋</p>
+                <p className="text-sm font-semibold text-gray-700 mb-4">Aucune séance trouvée</p>
+                <Link href="/log" className="inline-block bg-orange-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl">
+                  + Nouvelle séance
+                </Link>
+              </div>
+            ) : (
+              Object.entries(groups).map(([month, items]) => (
+                <div key={month} className="mb-6">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{capitalize(month)}</p>
+                  <div className="space-y-1.5">
+                    {items.map(s => (
+                      <Link key={s.id} href={`/sessions/${s.id}`}
+                        className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:border-gray-300 transition">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                          style={{ background: s.session_types.color + '15', border: `1.5px solid ${s.session_types.color}30` }}>
+                          {s.session_types.emoji}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-800">{s.session_types.name}</p>
+                          <p className="text-xs text-gray-400">{formatDateShort(s.date)}{s.duration_min ? ` · ${s.duration_min} min` : ''}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {(s.session_pain_alerts?.length ?? 0) > 0 && <span className="text-xs">⚠️</span>}
+                          {s.rpe !== null && (
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: RPE_COLORS[s.rpe] }}>
+                              {s.rpe}
+                            </span>
+                          )}
+                          <span className="text-gray-300 text-sm">›</span>
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
-
-                {/* Ressenti */}
-                <div className="mb-4">
-                  <label className={labelCls}>Ressenti post-séance</label>
-                  <div className="flex gap-2">
-                    {[1,2,3,4,5].map(v => (
-                      <button key={v} onClick={() => setEditFeeling(v)}
-                        className={`flex-1 py-2 rounded-xl border flex flex-col items-center gap-0.5 transition ${editFeeling === v ? 'border-orange-400 bg-orange-50' : 'border-gray-200'}`}>
-                        <span className="text-xl">{FEEL_EMOJIS[v]}</span>
-                        <span className={`text-xs ${editFeeling === v ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>{FEEL_LABELS[v]}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Échauffement */}
-                <div className="mb-4">
-                  <label className={labelCls}>Échauffement</label>
-                  <textarea rows={2} value={editWarmup} onChange={e => setEditWarmup(e.target.value)}
-                    placeholder="Ex: EMOM 6' — Dead Hang / Air Squat / Echo Bike..."
-                    className={inputCls + ' resize-none'} />
-                </div>
-
-                {/* Skill */}
-                <div className="mb-4">
-                  <label className={labelCls}>Skill & Technique</label>
-                  <textarea rows={2} value={editSkill} onChange={e => setEditSkill(e.target.value)}
-                    placeholder="Ex: Snatch technique — Every 3' x 4..."
-                    className={inputCls + ' resize-none'} />
-                </div>
-
-                {/* Résultat WOD */}
-                {wod && (
-                  <div className="mb-4">
-                    <label className={labelCls}>Résultat WOD</label>
-                    <div className="flex gap-2 mb-2">
-                      {[{v:true,l:'RX'},{v:false,l:'Scaled'}].map(o => (
-                        <button key={String(o.v)} onClick={() => setEditRx(o.v)}
-                          className={`px-4 py-2 rounded-xl border text-sm font-bold transition ${
-                            editRx === o.v
-                              ? (o.v ? 'border-green-400 bg-green-50 text-green-700' : 'border-amber-400 bg-amber-50 text-amber-700')
-                              : 'border-gray-200 bg-white text-gray-400'
-                          }`}>{o.l}</button>
-                      ))}
-                    </div>
-                    <input type="text" value={editResult} onChange={e => setEditResult(e.target.value)}
-                      placeholder="Ex: 4+12, 12'35, 187 reps..." className={inputCls} />
-                  </div>
-                )}
-
-                {/* Notes */}
-                <div className="mb-5">
-                  <label className={labelCls}>Notes libres</label>
-                  <textarea rows={3} value={editNotes} onChange={e => setEditNotes(e.target.value)}
-                    placeholder="Ressenti général, contexte particulier..."
-                    className={inputCls + ' resize-none'} />
-                </div>
-
-                <button onClick={handleSave} disabled={saving}
-                  className="w-full py-3.5 rounded-xl text-white text-sm font-bold transition"
-                  style={{ background: saving ? '#FED7AA' : 'var(--theme-primary, #F97316)' }}>
-                  {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                </button>
-              </div>
-            </div>
+              ))
+            )}
           </div>
         )}
-
-        {/* ── Confirmation suppression ── */}
-        {confirmDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
-              <p className="text-lg font-black text-gray-900 mb-2">Supprimer cette séance ?</p>
-              <p className="text-sm text-gray-500 mb-6">
-                {t?.emoji} {t?.name} · {new Date(session.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-                <br />Cette action est irréversible.
-              </p>
-              <div className="flex gap-3">
-                <button onClick={() => setConfirmDelete(false)}
-                  className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold">
-                  Annuler
-                </button>
-                <button onClick={handleDelete} disabled={deleting}
-                  className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition">
-                  {deleting ? 'Suppression...' : 'Supprimer'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   )
