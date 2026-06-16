@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getUserId } from '@/lib/user'
+import { seedDemoData } from '@/lib/seedDemoData'
 
 const SPORTS = [
   { id: 'crossfit',      label: 'CrossFit',       icon: '🏋️', desc: 'WOD, AMRAP, For Time' },
@@ -52,6 +53,7 @@ export default function WelcomePage() {
         weekly_target: weekly,
         user_id:       getUserId(),
       })
+      await seedDemoData(sports)
       router.push('/log')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erreur')

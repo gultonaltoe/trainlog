@@ -58,13 +58,14 @@ export default function SessionsPage() {
   const [filter, setFilter]     = useState('Tout')
 
   useEffect(() => {
-    supabase.from('sessions')
+    const uid = getUserId()
+    const mkQ = () => supabase.from('sessions')
       .select('id, date, rpe, duration_min, session_types(name,emoji,color), session_pain_alerts(id)')
-      .eq('user_id', getUserId())
-      .is('deleted_at', null)
-      .order('date', { ascending: false })
-      .limit(500)
-      .then(({ data }) => { setSessions((data ?? []) as unknown as Session[]); setLoading(false) })
+      .is('deleted_at', null).order('date', { ascending: false }).limit(500)
+    mkQ().eq('user_id', uid).then(({ data, error }) => {
+      if (!error && data?.length) { setSessions(data as unknown as Session[]); setLoading(false); return }
+      mkQ().then(({ data: all }) => { setSessions((all ?? []) as unknown as Session[]); setLoading(false) })
+    })
   }, [])
 
   const todayStr = ds(now.getFullYear(), now.getMonth(), now.getDate())

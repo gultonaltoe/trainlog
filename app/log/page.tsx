@@ -26,10 +26,16 @@ const mkHBlock = (id: number): HBlock    => ({ id, isComplex: false, complexLabe
 const mkRunIv  = (): RunInterval => ({ distance: '', timeMin: '', timeSec: '', rest: '' })
 
 // ── Constantes ────────────────────────────────────────────
-const WOD_FORMATS    = ['AMRAP','EMOM','E2MOM','For Time','Tabata',"Every X'",'Rounds','Autre']
-const TIMED_FORMATS  = ['AMRAP','EMOM','E2MOM',"Every X'",'Tabata']
-const DURATION_CHIPS = [8,10,12,15,20,25]
-const COMMON_MOVES   = ['Thrusters','Pull-ups','Box Jump','Double Unders','TTB','HSPU','Burpees','Row Cal','Ski Cal','Wall Ball','Power Clean','Deadlift']
+const WOD_FORMATS       = ['AMRAP','EMOM','For Time',"Every X'",'Autre']
+const WOD_FORMATS_EXTRA = ['E2MOM','Tabata','Rounds']
+const TIMED_FORMATS     = ['AMRAP','EMOM','E2MOM',"Every X'",'Tabata']
+const DURATION_CHIPS    = [8,10,12,15,20,25]
+const COMMON_MOVES      = [
+  'Thrusters','Wall Ball','Burpees','Box Jump','Double Unders',
+  'Pull-ups','TTB','HSPU','Ring MU','Bar MU','Dips',
+  'Power Clean','Deadlift','KB Swing','Overhead Squat',
+  'Row Cal','Ski Cal','Echo Bike Cal','Run 400m','Run 200m',
+]
 const NO_WEIGHT_CATS = ['gymnastics','cardio','skill']
 const RUN_TYPES      = ['Endurance','Tempo','Fractionné','Récupération','Compétition']
 const RUN_SURFACES   = ['Route','Trail','Piste','Tapis']
@@ -148,7 +154,9 @@ export default function LogPage() {
   const [savedId, setSavedId]         = useState('')
 
   // Step 0
-  const [date, setDate]             = useState(new Date().toISOString().split('T')[0])
+  const todayLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
+  const [date, setDate]               = useState(todayLocal)
+  const [showDatePicker, setShowDatePicker] = useState(false)
   const [sleepHours, setSleepHours] = useState(7)
   const [energy, setEnergy]         = useState(3)
 
@@ -513,7 +521,32 @@ export default function LogPage() {
           <div className="space-y-6">
             <div>
               <label className={labelCls}>Date <span className="text-orange-400">*</span></label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} />
+              {(() => {
+                const ds = (off: number) => { const d = new Date(); d.setDate(d.getDate() - off); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
+                const chips = [["Aujourd'hui", ds(0)], ['Hier', ds(1)], ['Avant-hier', ds(2)]] as [string,string][]
+                const isChip = chips.some(([,v]) => v === date)
+                return (
+                  <>
+                    <div className="flex gap-2 flex-wrap">
+                      {chips.map(([label, val]) => (
+                        <button key={label} type="button"
+                          onClick={() => { setDate(val); setShowDatePicker(false) }}
+                          className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${date === val && !showDatePicker ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-200 bg-white text-gray-600'}`}>
+                          {label}
+                        </button>
+                      ))}
+                      <button type="button"
+                        onClick={() => setShowDatePicker(true)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${(showDatePicker || !isChip) ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-200 bg-white text-gray-600'}`}>
+                        Autre
+                      </button>
+                    </div>
+                    {(showDatePicker || !isChip) && (
+                      <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls + ' mt-2'} />
+                    )}
+                  </>
+                )
+              })()}
             </div>
             <div>
               <label className={labelCls}>Nuit de sommeil — {sleepHours}h</label>
@@ -934,7 +967,7 @@ export default function LogPage() {
 
             {/* Préparation */}
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Préparation technique & Force — optionnel</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Skills — Optionnel</p>
               <div className="space-y-3">
                 {prepItems.map((item, idx) => item.kind === 'note' ? (
                   <div key={item.id} className="bg-white rounded-2xl border border-blue-100 p-4">
@@ -1047,6 +1080,20 @@ export default function LogPage() {
                       </button>
                     ))}
                   </div>
+                  {(wodFormat === 'Autre' || WOD_FORMATS_EXTRA.includes(wodFormat)) && (
+                    <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-gray-100">
+                      {WOD_FORMATS_EXTRA.map(f => (
+                        <button key={f} onClick={() => setWodFormat(f === wodFormat ? 'Autre' : f)}
+                          className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition ${
+                            wodFormat === f
+                              ? 'bg-orange-500 border-orange-500 text-white'
+                              : 'border-gray-200 bg-white text-gray-600'
+                          }`}>
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {TIMED_FORMATS.includes(wodFormat) && (
@@ -1079,7 +1126,7 @@ export default function LogPage() {
                     </button>
                   ))}
                 </div>
-                <textarea rows={5} value={wodDesc} onChange={e => setWodDesc(e.target.value)}
+                <textarea rows={7} value={wodDesc} onChange={e => setWodDesc(e.target.value)}
                   placeholder={
                     wodFormat === 'AMRAP'    ? `AMRAP ${wodTimeCap || '15'}'\n21 Thrusters 43kg\n21 Pull-ups\n21 Box Jumps 60cm` :
                     wodFormat === 'EMOM'     ? `EMOM ${wodTimeCap || '12'}\nMin paire : 10 KB Swings 24kg\nMin impaire : 15 Squats` :

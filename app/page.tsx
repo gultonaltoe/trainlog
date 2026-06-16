@@ -153,9 +153,9 @@ export default function Dashboard() {
             <p className="text-sm text-gray-400 mt-0.5">{capitalize(today)}</p>
           </div>
           <Link href="/log"
-            className="text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm whitespace-nowrap"
-            style={{ background: 'var(--theme-primary, #F97316)' }}>
-            + Séance
+            className="text-white text-sm font-black px-5 py-3 rounded-2xl whitespace-nowrap flex items-center gap-1.5"
+            style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.4)' }}>
+            <span className="text-base leading-none">+</span> Séance
           </Link>
         </div>
 

@@ -102,21 +102,26 @@ export default function PRsPage() {
   const prDate = showDatePicker && customDate ? customDate : offsetStr(dateOffset)
 
   const loadPRs = () => {
-    supabase.from('personal_records').select('*').eq('user_id', getUserId()).order('date', { ascending: false })
-      .then(({ data }) => {
-        if (!data?.length) { setLoading(false); return }
-        const map: Record<string, MovementPR> = {}
-        ;(data as PR[]).forEach(pr => {
-          if (!pr.movement_name) return
-          const key = (pr.movement_id ?? pr.movement_name) + '|' + (pr.unit ?? 'kg')
-          if (!map[key] || pr.value > map[key].best) {
-            map[key] = { key, movement_id: pr.movement_id, movement_name: pr.movement_name, best: pr.value, unit: pr.unit ?? 'kg', date: pr.date, count: 0 }
-          }
-          map[key].count++
-        })
-        setPrs(Object.values(map).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
-        setLoading(false)
+    const uid = getUserId()
+    const mkQ = () => supabase.from('personal_records').select('*').order('date', { ascending: false })
+    const process = (data: PR[] | null) => {
+      if (!data?.length) { setLoading(false); return }
+      const map: Record<string, MovementPR> = {}
+      ;(data as PR[]).forEach(pr => {
+        if (!pr.movement_name) return
+        const key = (pr.movement_id ?? pr.movement_name) + '|' + (pr.unit ?? 'kg')
+        if (!map[key] || pr.value > map[key].best) {
+          map[key] = { key, movement_id: pr.movement_id, movement_name: pr.movement_name, best: pr.value, unit: pr.unit ?? 'kg', date: pr.date, count: 0 }
+        }
+        map[key].count++
       })
+      setPrs(Object.values(map).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+      setLoading(false)
+    }
+    mkQ().eq('user_id', uid).then(({ data, error }) => {
+      if (!error && data?.length) { process(data as PR[]); return }
+      mkQ().then(({ data: all }) => process(all as PR[] | null))
+    })
   }
 
   useEffect(() => { loadPRs() }, [])
@@ -395,8 +400,8 @@ export default function PRsPage() {
                 <div className="flex items-center gap-3">
                   <input type="number" value={value} onChange={e => setValue(e.target.value)}
                     placeholder="0" min="0" step={prType === 'charge' ? '0.5' : '1'}
-                    className="flex-1 rounded-xl border border-gray-300 bg-white px-3 py-3 text-4xl font-black text-center text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                  <span className="text-xl font-bold text-gray-400 w-10">{prType === 'charge' ? 'kg' : 'reps'}</span>
+                    className="flex-1 rounded-xl border border-gray-300 bg-white px-3 py-4 text-3xl font-black text-center text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <span className="text-lg font-bold text-gray-400 w-10">{prType === 'charge' ? 'kg' : 'reps'}</span>
                 </div>
               )}
             </div>
