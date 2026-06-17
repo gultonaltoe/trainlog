@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { getUserId } from '@/lib/user'
 import { toast } from '@/lib/toast'
+import MovementSearch from '@/components/MovementSearch'
 
 type PR = { id: string; movement_id: string; movement_name: string; value: number; unit: string; date: string }
 type MovementPR = {
@@ -353,13 +354,13 @@ export default function PRsPage() {
               </div>
 
               {isCustom && (
-                <input
-                  type="text"
-                  placeholder="ex: Romanian DL, Snatch Balance..."
+                <MovementSearch
                   value={customMov}
-                  onChange={e => setCustomMov(e.target.value)}
-                  autoFocus
-                  className="w-full rounded-xl border border-orange-300 bg-orange-50 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  onChange={m => {
+                    setCustomMov(m.name)
+                    setPrType(MOVEMENT_TYPE[m.name] ?? 'charge')
+                    if (MOVEMENT_SCHEME[m.name]) setScheme(MOVEMENT_SCHEME[m.name])
+                  }}
                 />
               )}
 

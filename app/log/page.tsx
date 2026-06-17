@@ -32,9 +32,9 @@ const TIMED_FORMATS     = ['AMRAP','EMOM','E2MOM',"Every X'",'Tabata']
 const DURATION_CHIPS    = [8,10,12,15,20,25]
 const COMMON_MOVES      = [
   'Thrusters','Wall Ball','Burpees','Box Jump','Double Unders',
-  'Pull-ups','TTB','HSPU','Ring MU','Bar MU','Dips',
+  'Pull-ups','TTB','HSPU','Bar MU','Dips',
   'Power Clean','Deadlift','KB Swing','Overhead Squat',
-  'Row Cal','Ski Cal','Echo Bike Cal','Run 400m','Run 200m',
+  'Row Cal','Echo Bike Cal','Run 400m','Run 200m',
 ]
 const NO_WEIGHT_CATS = ['gymnastics','cardio','skill']
 const RUN_TYPES      = ['Endurance','Tempo','Fractionné','Récupération','Compétition']
@@ -485,9 +485,19 @@ export default function LogPage() {
           <h2 className="text-2xl font-black text-gray-900 mb-1">Séance enregistrée</h2>
           <p className="text-sm text-gray-400">Beau travail !</p>
         </div>
+        {hasWod && wodResult.trim() && (
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3 text-left">
+            <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mb-1">Score WOD</p>
+            <p className="text-sm text-gray-800 font-semibold mb-2">«&nbsp;{wodResult}&nbsp;»</p>
+            <Link href="/prs"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 transition">
+              Enregistrer comme perf perso →
+            </Link>
+          </div>
+        )}
         <div className="flex gap-3">
           <button onClick={reset}
-            className="flex-1 py-3.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-700 hover:bg-gray-100 transition">
+            className="flex-1 py-3.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer">
             + Nouvelle
           </button>
           <Link href={`/sessions/${savedId}`}
@@ -562,8 +572,8 @@ export default function LogPage() {
               })()}
             </div>
             <div>
-              <label className={labelCls}>Nuit de sommeil — {sleepHours}h</label>
-              <input type="range" min={3} max={12} step={1} value={sleepHours} onChange={e => setSleepHours(parseInt(e.target.value))}
+              <label className={labelCls}>Nuit de sommeil — {Math.floor(sleepHours)}h{sleepHours % 1 ? '30' : ''}</label>
+              <input type="range" min={3} max={12} step={0.5} value={sleepHours} onChange={e => setSleepHours(parseFloat(e.target.value))}
                 className="w-full accent-orange-400" />
               <div className="flex justify-between text-xs text-gray-400 mt-1"><span>3h</span><span>12h</span></div>
             </div>
