@@ -28,6 +28,12 @@ export default function UserInit() {
     if (doneRef.current) return
     doneRef.current = true
 
+    // If Supabase returned an auth error (e.g. expired link), send to /auth with message
+    if (typeof window !== 'undefined' && window.location.hash.includes('error=')) {
+      router.replace('/auth?error=1')
+      return
+    }
+
     const tokenInUrl = typeof window !== 'undefined' && (
       window.location.hash.includes('access_token=') ||
       window.location.search.includes('code=') ||
