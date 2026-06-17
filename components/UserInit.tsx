@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
 const UID_KEY = 'trainlog_uid'
@@ -17,54 +18,58 @@ async function migrateIfNeeded(authUid: string) {
   localStorage.setItem(UID_KEY, authUid)
 }
 
-async function checkProfile(authUid: string, router: ReturnType<typeof useRouter>, pathname: string) {
-  await migrateIfNeeded(authUid)
-  if (pathname === '/welcome') return
-  const { data: profile } = await supabase
-    .from('user_profile').select('id').eq('user_id', authUid).limit(1).maybeSingle()
-  if (!profile) router.replace('/welcome')
-  // If there's a hash token in the URL, navigate to clean root
-  else if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-    router.replace('/')
-  }
-}
-
 export default function UserInit() {
   const pathname = usePathname()
   const router = useRouter()
-  const resolvedRef = useRef(false)
+  const doneRef = useRef(false)
 
   useEffect(() => {
     if (pathname.startsWith('/auth')) return
-    if (resolvedRef.current) return
-    resolvedRef.current = true
+    if (doneRef.current) return
+    doneRef.current = true
 
-    // Detect implicit flow token in URL hash (Supabase sends #access_token= to Site URL)
-    const hasTokenInHash = typeof window !== 'undefined' &&
-      (window.location.hash.includes('access_token=') ||
-       window.location.search.includes('code=') ||
-       window.location.search.includes('token_hash='))
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'INITIAL_SESSION') {
-          if (!session) {
-            // If there's a token in the URL, wait — Supabase will fire SIGNED_IN shortly
-            if (hasTokenInHash) return
-            router.replace('/auth')
-            return
-          }
-          await checkProfile(session.user.id, router, pathname)
-          subscription.unsubscribe()
-        }
-
-        if (event === 'SIGNED_IN' && session) {
-          // Handles implicit flow: Supabase processes #access_token= and fires this
-          await checkProfile(session.user.id, router, pathname)
-          subscription.unsubscribe()
-        }
-      }
+    const tokenInUrl = typeof window !== 'undefined' && (
+      window.location.hash.includes('access_token=') ||
+      window.location.search.includes('code=') ||
+      window.location.search.includes('token_hash=')
     )
+
+    let handled = false
+
+    const handle = async (session: Session | null) => {
+      if (handled) return
+      handled = true
+
+      if (!session) {
+        router.replace('/auth')
+        return
+      }
+
+      await migrateIfNeeded(session.user.id)
+      if (pathname === '/welcome') return
+
+      const { data: profile } = await supabase
+        .from('user_profile').select('id')
+        .eq('user_id', session.user.id).limit(1).maybeSingle()
+
+      if (!profile) {
+        router.replace('/welcome')
+      } else if (window.location.hash.includes('access_token=')) {
+        router.replace('/')
+      }
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') {
+        // If there's a token in the URL hash, Supabase fires INITIAL_SESSION with null first,
+        // then SIGNED_IN once the hash is processed — skip the null initial session
+        if (!session && tokenInUrl) return
+        void handle(session)
+      }
+      if (event === 'SIGNED_IN') {
+        void handle(session)
+      }
+    })
 
     return () => subscription.unsubscribe()
   // eslint-disable-next-line react-hooks/exhaustive-deps
