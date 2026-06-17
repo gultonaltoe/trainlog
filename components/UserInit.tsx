@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
 const UID_KEY = 'trainlog_uid'
@@ -22,68 +21,54 @@ export default function UserInit() {
   const pathname = usePathname()
   const router = useRouter()
   const doneRef = useRef(false)
-  // Read the hash at render time, before Supabase's lazy init clears it from the URL
-  const initialHash = useRef(typeof window !== 'undefined' ? window.location.hash : '')
 
   useEffect(() => {
     if (pathname.startsWith('/auth')) return
     if (doneRef.current) return
     doneRef.current = true
 
-    const hash = initialHash.current
+    // detectSessionInUrl: false means Supabase never clears window.location.hash,
+    // so we can safely read it here and handle the token ourselves.
+    const hash = window.location.hash
 
     if (hash.includes('error=')) {
       router.replace('/auth?error=1')
       return
     }
 
-    // Was there an auth token in the URL when the page loaded?
-    const hadToken = hash.includes('access_token=')
-      || window.location.search.includes('code=')
-      || window.location.search.includes('token_hash=')
+    const run = async () => {
+      let session = null
 
-    let handled = false
+      if (hash.includes('access_token=')) {
+        const params = new URLSearchParams(hash.slice(1))
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+        if (access_token && refresh_token) {
+          const { data, error } = await supabase.auth.setSession({ access_token, refresh_token })
+          if (!error) session = data.session
+        }
+      } else {
+        const { data } = await supabase.auth.getSession()
+        session = data.session
+      }
 
-    const handle = async (session: Session | null) => {
-      if (handled) return
-      handled = true
       if (!session) { router.replace('/auth'); return }
+
       await migrateIfNeeded(session.user.id)
       if (pathname === '/welcome') return
+
       const { data: profile } = await supabase
         .from('user_profile').select('id')
         .eq('user_id', session.user.id).limit(1).maybeSingle()
+
       if (!profile) {
         router.replace('/welcome')
-      } else if (hadToken) {
+      } else if (hash.includes('access_token=')) {
         router.replace('/')
       }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        void handle(session)
-      }
-      if (event === 'INITIAL_SESSION') {
-        if (session) {
-          void handle(session)
-        } else if (!hadToken) {
-          // No session, no token in URL → user is genuinely not logged in
-          void handle(null)
-        }
-        // hadToken + no session: Supabase is still processing the hash → wait for SIGNED_IN.
-        // Safety net: if SIGNED_IN never fires within 3s, check one more time.
-        else {
-          setTimeout(() => {
-            supabase.auth.getSession().then(({ data }) => {
-              void handle(data.session)
-            })
-          }, 3000)
-        }
-      }
-    })
-
-    return () => subscription.unsubscribe()
+    void run()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
