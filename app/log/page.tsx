@@ -1040,11 +1040,11 @@ export default function LogPage() {
                         <span className="text-xs text-gray-300 font-bold text-center">S{si+1}</span>
                         <input type="number" placeholder="—" value={set.reps}
                           onChange={e => updSet(item.id, si, { reps: e.target.value })}
-                          className="rounded-lg border border-gray-400 px-2 py-1.5 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                          className="w-full min-w-0 rounded-lg border border-gray-400 px-2 py-1.5 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                         {(item as PrepBlock).hasWeight && (
                           <input type="number" placeholder="—" value={set.weight}
                             onChange={e => updSet(item.id, si, { weight: e.target.value })}
-                            className="rounded-lg border border-gray-400 px-2 py-1.5 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                            className="w-full min-w-0 rounded-lg border border-gray-400 px-2 py-1.5 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                         )}
                         <button onClick={() => {
                           if ((item as PrepBlock).sets.length > 1)
