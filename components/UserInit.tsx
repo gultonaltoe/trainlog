@@ -22,16 +22,25 @@ export default function UserInit() {
   const pathname = usePathname()
   const router = useRouter()
   const doneRef = useRef(false)
+  // Read the hash at render time, before Supabase's lazy init clears it from the URL
+  const initialHash = useRef(typeof window !== 'undefined' ? window.location.hash : '')
 
   useEffect(() => {
     if (pathname.startsWith('/auth')) return
     if (doneRef.current) return
     doneRef.current = true
 
-    if (typeof window !== 'undefined' && window.location.hash.includes('error=')) {
+    const hash = initialHash.current
+
+    if (hash.includes('error=')) {
       router.replace('/auth?error=1')
       return
     }
+
+    // Was there an auth token in the URL when the page loaded?
+    const hadToken = hash.includes('access_token=')
+      || window.location.search.includes('code=')
+      || window.location.search.includes('token_hash=')
 
     let handled = false
 
@@ -46,7 +55,7 @@ export default function UserInit() {
         .eq('user_id', session.user.id).limit(1).maybeSingle()
       if (!profile) {
         router.replace('/welcome')
-      } else if (window.location.hash || window.location.search.includes('code=')) {
+      } else if (hadToken) {
         router.replace('/')
       }
     }
@@ -58,13 +67,18 @@ export default function UserInit() {
       if (event === 'INITIAL_SESSION') {
         if (session) {
           void handle(session)
-        } else {
-          // INITIAL_SESSION with null fires before Supabase finishes processing the URL hash.
-          // getSession() waits for in-progress initialization to complete, so it returns
-          // the real session once the hash token has been parsed.
-          supabase.auth.getSession().then(({ data }) => {
-            if (!handled) void handle(data.session)
-          })
+        } else if (!hadToken) {
+          // No session, no token in URL → user is genuinely not logged in
+          void handle(null)
+        }
+        // hadToken + no session: Supabase is still processing the hash → wait for SIGNED_IN.
+        // Safety net: if SIGNED_IN never fires within 3s, check one more time.
+        else {
+          setTimeout(() => {
+            supabase.auth.getSession().then(({ data }) => {
+              void handle(data.session)
+            })
+          }, 3000)
         }
       }
     })
