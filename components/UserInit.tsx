@@ -28,52 +28,44 @@ export default function UserInit() {
     if (doneRef.current) return
     doneRef.current = true
 
-    // If Supabase returned an auth error (e.g. expired link), send to /auth with message
     if (typeof window !== 'undefined' && window.location.hash.includes('error=')) {
       router.replace('/auth?error=1')
       return
     }
-
-    const tokenInUrl = typeof window !== 'undefined' && (
-      window.location.hash.includes('access_token=') ||
-      window.location.search.includes('code=') ||
-      window.location.search.includes('token_hash=')
-    )
 
     let handled = false
 
     const handle = async (session: Session | null) => {
       if (handled) return
       handled = true
-
-      if (!session) {
-        router.replace('/auth')
-        return
-      }
-
+      if (!session) { router.replace('/auth'); return }
       await migrateIfNeeded(session.user.id)
       if (pathname === '/welcome') return
-
       const { data: profile } = await supabase
         .from('user_profile').select('id')
         .eq('user_id', session.user.id).limit(1).maybeSingle()
-
       if (!profile) {
         router.replace('/welcome')
-      } else if (window.location.hash.includes('access_token=')) {
+      } else if (window.location.hash || window.location.search.includes('code=')) {
         router.replace('/')
       }
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION') {
-        // If there's a token in the URL hash, Supabase fires INITIAL_SESSION with null first,
-        // then SIGNED_IN once the hash is processed — skip the null initial session
-        if (!session && tokenInUrl) return
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         void handle(session)
       }
-      if (event === 'SIGNED_IN') {
-        void handle(session)
+      if (event === 'INITIAL_SESSION') {
+        if (session) {
+          void handle(session)
+        } else {
+          // INITIAL_SESSION with null fires before Supabase finishes processing the URL hash.
+          // getSession() waits for in-progress initialization to complete, so it returns
+          // the real session once the hash token has been parsed.
+          supabase.auth.getSession().then(({ data }) => {
+            if (!handled) void handle(data.session)
+          })
+        }
       }
     })
 
