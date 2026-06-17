@@ -124,12 +124,12 @@ export default function SessionsPage() {
           </div>
           <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
             <button onClick={() => setView('cal')}
-              className="px-3 py-2 text-sm font-semibold transition"
+              className="px-3 py-2 text-sm font-semibold transition cursor-pointer"
               style={view === 'cal' ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
               📅
             </button>
             <button onClick={() => setView('list')}
-              className="px-3 py-2 text-sm font-semibold transition"
+              className="px-3 py-2 text-sm font-semibold transition cursor-pointer"
               style={view === 'list' ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
               ☰
             </button>
@@ -177,23 +177,23 @@ export default function SessionsPage() {
                   <button key={i}
                     onClick={() => items.length > 0 && router.push(`/sessions/${items[0].id}?from=sessions`)}
                     className={`flex flex-col items-center justify-center rounded-xl transition ${
-                      items.length > 0 ? 'active:scale-95' : 'cursor-default'
+                      items.length > 0 ? 'active:scale-95 cursor-pointer' : 'cursor-default'
                     }`}
                     style={{
-                      minHeight: 50,
+                      minHeight: 58,
                       background: first ? first.session_types.color + '20' : undefined,
                       outline: isToday ? '2px solid var(--theme-primary, #F97316)' : undefined,
                     }}>
-                    <span className={`text-[11px] font-bold leading-none mb-0.5 ${
+                    <span className={`text-xs font-bold leading-none mb-0.5 ${
                       isToday ? 'text-orange-500' : items.length > 0 ? 'text-gray-700' : 'text-gray-300'
                     }`}>
                       {day}
                     </span>
                     {first && (
-                      <span className="text-sm leading-none">{first.session_types.emoji}</span>
+                      <span className="text-base leading-none">{first.session_types.emoji}</span>
                     )}
                     {items.length > 1 && (
-                      <span className="text-[9px] font-bold text-gray-400 leading-none mt-0.5">+{items.length - 1}</span>
+                      <span className="text-[10px] font-bold text-gray-400 leading-none mt-0.5">+{items.length - 1}</span>
                     )}
                   </button>
                 )
@@ -228,7 +228,7 @@ export default function SessionsPage() {
             <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
               {types.map(t => (
                 <button key={t} onClick={() => setFilter(t)}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 transition"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 transition cursor-pointer"
                   style={filter === t
                     ? { background: 'var(--theme-primary, #F97316)', borderColor: 'var(--theme-primary, #F97316)', color: '#fff' }
                     : { background: '#fff', borderColor: '#E5E7EB', color: '#6B7280' }}>

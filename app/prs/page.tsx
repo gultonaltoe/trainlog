@@ -136,10 +136,23 @@ export default function PRsPage() {
   const openForm  = () => { resetForm(); setShowForm(true) }
   const closeForm = () => { setShowForm(false); resetForm() }
 
+  const MOVEMENT_TYPE: Record<string, PRType> = {
+    '5km': 'temps', '10km': 'temps',
+    '2km Rowing': 'temps', '500m Rowing': 'temps',
+  }
+  const MOVEMENT_SCHEME: Record<string, Scheme> = {
+    'Back Squat': '1RM', 'Front Squat': '1RM', 'Deadlift': '1RM',
+    'Strict Press': '1RM', 'Push Press': '1RM', 'Bench Press': '1RM',
+    'Squat Clean': '1RM', 'Power Clean': '1RM', 'Clean & Jerk': '1RM',
+    'Power Snatch': '1RM', 'Squat Snatch': '1RM', 'Jerk': '1RM',
+  }
+
   const selectPreset = (name: string) => {
     setMovName(name)
     setIsCustom(false)
     setCustomMov('')
+    setPrType(MOVEMENT_TYPE[name] ?? 'charge')
+    if (MOVEMENT_SCHEME[name]) setScheme(MOVEMENT_SCHEME[name])
   }
 
   const handleSave = async () => {

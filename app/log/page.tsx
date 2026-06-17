@@ -165,11 +165,23 @@ export default function LogPage() {
   const [duration, setDuration] = useState('')
 
   // Step 2 — Séance (CrossFit / Renfo)
-  const [warmupNotes, setWarmupNotes]       = useState('')
-  const [prepItems, setPrepItems]           = useState<PrepItem[]>([mkBlock(1)])
-  const [photoPreview, setPhotoPreview]     = useState<string | null>(null)
-  const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
+  const [warmupNotes, setWarmupNotes]           = useState('')
+  const [prepItems, setPrepItems]               = useState<PrepItem[]>([mkBlock(1)])
+  const [photoPreview, setPhotoPreview]         = useState<string | null>(null)
+  const [analyzingPhoto, setAnalyzingPhoto]     = useState(false)
+  const [showClearAIDialog, setShowClearAIDialog] = useState(false)
+  const [wodMoveSearch, setWodMoveSearch]       = useState('')
   const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const clearAIContent = () => {
+    setWarmupNotes(''); setPrepItems([mkBlock(1)]); setHBlocks([mkHBlock(1)])
+    setWodDesc(''); setWodFormat(''); setWodResult('')
+  }
+  const deletePhoto = () => {
+    setPhotoPreview(null)
+    if (photoInputRef.current) photoInputRef.current.value = ''
+    setShowClearAIDialog(true)
+  }
 
   // Step 2 — Haltérophilie
   const [hBlocks, setHBlocks] = useState<HBlock[]>([mkHBlock(1)])
@@ -490,6 +502,7 @@ export default function LogPage() {
 
   // ── Steps bar ───────────────────────────────────────────
   return (
+    <>
     <div className="bg-gray-50 pb-24">
       <div className="max-w-lg mx-auto px-4">
 
@@ -550,7 +563,7 @@ export default function LogPage() {
             </div>
             <div>
               <label className={labelCls}>Nuit de sommeil — {sleepHours}h</label>
-              <input type="range" min={3} max={12} step={0.5} value={sleepHours} onChange={e => setSleepHours(parseFloat(e.target.value))}
+              <input type="range" min={3} max={12} step={1} value={sleepHours} onChange={e => setSleepHours(parseInt(e.target.value))}
                 className="w-full accent-orange-400" />
               <div className="flex justify-between text-xs text-gray-400 mt-1"><span>3h</span><span>12h</span></div>
             </div>
@@ -707,13 +720,13 @@ export default function LogPage() {
                   </div>
                 )}
                 {!analyzingPhoto && (
-                  <button onClick={() => { setPhotoPreview(null); if (photoInputRef.current) photoInputRef.current.value = '' }}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-400 transition text-sm">×</button>
+                  <button onClick={deletePhoto}
+                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-400 transition text-sm cursor-pointer">×</button>
                 )}
               </div>
             ) : (
               <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
-                className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md"
+                className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
                 style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
                 <span className="text-2xl">📷</span>
                 <div className="text-left">
@@ -732,8 +745,11 @@ export default function LogPage() {
                 </div>
                 <span className="text-xs text-gray-400">optionnel</span>
               </div>
-              <textarea rows={2} value={warmupNotes} onChange={e => setWarmupNotes(e.target.value)}
+              <textarea value={warmupNotes}
+                onChange={e => { setWarmupNotes(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
+                onFocus={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
                 placeholder="Ex: Activation épaules, snatch balance, 3×3 à 60%..."
+                rows={2} style={{ overflow: 'hidden' }}
                 className={inputCls + ' resize-none'} />
             </div>
 
@@ -935,13 +951,13 @@ export default function LogPage() {
                   </div>
                 )}
                 {!analyzingPhoto && (
-                  <button onClick={() => { setPhotoPreview(null); if (photoInputRef.current) photoInputRef.current.value = '' }}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-400 transition text-sm">×</button>
+                  <button onClick={deletePhoto}
+                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-400 transition text-sm cursor-pointer">×</button>
                 )}
               </div>
             ) : (
               <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
-                className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md"
+                className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
                 style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
                 <span className="text-2xl">📷</span>
                 <div className="text-left">
@@ -960,8 +976,11 @@ export default function LogPage() {
                 </div>
                 <span className="text-xs text-gray-400">optionnel</span>
               </div>
-              <textarea rows={2} value={warmupNotes} onChange={e => setWarmupNotes(e.target.value)}
+              <textarea value={warmupNotes}
+                onChange={e => { setWarmupNotes(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
+                onFocus={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
                 placeholder="Ex: EMOM 6' — 1' Dead Hang / 2' Air Squat / 3' Echo Bike..."
+                rows={2} style={{ overflow: 'hidden' }}
                 className={inputCls + ' resize-none'} />
             </div>
 
@@ -1118,13 +1137,23 @@ export default function LogPage() {
               {/* ② Description */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4">
                 <label className={labelCls}>② Mouvements du WOD</label>
+                <input
+                  type="text" placeholder="Chercher un mouvement..." value={wodMoveSearch}
+                  onChange={e => setWodMoveSearch(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2" />
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  {COMMON_MOVES.map(m => (
-                    <button key={m} onClick={() => setWodDesc(d => d ? d + '\n' + m : m)}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-500 hover:border-orange-300 hover:text-orange-500 transition">
+                  {COMMON_MOVES.filter(m => m.toLowerCase().includes(wodMoveSearch.toLowerCase())).map(m => (
+                    <button key={m} onClick={() => { setWodDesc(d => d ? d + '\n' + m : m); setWodMoveSearch('') }}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-500 hover:border-orange-300 hover:text-orange-500 transition cursor-pointer">
                       + {m}
                     </button>
                   ))}
+                  {COMMON_MOVES.filter(m => m.toLowerCase().includes(wodMoveSearch.toLowerCase())).length === 0 && wodMoveSearch && (
+                    <button onClick={() => { setWodDesc(d => d ? d + '\n' + wodMoveSearch : wodMoveSearch); setWodMoveSearch('') }}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-orange-300 bg-orange-50 text-orange-600 transition cursor-pointer">
+                      + Ajouter «{wodMoveSearch}»
+                    </button>
+                  )}
                 </div>
                 <textarea rows={7} value={wodDesc} onChange={e => setWodDesc(e.target.value)}
                   placeholder={
@@ -1289,5 +1318,26 @@ export default function LogPage() {
 
       </div>
     </div>
+
+    {/* ── Dialog: effacer contenu IA après suppression photo ── */}
+    {showClearAIDialog && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+        <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+          <p className="text-base font-black text-gray-900 mb-1">Effacer le contenu généré ?</p>
+          <p className="text-sm text-gray-500 mb-5">L'IA avait pré-rempli l'échauffement, les blocs et le WOD. Veux-tu les effacer aussi ?</p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowClearAIDialog(false)}
+              className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition cursor-pointer">
+              Garder
+            </button>
+            <button onClick={() => { clearAIContent(); setShowClearAIDialog(false) }}
+              className="flex-1 py-3 rounded-xl bg-red-500 text-sm font-bold text-white hover:bg-red-600 transition cursor-pointer">
+              Effacer tout
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
