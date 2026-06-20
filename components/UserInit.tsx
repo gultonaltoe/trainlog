@@ -27,45 +27,21 @@ export default function UserInit() {
     if (doneRef.current) return
     doneRef.current = true
 
-    // detectSessionInUrl: false means Supabase never clears window.location.hash,
-    // so we can safely read it here and handle the token ourselves.
-    const hash = window.location.hash
-
-    if (hash.includes('error=')) {
+    // Supabase error redirect (e.g. expired link) — hash not cleared by Supabase for error case
+    if (window.location.hash.includes('error=')) {
       router.replace('/auth?error=1')
       return
     }
 
     const run = async () => {
-      let session = null
-
-      if (hash.includes('access_token=')) {
-        const params = new URLSearchParams(hash.slice(1))
-        const access_token = params.get('access_token')
-        const refresh_token = params.get('refresh_token')
-        if (access_token && refresh_token) {
-          const { data, error } = await supabase.auth.setSession({ access_token, refresh_token })
-          if (!error) session = data.session
-        }
-      } else {
-        const { data } = await supabase.auth.getSession()
-        session = data.session
-      }
-
+      const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.replace('/auth'); return }
-
       await migrateIfNeeded(session.user.id)
       if (pathname === '/welcome') return
-
       const { data: profile } = await supabase
         .from('user_profile').select('id')
         .eq('user_id', session.user.id).limit(1).maybeSingle()
-
-      if (!profile) {
-        router.replace('/welcome')
-      } else if (hash.includes('access_token=')) {
-        router.replace('/')
-      }
+      if (!profile) router.replace('/welcome')
     }
 
     void run()

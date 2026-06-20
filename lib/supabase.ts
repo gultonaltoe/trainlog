@@ -5,5 +5,5 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Singleton — import `supabase` everywhere, never recreate the client
 export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { detectSessionInUrl: false },
+  auth: { flowType: 'pkce' },
 })
