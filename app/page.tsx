@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { getRecentSessions, getProfile } from '@/lib/api'
+import { getRecentSessions, getProfile, deleteDemoData } from '@/lib/api'
 import type { SessionSummary, UserProfile } from '@/lib/api'
 
 // ── Helpers ───────────────────────────────────────────────
@@ -61,10 +61,11 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 // ── Dashboard ──────────────────────────────────────────────
 export default function Dashboard() {
-  const [sessions, setSessions] = useState<SessionSummary[]>([])
-  const [profile, setProfile]   = useState<UserProfile | null>(null)
-  const [loading, setLoading]   = useState(true)
-  const [period, setPeriod]     = useState<Period>('30j')
+  const [sessions, setSessions]       = useState<SessionSummary[]>([])
+  const [profile, setProfile]         = useState<UserProfile | null>(null)
+  const [loading, setLoading]         = useState(true)
+  const [deletingDemo, setDeletingDemo] = useState(false)
+  const [period, setPeriod]           = useState<Period>('30j')
   const [dashCalY, setDashCalY] = useState(new Date().getFullYear())
   const [dashCalM, setDashCalM] = useState(new Date().getMonth())
 
@@ -75,6 +76,13 @@ export default function Dashboard() {
     const s = await getRecentSessions(200)
     setSessions(s); setLoading(false)
   }, [])
+
+  const handleDeleteDemo = async () => {
+    setDeletingDemo(true)
+    await deleteDemoData()
+    setSessions(s => s.filter(x => !x.is_demo))
+    setDeletingDemo(false)
+  }
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
@@ -157,6 +165,22 @@ export default function Dashboard() {
           </Link>
         </div>
 
+
+        {/* Bannière données démo */}
+        {!loading && sessions.some(s => s.is_demo) && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-amber-800">Données de démo</p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                {sessions.filter(s => s.is_demo).length} séances fictives dans ton historique
+              </p>
+            </div>
+            <button onClick={handleDeleteDemo} disabled={deletingDemo}
+              className="text-xs font-bold text-white bg-amber-500 rounded-xl px-3 py-2 whitespace-nowrap flex-shrink-0 disabled:opacity-50 transition">
+              {deletingDemo ? '...' : 'Supprimer'}
+            </button>
+          </div>
+        )}
 
         {/* Semaine courante */}
         {loading ? <Skeleton className="h-44 mb-4" /> : (

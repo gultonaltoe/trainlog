@@ -194,6 +194,12 @@ export async function getProfile(): Promise<UserProfile | null> {
   }
 }
 
+export async function deleteDemoData(): Promise<void> {
+  const uid = await getUid()
+  await supabase.from('personal_records').delete().eq('user_id', uid).eq('is_demo', true)
+  await supabase.from('sessions').delete().eq('user_id', uid).eq('is_demo', true)
+}
+
 export async function upsertProfile(profile: UserProfile, id?: string): Promise<void> {
   const uid = await getUid()
   if (id) {
