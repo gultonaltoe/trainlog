@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { getRecentSessions, getProfile } from '@/lib/api'
 import type { SessionSummary, UserProfile } from '@/lib/api'
 
@@ -62,7 +61,6 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 // ── Dashboard ──────────────────────────────────────────────
 export default function Dashboard() {
-  const router  = useRouter()
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [profile, setProfile]   = useState<UserProfile | null>(null)
   const [loading, setLoading]   = useState(true)
@@ -72,11 +70,11 @@ export default function Dashboard() {
 
   const load = useCallback(async () => {
     const p = await getProfile()
-    if (!p?.first_name) { router.push('/welcome'); return }
+    if (!p) return  // UserInit handles redirect if no profile
     setProfile(p)
     const s = await getRecentSessions(200)
     setSessions(s); setLoading(false)
-  }, [router])
+  }, [])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {

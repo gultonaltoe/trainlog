@@ -54,7 +54,7 @@ export default function WelcomePage() {
         user_id:       getUserId(),
       })
       await seedDemoData(sports)
-      router.push('/log')
+      router.push('/')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erreur')
       setSaving(false)
