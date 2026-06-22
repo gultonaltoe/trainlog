@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { seedDemoData } from '@/lib/seedDemoData'
 
 const SPORTS = [
   { id: 'crossfit',      label: 'CrossFit',       icon: '🏋️', desc: 'WOD, AMRAP, For Time' },
@@ -59,13 +58,6 @@ export default function WelcomePage() {
         user_id:       uid,
       })
       if (insertError) throw new Error(insertError.message)
-
-      const { count } = await supabase
-        .from('sessions')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', uid)
-
-      if (!count) await seedDemoData(sports, uid)
 
       router.push('/')
     } catch (e: unknown) {
