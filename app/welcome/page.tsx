@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { getUserId } from '@/lib/user'
 import { seedDemoData } from '@/lib/seedDemoData'
 
 const SPORTS = [
@@ -44,16 +43,30 @@ export default function WelcomePage() {
   const handleFinish = async () => {
     if (!name.trim()) { setError('Entre ton prénom.'); return }
     setSaving(true)
+    setError('')
     try {
-      await supabase.from('user_profile').insert({
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Non authentifié — réessaie de te connecter.')
+
+      const uid = session.user.id
+
+      const { error: insertError } = await supabase.from('user_profile').insert({
         first_name:    name.trim(),
         sports:        sports,
         level:         level || null,
         goal:          goal  || null,
         weekly_target: weekly,
-        user_id:       getUserId(),
+        user_id:       uid,
       })
-      await seedDemoData(sports)
+      if (insertError) throw new Error(insertError.message)
+
+      const { count } = await supabase
+        .from('sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', uid)
+
+      if (!count) await seedDemoData(sports, uid)
+
       router.push('/')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erreur')

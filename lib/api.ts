@@ -1,5 +1,10 @@
 import { supabase } from './supabase'
-import { getUserId } from './user'
+
+async function getUid(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Not authenticated')
+  return session.user.id
+}
 
 export type SessionType   = { id: string; name: string; color: string; emoji: string; category: string }
 export type Movement      = { id: string; name: string; category: string; subcategory?: string; equipment?: string[] }
@@ -59,7 +64,7 @@ export async function getMovementsByCategory(category: string): Promise<Movement
 }
 
 export async function saveSession(input: SessionInput): Promise<string> {
-  const uid = getUserId()
+  const uid = await getUid()
   const { data: session, error: sessionError } = await supabase.from('sessions')
     .insert({
       date: input.date, session_type_id: input.session_type_id,
@@ -122,41 +127,35 @@ is_rx: input.wod.is_rx, time_cap_min: input.wod.time_cap ?? null,
 }
 
 export async function getRecentSessions(limit = 30): Promise<SessionSummary[]> {
-  const uid = getUserId()
-  type Row = { id: string; date: string; duration_min: number | null; rpe: number | null; feeling_post: number | null; sleep_hours: number | null; energy_level: number | null; notes: string | null; session_types: { name: string; color: string; emoji: string } }
-  const toSummary = (rows: Row[]): SessionSummary[] => rows.map(s => ({
-    id:                s.id,
-    date:              s.date,
-    duration_min:      s.duration_min,
-    rpe:               s.rpe,
-    feeling_post:      s.feeling_post,
-    sleep_hours:       s.sleep_hours,
-    energy_level:      s.energy_level,
-    notes:             s.notes,
-    session_type:      s.session_types?.name  ?? '',
-    type_color:        s.session_types?.color ?? '#F97316',
-    type_emoji:        s.session_types?.emoji ?? '🏋️',
-    blocks_count:      0,
-    wods_count:        0,
-    pain_alerts_count: 0,
-    is_competition:    false,
-  }))
-
-  const SEL = 'id, date, duration_min, rpe, feeling_post, sleep_hours, energy_level, notes, session_types!inner(name, color, emoji)'
-
-  const { data, error } = await supabase.from('sessions')
-    .select(SEL).eq('user_id', uid).is('deleted_at', null)
-    .order('date', { ascending: false }).limit(limit)
-
-  if (!error && data?.length) return toSummary(data as unknown as Row[])
-
-  // Fallback: user_id column may not exist yet, or rows not yet stamped
-  const { data: all, error: err2 } = await supabase.from('sessions')
-    .select(SEL).is('deleted_at', null)
-    .order('date', { ascending: false }).limit(limit)
-
-  if (err2) throw new Error(`getRecentSessions: ${err2.message}`)
-  return toSummary((all ?? []) as unknown as Row[])
+  try {
+    const uid = await getUid()
+    type Row = { id: string; date: string; duration_min: number | null; rpe: number | null; feeling_post: number | null; sleep_hours: number | null; energy_level: number | null; notes: string | null; session_types: { name: string; color: string; emoji: string } }
+    const toSummary = (rows: Row[]): SessionSummary[] => rows.map(s => ({
+      id:                s.id,
+      date:              s.date,
+      duration_min:      s.duration_min,
+      rpe:               s.rpe,
+      feeling_post:      s.feeling_post,
+      sleep_hours:       s.sleep_hours,
+      energy_level:      s.energy_level,
+      notes:             s.notes,
+      session_type:      s.session_types?.name  ?? '',
+      type_color:        s.session_types?.color ?? '#F97316',
+      type_emoji:        s.session_types?.emoji ?? '🏋️',
+      blocks_count:      0,
+      wods_count:        0,
+      pain_alerts_count: 0,
+      is_competition:    false,
+    }))
+    const SEL = 'id, date, duration_min, rpe, feeling_post, sleep_hours, energy_level, notes, session_types!inner(name, color, emoji)'
+    const { data, error } = await supabase.from('sessions')
+      .select(SEL).eq('user_id', uid).is('deleted_at', null)
+      .order('date', { ascending: false }).limit(limit)
+    if (error) throw new Error(error.message)
+    return toSummary((data ?? []) as unknown as Row[])
+  } catch {
+    return []
+  }
 }
 
 export async function getWeeklyVolume(weeks = 12) {
@@ -185,31 +184,17 @@ export type UserProfile = {
 }
 
 export async function getProfile(): Promise<UserProfile | null> {
-  const uid = getUserId()
-  const { data } = await supabase.from('user_profile').select('*').eq('user_id', uid).limit(1).maybeSingle()
-
-  if (data) {
-    // Always stamp any orphan rows left from before user isolation was added
-    supabase.from('sessions').update({ user_id: uid }).is('user_id', null).then(() => {})
-    supabase.from('personal_records').update({ user_id: uid }).is('user_id', null).then(() => {})
-    return data as UserProfile
+  try {
+    const uid = await getUid()
+    const { data } = await supabase.from('user_profile').select('*').eq('user_id', uid).limit(1).maybeSingle()
+    return data as UserProfile | null
+  } catch {
+    return null
   }
-
-  // No profile for this UUID yet — claim any existing unclaimed profile
-  const { data: fallback } = await supabase.from('user_profile').select('*').limit(1).maybeSingle()
-  if (fallback) {
-    await Promise.all([
-      supabase.from('user_profile')    .update({ user_id: uid }).is('user_id', null),
-      supabase.from('sessions')        .update({ user_id: uid }).is('user_id', null),
-      supabase.from('personal_records').update({ user_id: uid }).is('user_id', null),
-    ])
-    return fallback as UserProfile
-  }
-  return null
 }
 
 export async function upsertProfile(profile: UserProfile, id?: string): Promise<void> {
-  const uid = getUserId()
+  const uid = await getUid()
   if (id) {
     await supabase.from('user_profile').update({ ...profile, updated_at: new Date().toISOString() }).eq('id', id)
   } else {
@@ -224,7 +209,7 @@ export async function detectAndSavePRs(
   sessionId: string,
   blocks: BlockInput[]
 ): Promise<NewPR[]> {
-  const uid     = getUserId()
+  const uid     = await getUid()
   const today   = new Date().toISOString().split('T')[0]
   const newPRs: NewPR[] = []
   if (!blocks?.length) return newPRs

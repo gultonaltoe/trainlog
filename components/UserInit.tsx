@@ -7,14 +7,9 @@ const UID_KEY = 'trainlog_uid'
 
 async function migrateIfNeeded(authUid: string) {
   const oldUid = localStorage.getItem(UID_KEY)
-  if (!oldUid) { localStorage.setItem(UID_KEY, authUid); return }
-  if (oldUid === authUid) return
-  await Promise.all([
-    supabase.from('user_profile').update({ user_id: authUid }).eq('user_id', oldUid),
-    supabase.from('sessions').update({ user_id: authUid }).eq('user_id', oldUid),
-    supabase.from('personal_records').update({ user_id: authUid }).eq('user_id', oldUid),
-  ])
   localStorage.setItem(UID_KEY, authUid)
+  if (!oldUid || oldUid === authUid) return
+  await supabase.rpc('migrate_user_data', { old_uid: oldUid })
 }
 
 export default function UserInit() {

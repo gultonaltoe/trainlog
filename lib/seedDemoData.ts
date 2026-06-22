@@ -1,5 +1,4 @@
 import { supabase } from './supabase'
-import { getUserId } from './user'
 
 function daysAgo(n: number) {
   const d = new Date()
@@ -7,8 +6,8 @@ function daysAgo(n: number) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
-export async function seedDemoData(sports: string[]) {
-  const uid = getUserId()
+export async function seedDemoData(sports: string[], userId: string) {
+  const uid = userId
   const hasCrossfit = sports.some(s => s === 'crossfit')
   const hasHaltero  = sports.some(s => s === 'haltérophilie')
   const hasRun      = sports.some(s => s === 'run')
