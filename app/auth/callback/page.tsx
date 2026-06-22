@@ -1,32 +1,22 @@
 'use client'
 import { Suspense, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 function CallbackHandler() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
-    const code = searchParams.get('code')
-    const tokenHash = searchParams.get('token_hash')
-    const type = searchParams.get('type')
-
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          router.replace(`/auth?error=1&msg=${encodeURIComponent(error.message)}`)
-        } else {
-          router.replace('/')
-        }
-      })
-    } else if (tokenHash && type) {
-      supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as 'email' }).then(({ error }) => {
-        router.replace(error ? '/auth?error=1' : '/')
-      })
-    } else {
-      router.replace('/auth')
+    // Error redirect from Supabase (e.g. expired link)
+    if (window.location.hash.includes('error=')) {
+      router.replace('/auth?error=1')
+      return
     }
+    // Supabase auto-exchanges ?code= via detectSessionInUrl during initialization.
+    // getSession() waits for that initialization (including PKCE exchange) to finish.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      router.replace(session ? '/' : '/auth?error=1')
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

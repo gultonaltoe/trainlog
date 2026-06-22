@@ -6,12 +6,11 @@ import { supabase } from '@/lib/supabase'
 function AuthForm() {
   const searchParams = useSearchParams()
   const hasError = searchParams.get('error')
-  const errorMsg = searchParams.get('msg')
 
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(hasError ? `Lien invalide ou expiré. Réessaie.${errorMsg ? ` (${errorMsg})` : ''}` : '')
+  const [error, setError] = useState(hasError ? 'Lien invalide ou expiré. Réessaie.' : '')
 
   const handleSubmit = async () => {
     if (!email.trim()) return
