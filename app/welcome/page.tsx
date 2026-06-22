@@ -14,9 +14,9 @@ const SPORTS = [
 ]
 
 const LEVELS = [
-  { id: 'beginner',     label: 'Débutant',      desc: 'Je commence ou moins d\'1 an de pratique', icon: '🌱' },
-  { id: 'intermediate', label: 'Intermédiaire', desc: '1 à 3 ans — je progresse régulièrement',    icon: '📈' },
-  { id: 'advanced',     label: 'Avancé',        desc: 'Plus de 3 ans — je cherche à optimiser',    icon: '🏆' },
+  { id: 'débutant',       label: 'Débutant',      desc: 'Je commence ou moins d\'1 an de pratique', icon: '🌱' },
+  { id: 'intermédiaire',  label: 'Intermédiaire', desc: '1 à 3 ans — je progresse régulièrement',    icon: '📈' },
+  { id: 'avancé',         label: 'Avancé',        desc: 'Plus de 3 ans — je cherche à optimiser',    icon: '🏆' },
 ]
 
 const GOALS = [
