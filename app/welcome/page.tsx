@@ -20,10 +20,10 @@ const LEVELS = [
 ]
 
 const GOALS = [
-  { id: 'performance', label: 'Performance',    icon: '🎯', desc: 'Battre mes PRs, progresser' },
-  { id: 'health',      label: 'Santé / Forme',  icon: '💚', desc: 'Rester actif, me sentir bien' },
-  { id: 'competition', label: 'Compétition',    icon: '🥇', desc: 'Préparer des événements' },
-  { id: 'body',        label: 'Transformation', icon: '🔥', desc: 'Composition corporelle' },
+  { id: 'performance',    label: 'Performance',    icon: '🎯', desc: 'Battre mes PRs, progresser' },
+  { id: 'santé',          label: 'Santé / Forme',  icon: '💚', desc: 'Rester actif, me sentir bien' },
+  { id: 'compétition',    label: 'Compétition',    icon: '🥇', desc: 'Préparer des événements' },
+  { id: 'remise_en_forme',label: 'Transformation', icon: '🔥', desc: 'Composition corporelle' },
 ]
 
 export default function WelcomePage() {
