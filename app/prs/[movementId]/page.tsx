@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { getUserId } from '@/lib/user'
+import { getSessionUserId } from '@/lib/auth'
 
 type PR = {
   id: string; value: number; unit: string; date: string
@@ -46,19 +46,21 @@ export default function MovementPRPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const uid = getUserId()
-    Promise.all([
-      supabase.from('personal_records')
-        .select('id, value, unit, date, session_id, movement_name')
-        .eq('movement_id', movementId)
-        .eq('user_id', uid)
-        .order('date', { ascending: true }),
-      supabase.from('block_sets')
-        .select('weight_kg, reps, session_blocks!inner(sessions!inner(id, date, user_id))')
-        .eq('movement_id', movementId)
-        .not('weight_kg', 'is', null)
-        .order('session_blocks(sessions(date))', { ascending: true }),
-    ]).then(([prRes, setsRes]) => {
+    const run = async () => {
+      const uid = await getSessionUserId()
+      if (!uid) { setLoading(false); return }
+      const [prRes, setsRes] = await Promise.all([
+        supabase.from('personal_records')
+          .select('id, value, unit, date, session_id, movement_name')
+          .eq('movement_id', movementId)
+          .eq('user_id', uid)
+          .order('date', { ascending: true }),
+        supabase.from('block_sets')
+          .select('weight_kg, reps, session_blocks!inner(sessions!inner(id, date, user_id))')
+          .eq('movement_id', movementId)
+          .not('weight_kg', 'is', null)
+          .order('session_blocks(sessions(date))', { ascending: true }),
+      ])
       setPrs((prRes.data ?? []) as PR[])
       const rawSets = (setsRes.data ?? []) as unknown as {
         weight_kg: number; reps: number | null
@@ -73,7 +75,8 @@ export default function MovementPRPage() {
           session_id: s.session_blocks.sessions.id,
         })))
       setLoading(false)
-    })
+    }
+    void run()
   }, [movementId])
 
   if (loading) return (

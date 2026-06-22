@@ -1,10 +1,7 @@
 import { supabase } from './supabase'
+import { requireUserId, NotAuthenticatedError } from './auth'
 
-async function getUid(): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) throw new Error('Not authenticated')
-  return session.user.id
-}
+const getUid = requireUserId
 
 export type SessionType   = { id: string; name: string; color: string; emoji: string; category: string }
 export type Movement      = { id: string; name: string; category: string; subcategory?: string; equipment?: string[] }
@@ -154,8 +151,9 @@ export async function getRecentSessions(limit = 30): Promise<SessionSummary[]> {
       .order('date', { ascending: false }).limit(limit)
     if (error) throw new Error(error.message)
     return toSummary((data ?? []) as unknown as Row[])
-  } catch {
-    return []
+  } catch (e) {
+    if (e instanceof NotAuthenticatedError) return []  // logged out — expected
+    throw e  // real failure — don't hide it
   }
 }
 
@@ -187,10 +185,12 @@ export type UserProfile = {
 export async function getProfile(): Promise<UserProfile | null> {
   try {
     const uid = await getUid()
-    const { data } = await supabase.from('user_profile').select('*').eq('user_id', uid).limit(1).maybeSingle()
+    const { data, error } = await supabase.from('user_profile').select('*').eq('user_id', uid).limit(1).maybeSingle()
+    if (error) throw new Error(error.message)
     return data as UserProfile | null
-  } catch {
-    return null
+  } catch (e) {
+    if (e instanceof NotAuthenticatedError) return null  // logged out — expected
+    throw e  // real failure — don't hide it
   }
 }
 

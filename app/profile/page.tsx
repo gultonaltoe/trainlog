@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/lib/toast'
-import { getUserId } from '@/lib/user'
+import { getSessionUserId } from '@/lib/auth'
 
 type Profile = {
   first_name: string; email: string; birth_date: string
@@ -45,7 +45,10 @@ export default function ProfilePage() {
   const [pid, setPid]   = useState<string|null>(null)
 
   useEffect(() => {
-    supabase.from('user_profile').select('*').eq('user_id', getUserId()).limit(1).maybeSingle().then(({data}) => {
+    const run = async () => {
+      const uid = await getSessionUserId()
+      if (!uid) { setL(false); return }
+      const { data } = await supabase.from('user_profile').select('*').eq('user_id', uid).limit(1).maybeSingle()
       if (data) {
         setPid(data.id)
         setP({
@@ -67,7 +70,8 @@ export default function ProfilePage() {
         }
       }
       setL(false)
-    })
+    }
+    void run()
   }, [])
 
   const upd = (f: keyof Profile, v: string | string[]) => setP(prev => ({...prev, [f]: v}))
@@ -93,7 +97,9 @@ export default function ProfilePage() {
     }
     if (pid) await supabase.from('user_profile').update(payload).eq('id', pid)
     else {
-      const { data } = await supabase.from('user_profile').insert({ ...payload, user_id: getUserId() }).select('id').single()
+      const uid = await getSessionUserId()
+      if (!uid) { toast.error('Session expirée, reconnecte-toi'); setS(false); return }
+      const { data } = await supabase.from('user_profile').insert({ ...payload, user_id: uid }).select('id').single()
       if (data) setPid(data.id)
     }
     document.documentElement.style.setProperty('--theme-primary', p.theme_color)

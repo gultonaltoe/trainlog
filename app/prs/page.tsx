@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { getUserId } from '@/lib/user'
+import { getSessionUserId } from '@/lib/auth'
 import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
 
@@ -102,27 +102,23 @@ export default function PRsPage() {
 
   const prDate = showDatePicker && customDate ? customDate : offsetStr(dateOffset)
 
-  const loadPRs = () => {
-    const uid = getUserId()
-    const mkQ = () => supabase.from('personal_records').select('*').order('date', { ascending: false })
-    const process = (data: PR[] | null) => {
-      if (!data?.length) { setLoading(false); return }
-      const map: Record<string, MovementPR> = {}
-      ;(data as PR[]).forEach(pr => {
-        if (!pr.movement_name) return
-        const key = (pr.movement_id ?? pr.movement_name) + '|' + (pr.unit ?? 'kg')
-        if (!map[key] || pr.value > map[key].best) {
-          map[key] = { key, movement_id: pr.movement_id, movement_name: pr.movement_name, best: pr.value, unit: pr.unit ?? 'kg', date: pr.date, count: 0 }
-        }
-        map[key].count++
-      })
-      setPrs(Object.values(map).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
-      setLoading(false)
-    }
-    mkQ().eq('user_id', uid).then(({ data, error }) => {
-      if (!error && data?.length) { process(data as PR[]); return }
-      mkQ().then(({ data: all }) => process(all as PR[] | null))
+  const loadPRs = async () => {
+    const uid = await getSessionUserId()
+    if (!uid) { setLoading(false); return }
+    const { data } = await supabase.from('personal_records').select('*')
+      .eq('user_id', uid).order('date', { ascending: false })
+    if (!data?.length) { setLoading(false); return }
+    const map: Record<string, MovementPR> = {}
+    ;(data as PR[]).forEach(pr => {
+      if (!pr.movement_name) return
+      const key = (pr.movement_id ?? pr.movement_name) + '|' + (pr.unit ?? 'kg')
+      if (!map[key] || pr.value > map[key].best) {
+        map[key] = { key, movement_id: pr.movement_id, movement_name: pr.movement_name, best: pr.value, unit: pr.unit ?? 'kg', date: pr.date, count: 0 }
+      }
+      map[key].count++
     })
+    setPrs(Object.values(map).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+    setLoading(false)
   }
 
   useEffect(() => { loadPRs() }, [])
@@ -180,6 +176,8 @@ export default function PRsPage() {
       ? `${finalMov} (${scheme})`
       : finalMov
 
+    const uid = await getSessionUserId()
+    if (!uid) { toast.error('Session expirée, reconnecte-toi'); return }
     setSaving(true)
     const { error } = await supabase.from('personal_records').insert({
       movement_id:   null,
@@ -188,7 +186,7 @@ export default function PRsPage() {
       unit,
       date:          prDate,
       session_id:    null,
-      user_id:       getUserId(),
+      user_id:       uid,
     })
     setSaving(false)
 
