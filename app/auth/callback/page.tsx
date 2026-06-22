@@ -14,7 +14,11 @@ function CallbackHandler() {
 
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        router.replace(error ? '/auth?error=1' : '/')
+        if (error) {
+          router.replace(`/auth?error=1&msg=${encodeURIComponent(error.message)}`)
+        } else {
+          router.replace('/')
+        }
       })
     } else if (tokenHash && type) {
       supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as 'email' }).then(({ error }) => {
