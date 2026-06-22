@@ -36,7 +36,7 @@ export type SessionSummary = {
   rpe: number | null; feeling_post: number | null
   sleep_hours: number | null; energy_level: number | null
   blocks_count: number; wods_count: number; pain_alerts_count: number
-  is_competition: boolean; notes: string | null
+  is_competition: boolean; notes: string | null; is_demo: boolean
 }
 
 export async function getSessionTypes(): Promise<SessionType[]> {
@@ -129,7 +129,7 @@ is_rx: input.wod.is_rx, time_cap_min: input.wod.time_cap ?? null,
 export async function getRecentSessions(limit = 30): Promise<SessionSummary[]> {
   try {
     const uid = await getUid()
-    type Row = { id: string; date: string; duration_min: number | null; rpe: number | null; feeling_post: number | null; sleep_hours: number | null; energy_level: number | null; notes: string | null; session_types: { name: string; color: string; emoji: string } }
+    type Row = { id: string; date: string; duration_min: number | null; rpe: number | null; feeling_post: number | null; sleep_hours: number | null; energy_level: number | null; notes: string | null; is_demo: boolean; session_types: { name: string; color: string; emoji: string } }
     const toSummary = (rows: Row[]): SessionSummary[] => rows.map(s => ({
       id:                s.id,
       date:              s.date,
@@ -139,6 +139,7 @@ export async function getRecentSessions(limit = 30): Promise<SessionSummary[]> {
       sleep_hours:       s.sleep_hours,
       energy_level:      s.energy_level,
       notes:             s.notes,
+      is_demo:           s.is_demo ?? false,
       session_type:      s.session_types?.name  ?? '',
       type_color:        s.session_types?.color ?? '#F97316',
       type_emoji:        s.session_types?.emoji ?? '🏋️',
@@ -147,7 +148,7 @@ export async function getRecentSessions(limit = 30): Promise<SessionSummary[]> {
       pain_alerts_count: 0,
       is_competition:    false,
     }))
-    const SEL = 'id, date, duration_min, rpe, feeling_post, sleep_hours, energy_level, notes, session_types!inner(name, color, emoji)'
+    const SEL = 'id, date, duration_min, rpe, feeling_post, sleep_hours, energy_level, notes, is_demo, session_types!inner(name, color, emoji)'
     const { data, error } = await supabase.from('sessions')
       .select(SEL).eq('user_id', uid).is('deleted_at', null)
       .order('date', { ascending: false }).limit(limit)

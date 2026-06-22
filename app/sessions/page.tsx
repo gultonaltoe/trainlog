@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { getUserId } from '@/lib/user'
 
 type Session = {
   id: string; date: string; rpe: number | null; duration_min: number | null
+  is_demo: boolean
   session_types: { name: string; emoji: string; color: string }
   session_pain_alerts: Array<{ id: string }>
 }
@@ -58,13 +58,13 @@ export default function SessionsPage() {
   const [filter, setFilter]     = useState('Tout')
 
   useEffect(() => {
-    const uid = getUserId()
-    const mkQ = () => supabase.from('sessions')
-      .select('id, date, rpe, duration_min, session_types(name,emoji,color), session_pain_alerts(id)')
-      .is('deleted_at', null).order('date', { ascending: false }).limit(500)
-    mkQ().eq('user_id', uid).then(({ data, error }) => {
-      if (!error && data?.length) { setSessions(data as unknown as Session[]); setLoading(false); return }
-      mkQ().then(({ data: all }) => { setSessions((all ?? []) as unknown as Session[]); setLoading(false) })
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      supabase.from('sessions')
+        .select('id, date, rpe, duration_min, is_demo, session_types(name,emoji,color), session_pain_alerts(id)')
+        .eq('user_id', session.user.id)
+        .is('deleted_at', null).order('date', { ascending: false }).limit(500)
+        .then(({ data }) => { setSessions((data ?? []) as unknown as Session[]); setLoading(false) })
     })
   }, [])
 
@@ -181,8 +181,9 @@ export default function SessionsPage() {
                     }`}
                     style={{
                       minHeight: 58,
-                      background: first ? first.session_types.color + '20' : undefined,
+                      background: first ? first.session_types.color + (first.is_demo ? '10' : '20') : undefined,
                       outline: isToday ? '2px solid var(--theme-primary, #F97316)' : undefined,
+                      border: first?.is_demo ? '1.5px dashed #D1D5DB' : undefined,
                     }}>
                     <span className={`text-xs font-bold leading-none mb-0.5 ${
                       isToday ? 'text-orange-500' : items.length > 0 ? 'text-gray-700' : 'text-gray-300'
@@ -260,7 +261,14 @@ export default function SessionsPage() {
                           {s.session_types.emoji}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-800">{s.session_types.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-bold text-gray-800">{s.session_types.name}</p>
+                            {s.is_demo && (
+                              <span className="text-[10px] font-bold text-gray-400 border border-dashed border-gray-300 px-1.5 py-0.5 rounded-full leading-none">
+                                DÉMO
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-400">
                             {relDate(s.date)}{s.duration_min ? ` · ${s.duration_min} min` : ''}
                           </p>
