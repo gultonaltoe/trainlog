@@ -128,6 +128,18 @@ export default function ProfilePage() {
           <p className="text-sm text-gray-400 mt-0.5">Infos personnelles et préférences</p>
         </div>
 
+        <Link href="/box/join"
+          className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 p-4 mb-4 hover:shadow-sm transition">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏢</span>
+            <div>
+              <p className="text-sm font-bold text-gray-800">Rejoindre une box</p>
+              <p className="text-xs text-gray-400">Entre le code de ta salle</p>
+            </div>
+          </div>
+          <span className="text-gray-300">›</span>
+        </Link>
+
         {/* Identité */}
         <div className={section}>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Identité</p>

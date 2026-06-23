@@ -17,7 +17,7 @@ export default function StaffPage() {
   useEffect(() => {
     if (!org) return
     getOrgMembers(org.orgId)
-      .then(all => setStaff(all.filter(m => STAFF_ROLES.includes(m.role))))
+      .then(all => setStaff(all.filter(m => m.status === 'active' && STAFF_ROLES.includes(m.role))))
       .catch(() => {})
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,7 +51,7 @@ export default function StaffPage() {
               <div key={m.membershipId} className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">🧑‍🏫</div>
-                  <p className="text-sm font-bold text-gray-800">{ROLE_LABEL[m.role]}</p>
+                  <p className="text-sm font-bold text-gray-800 truncate">{m.firstName ?? ROLE_LABEL[m.role]}</p>
                 </div>
                 <span className="text-[11px] font-bold text-gray-400 flex-shrink-0">{ROLE_LABEL[m.role]}</span>
               </div>

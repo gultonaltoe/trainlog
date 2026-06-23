@@ -6,7 +6,7 @@ import { requireUserId } from './auth'
 // These functions only concern the org/role layer.
 
 export type Role = 'owner' | 'coach' | 'staff' | 'member'
-export type MembershipStatus = 'active' | 'invited' | 'inactive'
+export type MembershipStatus = 'active' | 'invited' | 'pending' | 'inactive'
 
 export type Membership = {
   id: string
@@ -55,25 +55,48 @@ export async function createOrganization(name: string): Promise<string> {
 export type OrgMember = {
   membershipId: string
   userId: string
+  firstName: string | null
   role: Role
+  status: MembershipStatus
   dataSharing: boolean
 }
 
-/** Active members of a box (owner/coach/staff can read this via RLS). */
+/**
+ * Member directory of a box (names + role + status), for owner/coach/staff.
+ * Uses a SECURITY DEFINER function that exposes only names, not full profiles.
+ */
 export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
-  const { data, error } = await supabase
-    .from('memberships')
-    .select('id, user_id, role, data_sharing')
-    .eq('organization_id', orgId)
-    .eq('status', 'active')
-    .order('created_at', { ascending: true })
+  const { data, error } = await supabase.rpc('get_org_member_directory', { p_org_id: orgId })
   if (error) throw new Error(`getOrgMembers: ${error.message}`)
   return (data ?? []).map(m => ({
-    membershipId: m.id,
+    membershipId: m.membership_id,
     userId:       m.user_id,
+    firstName:    m.first_name,
     role:         m.role as Role,
+    status:       m.status as MembershipStatus,
     dataSharing:  m.data_sharing,
   }))
+}
+
+/** The box's shareable join code (members enter it to request to join). */
+export async function getBoxJoinCode(orgId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('organizations').select('join_code').eq('id', orgId).single()
+  if (error) throw new Error(`getBoxJoinCode: ${error.message}`)
+  return data.join_code
+}
+
+/** Athlete requests to join a box by its code. Returns the box name. */
+export async function requestToJoinBox(code: string): Promise<string> {
+  const { data, error } = await supabase.rpc('request_to_join_box', { p_code: code.trim() })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+/** Owner/coach/staff approve (active) or reject (inactive) a membership. */
+export async function setMembershipStatus(membershipId: string, status: MembershipStatus): Promise<void> {
+  const { error } = await supabase.from('memberships').update({ status }).eq('id', membershipId)
+  if (error) throw new Error(`setMembershipStatus: ${error.message}`)
 }
 
 /** Member toggles whether this box's coaches can see their training data. */

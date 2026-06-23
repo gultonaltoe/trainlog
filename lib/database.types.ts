@@ -322,6 +322,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          join_code: string | null
           name: string
           owner_user_id: string
           settings: Json
@@ -331,6 +332,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          join_code?: string | null
           name: string
           owner_user_id: string
           settings?: Json
@@ -340,6 +342,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          join_code?: string | null
           name?: string
           owner_user_id?: string
           settings?: Json
@@ -995,11 +998,23 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
+      get_org_member_directory: {
+        Args: { p_org_id: string }
+        Returns: {
+          data_sharing: boolean
+          first_name: string
+          membership_id: string
+          role: string
+          status: string
+          user_id: string
+        }[]
+      }
       has_org_role: {
         Args: { allowed_roles: string[]; org_id: string }
         Returns: boolean
       }
       migrate_user_data: { Args: { old_uid: string }; Returns: undefined }
+      request_to_join_box: { Args: { p_code: string }; Returns: string }
       set_data_sharing: {
         Args: { org_id: string; share: boolean }
         Returns: undefined
