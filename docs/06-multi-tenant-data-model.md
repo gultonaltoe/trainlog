@@ -11,6 +11,16 @@ Today every table hangs off a single `user`. We add two small tables that introd
 
 Everything you already have (`sessions`, `personal_records`, `user_profile`, …) stays keyed on the user and untouched. A solo athlete simply has no membership rows.
 
+## Every user is an athlete (including coaches)
+
+"Athlete" is **not** a role — it's something *every* user is. A user's training data hangs off their user id, completely independent of any organization or role. So coaches, owners, and front-desk staff are all *also* athletes: each has their own personal training space, automatically.
+
+- **No "athlete" role exists.** Roles (owner / coach / staff / member) only describe what you do *inside a box*. Personal training is always yours.
+- **One role per box, additive capabilities.** At most one membership per org (`unique(organization_id, user_id)`); a coach can still self-serve as an athlete (log training, book a class). We deliberately do not model multiple roles per box — it keeps things simple; revisit only if a real need appears.
+- **Different roles in different boxes** is fine (coach at Box A, member at Box B) — just two membership rows.
+
+**Front-end consequence:** everyone gets the personal athlete experience; users with an org role get an added **context switch** ("My training" ⇄ "Coaching / Box"), not a separate account.
+
 ## The map (entity relationships)
 
 ```

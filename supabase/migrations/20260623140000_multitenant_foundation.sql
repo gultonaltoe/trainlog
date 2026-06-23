@@ -10,6 +10,12 @@
 -- Nothing here changes existing athlete data or Phase 0 owner policies.
 -- With zero memberships, the new coach-read policies grant nothing.
 -- Safe to re-run.
+--
+-- NOTE on "a coach is also an athlete": "athlete" is NOT a role. Every user
+-- owns their training data independent of any org/role, so a coach is
+-- automatically an athlete too. Roles below only govern actions inside a box,
+-- and a user holds at most one role per org (unique(organization_id,user_id))
+-- with additive capabilities. Different roles across different orgs are fine.
 -- ============================================================
 
 -- ------------------------------------------------------------
