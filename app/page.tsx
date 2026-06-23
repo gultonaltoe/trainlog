@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { getRecentSessions, getProfile, deleteDemoData } from '@/lib/api'
 import type { SessionSummary, UserProfile } from '@/lib/api'
 import { useAppContext } from '@/components/AppContext'
-import ContextSwitcher from '@/components/ContextSwitcher'
 import CoachDashboard from '@/components/CoachDashboard'
 
 // ── Helpers ───────────────────────────────────────────────
@@ -159,10 +158,8 @@ export default function Dashboard() {
     <div className="bg-gray-50">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
-        <div className="pt-6"><ContextSwitcher /></div>
-
         {/* Header */}
-        <div className="pb-5 flex items-start justify-between">
+        <div className="pt-8 pb-5 flex items-start justify-between">
           <div>
             {loading
               ? <Skeleton className="h-7 w-40 mb-1.5" />

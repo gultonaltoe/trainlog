@@ -18,7 +18,7 @@ export default function NewBoxPage() {
       const orgId = await createOrganization(name)
       await refresh()
       setActive({ type: 'org', orgId, orgName: name.trim(), role: 'owner' })
-      toast.success('Box créé 🎉')
+      toast.success('Box créée 🎉')
       router.push('/')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur')
@@ -34,13 +34,13 @@ export default function NewBoxPage() {
 
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🏢</div>
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Créer ton box</h1>
+          <h1 className="text-2xl font-black text-gray-900 mb-2">Créer ta box</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
             Tu en seras le propriétaire. Tu pourras ensuite inviter des coachs et des membres.
           </p>
         </div>
 
-        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Nom du box</label>
+        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Nom de la box</label>
         <input type="text" value={name} autoFocus
           placeholder="CrossFit Lyon"
           onChange={e => setName(e.target.value)}
@@ -50,7 +50,7 @@ export default function NewBoxPage() {
         <button onClick={submit} disabled={saving || !name.trim()}
           className="mt-6 w-full py-4 rounded-2xl text-white font-black text-base transition"
           style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', opacity: saving || !name.trim() ? 0.5 : 1 }}>
-          {saving ? 'Création...' : 'Créer le box →'}
+          {saving ? 'Création...' : 'Créer la box →'}
         </button>
       </div>
     </div>

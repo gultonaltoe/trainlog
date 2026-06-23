@@ -49,6 +49,30 @@ export async function createOrganization(name: string): Promise<string> {
   return data.id
 }
 
+export type OrgMember = {
+  membershipId: string
+  userId: string
+  role: Role
+  dataSharing: boolean
+}
+
+/** Active members of a box (owner/coach/staff can read this via RLS). */
+export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
+  const { data, error } = await supabase
+    .from('memberships')
+    .select('id, user_id, role, data_sharing')
+    .eq('organization_id', orgId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: true })
+  if (error) throw new Error(`getOrgMembers: ${error.message}`)
+  return (data ?? []).map(m => ({
+    membershipId: m.id,
+    userId:       m.user_id,
+    role:         m.role as Role,
+    dataSharing:  m.data_sharing,
+  }))
+}
+
 /** Member toggles whether this box's coaches can see their training data. */
 export async function setDataSharing(orgId: string, share: boolean): Promise<void> {
   const { error } = await supabase.rpc('set_data_sharing', { org_id: orgId, share })

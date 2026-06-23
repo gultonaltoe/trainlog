@@ -5,6 +5,7 @@ import ThemeLoader    from '@/components/ThemeLoader'
 import UserInit       from '@/components/UserInit'
 import ClientShell    from '@/components/ClientShell'
 import { AppProvider } from '@/components/AppContext'
+import GlobalContextBar from '@/components/GlobalContextBar'
 
 export const metadata: Metadata = {
   title: 'Trainlog',
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <UserInit />
           <ThemeLoader />
           <ToastContainer />
+          <GlobalContextBar />
           <div className="pb-20" style={{ background: '#F9FAFB' }}>
             {children}
           </div>

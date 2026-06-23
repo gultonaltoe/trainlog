@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAppContext, type ActiveContext } from './AppContext'
 import type { Role } from '@/lib/orgs'
@@ -55,10 +54,6 @@ export default function ContextSwitcher() {
               <span className="text-[11px] text-gray-400 flex-shrink-0">{ROLE_LABEL[m.role]}</span>
             </button>
           ))}
-          <Link href="/box/new" onClick={() => setOpen(false)}
-            className="block px-4 py-3 border-t border-gray-100 text-sm font-semibold text-orange-600 hover:bg-orange-50">
-            + Créer un box
-          </Link>
         </div>
       )}
     </div>
