@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { getRecentSessions, getProfile, deleteDemoData } from '@/lib/api'
 import type { SessionSummary, UserProfile } from '@/lib/api'
+import { useAppContext } from '@/components/AppContext'
+import ContextSwitcher from '@/components/ContextSwitcher'
+import CoachDashboard from '@/components/CoachDashboard'
 
 // ── Helpers ───────────────────────────────────────────────
 function toDateStr(d: Date) {
@@ -68,6 +71,7 @@ export default function Dashboard() {
   const [period, setPeriod]           = useState<Period>('30j')
   const [dashCalY, setDashCalY] = useState(new Date().getFullYear())
   const [dashCalM, setDashCalM] = useState(new Date().getMonth())
+  const { active } = useAppContext()
 
   const load = useCallback(async () => {
     let p = await getProfile()
@@ -146,12 +150,19 @@ export default function Dashboard() {
 
   const today  = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
+  // Role-aware: in a box as owner/coach/staff → coaching view. Members and
+  // solo athletes get the athlete dashboard below.
+  if (active.type === 'org' && active.role !== 'member')
+    return <CoachDashboard orgId={active.orgId} orgName={active.orgName} role={active.role} />
+
   return (
     <div className="bg-gray-50">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
+        <div className="pt-6"><ContextSwitcher /></div>
+
         {/* Header */}
-        <div className="pt-8 pb-5 flex items-start justify-between">
+        <div className="pb-5 flex items-start justify-between">
           <div>
             {loading
               ? <Skeleton className="h-7 w-40 mb-1.5" />
