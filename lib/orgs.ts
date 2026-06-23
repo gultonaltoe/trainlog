@@ -40,13 +40,16 @@ export async function getMyMemberships(): Promise<Membership[]> {
 /** Create a box. A DB trigger makes the current user its owner. Returns the new org id. */
 export async function createOrganization(name: string): Promise<string> {
   const uid = await requireUserId()
-  const { data, error } = await supabase
+  const id = crypto.randomUUID()
+  // No .select(): with a return representation, the DB re-checks the new row
+  // against the SELECT (read_orgs) policy, which needs the owner-membership the
+  // AFTER trigger hasn't created yet at that instant — that produced the RLS
+  // error. We generate the id ourselves and insert with return=minimal.
+  const { error } = await supabase
     .from('organizations')
-    .insert({ name: name.trim(), owner_user_id: uid })
-    .select('id')
-    .single()
+    .insert({ id, name: name.trim(), owner_user_id: uid })
   if (error) throw new Error(`createOrganization: ${error.message}`)
-  return data.id
+  return id
 }
 
 export type OrgMember = {
