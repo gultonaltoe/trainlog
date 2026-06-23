@@ -199,6 +199,44 @@ export type Database = {
         }
         Relationships: []
       }
+      memberships: {
+        Row: {
+          created_at: string
+          data_sharing: boolean
+          id: string
+          organization_id: string
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_sharing?: boolean
+          id?: string
+          organization_id: string
+          role: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_sharing?: boolean
+          id?: string
+          organization_id?: string
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memberships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       movements: {
         Row: {
           category: string | null
@@ -277,6 +315,36 @@ export type Database = {
           notes?: string | null
           protein_g?: number | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_user_id: string
+          settings: Json
+          slug: string | null
+          subscription_status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_user_id: string
+          settings?: Json
+          slug?: string | null
+          subscription_status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+          settings?: Json
+          slug?: string | null
+          subscription_status?: string
         }
         Relationships: []
       }
@@ -923,7 +991,19 @@ export type Database = {
       }
     }
     Functions: {
+      can_view_member_data: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      has_org_role: {
+        Args: { allowed_roles: string[]; org_id: string }
+        Returns: boolean
+      }
       migrate_user_data: { Args: { old_uid: string }; Returns: undefined }
+      set_data_sharing: {
+        Args: { org_id: string; share: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
