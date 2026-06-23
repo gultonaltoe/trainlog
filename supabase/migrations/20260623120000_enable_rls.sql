@@ -13,6 +13,31 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
+-- 0. Drop ALL pre-existing policies on the target tables.
+--    RLS was previously enabled with permissive "USING (true)"
+--    policies. Postgres ORs permissive policies together, so an old
+--    open policy left in place would override our new owner rules.
+--    This wipes the slate so only the policies below apply.
+-- ------------------------------------------------------------
+
+do $$
+declare r record;
+begin
+  for r in
+    select tablename, policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename in (
+        'user_profile','sessions','session_blocks','wods',
+        'session_pain_alerts','personal_records','body_metrics','nutrition_logs',
+        'block_sets','wod_components','programs','program_sessions',
+        'movements','session_types','wod_formats','body_parts','feedback')
+  loop
+    execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
+  end loop;
+end $$;
+
+-- ------------------------------------------------------------
 -- 1. Owner-only tables (they carry a user_id column)
 --    A row is yours iff its user_id = your logged-in id.
 --    `for all` = applies to select/insert/update/delete.
