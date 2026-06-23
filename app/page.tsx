@@ -70,8 +70,11 @@ export default function Dashboard() {
   const [dashCalM, setDashCalM] = useState(new Date().getMonth())
 
   const load = useCallback(async () => {
-    const p = await getProfile()
-    if (!p) return  // UserInit handles redirect if no profile
+    let p = await getProfile()
+    // Retry once: a profile can come back null in the brief window before the
+    // auth token is wired to requests. Avoids getting stuck on the skeleton.
+    if (!p) { await new Promise(r => setTimeout(r, 250)); p = await getProfile() }
+    if (!p) return  // genuinely no profile — UserInit redirects to /welcome
     setProfile(p)
     const s = await getRecentSessions(200)
     setSessions(s); setLoading(false)

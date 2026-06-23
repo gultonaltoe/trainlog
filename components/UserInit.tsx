@@ -29,14 +29,20 @@ export default function UserInit() {
     }
 
     const run = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.replace('/auth'); return }
-      await migrateIfNeeded(session.user.id)
+      // getUser() validates with the auth server, which guarantees the access
+      // token is attached to the client before we query. getSession() can return
+      // a stored session a tick before the token is wired to PostgREST requests —
+      // and under RLS that produced an empty profile result and a false redirect
+      // to /welcome (the bug that flashed the welcome page over the dashboard).
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/auth'); return }
+      await migrateIfNeeded(user.id)
       if (pathname === '/welcome') return
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('user_profile').select('id')
-        .eq('user_id', session.user.id).limit(1).maybeSingle()
-      if (!profile) router.replace('/welcome')
+        .eq('user_id', user.id).limit(1).maybeSingle()
+      if (error) return                       // transient — never bounce on an error
+      if (!profile) router.replace('/welcome') // genuinely not onboarded
     }
 
     void run()

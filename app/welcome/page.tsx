@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { seedDemoData } from '@/lib/seedDemoData'
@@ -36,6 +36,20 @@ export default function WelcomePage() {
   const [weekly, setWeekly]   = useState(4)
   const [saving, setSaving]   = useState(false)
   const [error, setError]     = useState('')
+
+  // Self-correct: if an onboarded user lands here (e.g. a stray redirect),
+  // bounce them straight to the dashboard instead of re-running onboarding.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return  // UserInit handles the unauthenticated case
+      const { data } = await supabase
+        .from('user_profile').select('id').eq('user_id', user.id).limit(1).maybeSingle()
+      if (!cancelled && data) router.replace('/')
+    })()
+    return () => { cancelled = true }
+  }, [router])
 
   const toggleSport = (id: string) =>
     setSports(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id])
