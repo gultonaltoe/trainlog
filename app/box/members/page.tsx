@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import BoxNav from '@/components/BoxNav'
 import { getOrgMembers, type OrgMember } from '@/lib/orgs'
 import { toast } from '@/lib/toast'
 
@@ -28,8 +27,6 @@ export default function MembersPage() {
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Membres</h1>
           <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
         </div>
-
-        <BoxNav />
 
         <button onClick={() => toast.info('Invitations bientôt disponibles')}
           className="w-full mb-4 py-3 rounded-2xl text-white font-bold text-sm"

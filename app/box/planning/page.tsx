@@ -1,6 +1,5 @@
 'use client'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import BoxNav from '@/components/BoxNav'
 import { toast } from '@/lib/toast'
 
 const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -16,8 +15,6 @@ export default function PlanningPage() {
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Planning</h1>
           <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
         </div>
-
-        <BoxNav />
 
         <button onClick={() => toast.info('Création de cours bientôt disponible')}
           className="w-full mb-4 py-3 rounded-2xl text-white font-bold text-sm"

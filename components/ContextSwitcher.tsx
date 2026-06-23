@@ -7,6 +7,8 @@ import type { Role } from '@/lib/orgs'
 const ROLE_LABEL: Record<Role, string> = {
   owner: 'Propriétaire', coach: 'Coach', staff: 'Staff', member: 'Membre',
 }
+// Label for the personal (athlete) context. Change here to rename everywhere.
+const PERSONAL_LABEL = 'Mon espace'
 
 // Lets the user switch between "My training" (personal) and any box they
 // belong to. This is what turns one app into one switchable environment.
@@ -17,7 +19,7 @@ export default function ContextSwitcher() {
 
   if (loading) return null
 
-  const label = active.type === 'personal' ? 'Mon entraînement' : active.orgName
+  const label = active.type === 'personal' ? PERSONAL_LABEL : active.orgName
   const sub   = active.type === 'personal' ? 'Athlète' : ROLE_LABEL[active.role]
 
   const choose = (ctx: ActiveContext) => { setActive(ctx); setOpen(false); router.push('/') }
@@ -41,7 +43,7 @@ export default function ContextSwitcher() {
           <button onClick={() => choose({ type: 'personal' })}
             className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2">
             <span>🏋️</span>
-            <span className="text-sm font-semibold text-gray-800">Mon entraînement</span>
+            <span className="text-sm font-semibold text-gray-800">{PERSONAL_LABEL}</span>
           </button>
           {memberships.map(m => (
             <button key={m.organizationId}

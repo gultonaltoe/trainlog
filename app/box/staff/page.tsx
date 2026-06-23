@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import BoxNav from '@/components/BoxNav'
 import { getOrgMembers, type OrgMember, type Role } from '@/lib/orgs'
 import { toast } from '@/lib/toast'
 
@@ -35,8 +34,6 @@ export default function StaffPage() {
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Staff</h1>
           <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
         </div>
-
-        <BoxNav />
 
         {canManage && (
           <button onClick={() => toast.info('Invitations bientôt disponibles')}

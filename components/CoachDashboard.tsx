@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Role } from '@/lib/orgs'
-import BoxNav from './BoxNav'
 
 const ROLE_LABEL: Record<Role, string> = {
   owner: 'Propriétaire', coach: 'Coach', staff: 'Staff', member: 'Membre',
@@ -34,8 +33,6 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">{orgName}</h1>
           <p className="text-sm text-gray-400 mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()}</p>
         </div>
-
-        <BoxNav />
 
         <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4 flex items-center justify-between">
           <div>
