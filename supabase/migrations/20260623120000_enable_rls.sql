@@ -57,24 +57,6 @@ create policy own_sessions on public.sessions
   for all using ((select auth.uid()) = user_id)
           with check ((select auth.uid()) = user_id);
 
-alter table public.session_blocks enable row level security;
-drop policy if exists own_session_blocks on public.session_blocks;
-create policy own_session_blocks on public.session_blocks
-  for all using ((select auth.uid()) = user_id)
-          with check ((select auth.uid()) = user_id);
-
-alter table public.wods enable row level security;
-drop policy if exists own_wods on public.wods;
-create policy own_wods on public.wods
-  for all using ((select auth.uid()) = user_id)
-          with check ((select auth.uid()) = user_id);
-
-alter table public.session_pain_alerts enable row level security;
-drop policy if exists own_session_pain_alerts on public.session_pain_alerts;
-create policy own_session_pain_alerts on public.session_pain_alerts
-  for all using ((select auth.uid()) = user_id)
-          with check ((select auth.uid()) = user_id);
-
 alter table public.personal_records enable row level security;
 drop policy if exists own_personal_records on public.personal_records;
 create policy own_personal_records on public.personal_records
@@ -94,32 +76,76 @@ create policy own_nutrition_logs on public.nutrition_logs
           with check ((select auth.uid()) = user_id);
 
 -- ------------------------------------------------------------
--- 2. Child tables (no user_id) — ownership walks up to the parent.
---    block_sets belong to a session_block (which has user_id);
---    wod_components belong to a wod (which has user_id).
+-- 2. Session-owned tables — ownership ALWAYS derives from the
+--    owning session (sessions.user_id), never from these tables'
+--    own user_id column.
+--
+--    Why: the app inserts session_blocks / wods / session_pain_alerts
+--    WITHOUT a user_id, so that column is null/stale and must not be
+--    trusted. The authoritative owner is the parent session.
+--    block_sets and wod_components walk two levels up to the session.
 -- ------------------------------------------------------------
 
+-- Direct children of a session (one hop)
+alter table public.session_blocks enable row level security;
+drop policy if exists own_session_blocks on public.session_blocks;
+create policy own_session_blocks on public.session_blocks
+  for all
+  using (exists (select 1 from public.sessions s
+                 where s.id = session_blocks.session_id
+                   and s.user_id = (select auth.uid())))
+  with check (exists (select 1 from public.sessions s
+                      where s.id = session_blocks.session_id
+                        and s.user_id = (select auth.uid())));
+
+alter table public.wods enable row level security;
+drop policy if exists own_wods on public.wods;
+create policy own_wods on public.wods
+  for all
+  using (exists (select 1 from public.sessions s
+                 where s.id = wods.session_id
+                   and s.user_id = (select auth.uid())))
+  with check (exists (select 1 from public.sessions s
+                      where s.id = wods.session_id
+                        and s.user_id = (select auth.uid())));
+
+alter table public.session_pain_alerts enable row level security;
+drop policy if exists own_session_pain_alerts on public.session_pain_alerts;
+create policy own_session_pain_alerts on public.session_pain_alerts
+  for all
+  using (exists (select 1 from public.sessions s
+                 where s.id = session_pain_alerts.session_id
+                   and s.user_id = (select auth.uid())))
+  with check (exists (select 1 from public.sessions s
+                      where s.id = session_pain_alerts.session_id
+                        and s.user_id = (select auth.uid())));
+
+-- Grandchildren (two hops to a session)
 alter table public.block_sets enable row level security;
 drop policy if exists own_block_sets on public.block_sets;
 create policy own_block_sets on public.block_sets
   for all
   using (exists (select 1 from public.session_blocks sb
+                 join public.sessions s on s.id = sb.session_id
                  where sb.id = block_sets.block_id
-                   and sb.user_id = (select auth.uid())))
+                   and s.user_id = (select auth.uid())))
   with check (exists (select 1 from public.session_blocks sb
+                      join public.sessions s on s.id = sb.session_id
                       where sb.id = block_sets.block_id
-                        and sb.user_id = (select auth.uid())));
+                        and s.user_id = (select auth.uid())));
 
 alter table public.wod_components enable row level security;
 drop policy if exists own_wod_components on public.wod_components;
 create policy own_wod_components on public.wod_components
   for all
   using (exists (select 1 from public.wods w
+                 join public.sessions s on s.id = w.session_id
                  where w.id = wod_components.wod_id
-                   and w.user_id = (select auth.uid())))
+                   and s.user_id = (select auth.uid())))
   with check (exists (select 1 from public.wods w
+                      join public.sessions s on s.id = w.session_id
                       where w.id = wod_components.wod_id
-                        and w.user_id = (select auth.uid())));
+                        and s.user_id = (select auth.uid())));
 
 -- ------------------------------------------------------------
 -- 3. Programs: owner can do everything; anyone logged-in can READ
