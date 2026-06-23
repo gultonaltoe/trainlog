@@ -19,6 +19,8 @@ export default function ContextSwitcher() {
 
   if (loading) return null
 
+  // Only boxes you're an active member of are switchable.
+  const switchable = memberships.filter(m => m.status === 'active')
   const label = active.type === 'personal' ? PERSONAL_LABEL : active.orgName
   const sub   = active.type === 'personal' ? 'Athlète' : ROLE_LABEL[active.role]
 
@@ -45,7 +47,7 @@ export default function ContextSwitcher() {
             <span>🏋️</span>
             <span className="text-sm font-semibold text-gray-800">{PERSONAL_LABEL}</span>
           </button>
-          {memberships.map(m => (
+          {switchable.map(m => (
             <button key={m.organizationId}
               onClick={() => choose({ type: 'org', orgId: m.organizationId, orgName: m.organizationName, role: m.role })}
               className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between gap-2">

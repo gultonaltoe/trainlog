@@ -42,8 +42,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (raw) stored = JSON.parse(raw) as ActiveContext
       } catch {}
       const s = stored
-      if (s && s.type === 'org' && !mine.some(m => m.organizationId === s.orgId)) {
-        stored = null  // left that org — fall back to personal
+      // Only restore into a box the user is an ACTIVE member of (not pending).
+      if (s && s.type === 'org' && !mine.some(m => m.organizationId === s.orgId && m.status === 'active')) {
+        stored = null  // left/never-active in that org — fall back to personal
       }
       setActiveState(stored ?? PERSONAL)
     } catch {

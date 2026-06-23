@@ -10,7 +10,9 @@ export default function GlobalContextBar() {
   const pathname = usePathname()
   const { memberships, loading } = useAppContext()
 
-  if (loading || memberships.length === 0) return null
+  // Show only when the user is an active member of at least one box.
+  const hasActiveBox = memberships.some(m => m.status === 'active')
+  if (loading || !hasActiveBox) return null
   if (pathname.startsWith('/auth') || pathname === '/welcome') return null
 
   return (

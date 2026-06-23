@@ -21,9 +21,10 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
   }, [orgId])
 
   const sections = [
-    { href: '/box/members',  icon: '👥', title: 'Membres',   desc: 'Gérer les adhérents de la box' },
-    { href: '/box/staff',    icon: '🧑‍🏫', title: 'Staff',     desc: 'Coachs et équipe' },
-    { href: '/box/planning', icon: '📅', title: 'Planning',  desc: 'Cours et réservations' },
+    { href: '/box/members',  icon: '👥', title: 'Membres',       desc: 'Gérer les adhérents de la box' },
+    { href: '/box/staff',    icon: '🧑‍🏫', title: 'Staff',         desc: 'Coachs et équipe' },
+    { href: '/box/planning', icon: '📅', title: 'Planning',      desc: 'Cours et réservations' },
+    { href: '/box/profile',  icon: 'ℹ️', title: 'Infos de la box', desc: 'Nom, adresse, contact' },
   ]
 
   return (

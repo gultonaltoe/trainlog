@@ -5,6 +5,11 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/lib/toast'
 import { getSessionUserId } from '@/lib/auth'
+import { useAppContext } from '@/components/AppContext'
+
+const ROLE_LABEL: Record<string, string> = {
+  owner: 'Propriétaire', coach: 'Coach', staff: 'Staff', member: 'Membre',
+}
 
 type Profile = {
   first_name: string; email: string; birth_date: string
@@ -39,6 +44,7 @@ const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wide 
 const section  = "bg-white rounded-2xl border border-gray-200 p-5 mb-4"
 
 export default function ProfilePage() {
+  const { memberships } = useAppContext()
   const [p, setP]     = useState<Profile>(EMPTY)
   const [loading, setL] = useState(true)
   const [saving, setS]  = useState(false)
@@ -128,10 +134,40 @@ export default function ProfilePage() {
           <p className="text-sm text-gray-400 mt-0.5">Infos personnelles et préférences</p>
         </div>
 
+        {/* Mes box — active memberships are tappable, pending show their state */}
+        {memberships.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {memberships.map(m => {
+              const pending = m.status === 'pending'
+              const card = (
+                <div className={`flex items-center justify-between rounded-2xl border p-4 ${
+                  pending ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 hover:shadow-sm transition'
+                }`}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-2xl">{pending ? '⏳' : '🏢'}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-800 truncate">
+                        {pending ? 'Demande en attente' : m.organizationName}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {pending ? 'En attente de validation par la box' : ROLE_LABEL[m.role]}
+                      </p>
+                    </div>
+                  </div>
+                  {!pending && <span className="text-gray-300">›</span>}
+                </div>
+              )
+              return pending
+                ? <div key={m.organizationId}>{card}</div>
+                : <Link key={m.organizationId} href={`/box/profile?org=${m.organizationId}`}>{card}</Link>
+            })}
+          </div>
+        )}
+
         <Link href="/box/join"
           className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 p-4 mb-4 hover:shadow-sm transition">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🏢</span>
+            <span className="text-2xl">➕</span>
             <div>
               <p className="text-sm font-bold text-gray-800">Rejoindre une box</p>
               <p className="text-xs text-gray-400">Entre le code de ta salle</p>

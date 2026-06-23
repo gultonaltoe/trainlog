@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { requireUserId } from './auth'
+import type { Json } from './database.types'
 
 // Organizations (boxes/gyms) + the current user's role in each.
 // "Athlete" is not a role — every user owns their training data regardless.
@@ -17,14 +18,14 @@ export type Membership = {
   dataSharing: boolean
 }
 
-/** All active memberships for the current user (their boxes + role in each). */
+/** The current user's memberships (active + pending) — their boxes + role/status. */
 export async function getMyMemberships(): Promise<Membership[]> {
   const uid = await requireUserId()
   const { data, error } = await supabase
     .from('memberships')
     .select('id, organization_id, role, status, data_sharing, organizations(name)')
     .eq('user_id', uid)
-    .eq('status', 'active')
+    .in('status', ['active', 'pending'])
     .order('created_at', { ascending: true })
   if (error) throw new Error(`getMyMemberships: ${error.message}`)
   return (data ?? []).map(m => ({
@@ -76,6 +77,51 @@ export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
     status:       m.status as MembershipStatus,
     dataSharing:  m.data_sharing,
   }))
+}
+
+export type OrgProfile = {
+  id: string
+  name: string
+  description: string
+  address: string
+  phone: string
+  website: string
+  joinCode: string | null
+}
+
+/** Box info — readable by any active member of the box (via read_orgs RLS). */
+export async function getOrganization(orgId: string): Promise<OrgProfile> {
+  const { data, error } = await supabase
+    .from('organizations').select('id, name, settings, join_code').eq('id', orgId).single()
+  if (error) throw new Error(`getOrganization: ${error.message}`)
+  const s = (data.settings ?? {}) as Record<string, unknown>
+  return {
+    id:          data.id,
+    name:        data.name,
+    description: (s.description as string) ?? '',
+    address:     (s.address as string) ?? '',
+    phone:       (s.phone as string) ?? '',
+    website:     (s.website as string) ?? '',
+    joinCode:    data.join_code,
+  }
+}
+
+/** Owner edits the box info (name + free-form fields stored in settings jsonb). */
+export async function updateOrgProfile(
+  orgId: string,
+  p: { name: string; description: string; address: string; phone: string; website: string },
+): Promise<void> {
+  const settings: Json = {
+    description: p.description,
+    address:     p.address,
+    phone:       p.phone,
+    website:     p.website,
+  }
+  const { error } = await supabase
+    .from('organizations')
+    .update({ name: p.name.trim(), settings })
+    .eq('id', orgId)
+  if (error) throw new Error(`updateOrgProfile: ${error.message}`)
 }
 
 /** The box's shareable join code (members enter it to request to join). */
