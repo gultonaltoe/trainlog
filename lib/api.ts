@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { requireUserId, NotAuthenticatedError } from './auth'
+import type { Json } from './database.types'
 
 const getUid = requireUserId
 
@@ -40,7 +41,12 @@ export async function getSessionTypes(): Promise<SessionType[]> {
   const { data, error } = await supabase.from('session_types')
     .select('id, name, color, emoji, category').eq('is_active', true).order('name')
   if (error) throw new Error(`getSessionTypes: ${error.message}`)
-  return data ?? []
+  return (data ?? []).map(t => ({
+    id: t.id, name: t.name,
+    color:    t.color    ?? '#F97316',
+    emoji:    t.emoji    ?? '🏋️',
+    category: t.category ?? '',
+  }))
 }
 
 export async function searchMovements(query: string, category?: string): Promise<Movement[]> {
@@ -50,14 +56,23 @@ export async function searchMovements(query: string, category?: string): Promise
   if (category) q = q.eq('category', category)
   const { data, error } = await q
   if (error) throw new Error(`searchMovements: ${error.message}`)
-  return data ?? []
+  return (data ?? []).map(toMovement)
+}
+
+function toMovement(m: { id: string; name: string; category: string | null; subcategory: string | null; equipment: string[] | null }): Movement {
+  return {
+    id: m.id, name: m.name,
+    category:    m.category    ?? '',
+    subcategory: m.subcategory ?? undefined,
+    equipment:   m.equipment   ?? undefined,
+  }
 }
 
 export async function getMovementsByCategory(category: string): Promise<Movement[]> {
   const { data, error } = await supabase.from('movements')
     .select('id, name, category, subcategory, equipment').eq('category', category).order('name').limit(30)
   if (error) throw new Error(`getMovementsByCategory: ${error.message}`)
-  return data ?? []
+  return (data ?? []).map(toMovement)
 }
 
 export async function saveSession(input: SessionInput): Promise<string> {
@@ -71,7 +86,7 @@ export async function saveSession(input: SessionInput): Promise<string> {
       rpe:           input.rpe           ?? null,
       feeling_post:  input.feeling_post  ?? null,
       notes:         input.notes         ?? null,
-      meta:          input.meta          ?? {},
+      meta:          (input.meta ?? {}) as Json,
       user_id:       uid,
     }).select('id').single()
   if (sessionError) throw new Error(`saveSession: ${sessionError.message}`)

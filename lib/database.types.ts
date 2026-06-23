@@ -1,0 +1,1061 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  public: {
+    Tables: {
+      block_sets: {
+        Row: {
+          block_id: string
+          distance_m: number | null
+          duration_seconds: number | null
+          execution: string | null
+          id: string
+          is_pr: boolean | null
+          movement_id: string | null
+          movement_label: string
+          notes: string | null
+          pct_rm: number | null
+          reps: number | null
+          rpe_set: number | null
+          set_number: number | null
+          tempo: string | null
+          weight_kg: number | null
+        }
+        Insert: {
+          block_id: string
+          distance_m?: number | null
+          duration_seconds?: number | null
+          execution?: string | null
+          id?: string
+          is_pr?: boolean | null
+          movement_id?: string | null
+          movement_label: string
+          notes?: string | null
+          pct_rm?: number | null
+          reps?: number | null
+          rpe_set?: number | null
+          set_number?: number | null
+          tempo?: string | null
+          weight_kg?: number | null
+        }
+        Update: {
+          block_id?: string
+          distance_m?: number | null
+          duration_seconds?: number | null
+          execution?: string | null
+          id?: string
+          is_pr?: boolean | null
+          movement_id?: string | null
+          movement_label?: string
+          notes?: string | null
+          pct_rm?: number | null
+          reps?: number | null
+          rpe_set?: number | null
+          set_number?: number | null
+          tempo?: string | null
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_sets_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "session_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "block_sets_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "block_sets_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "v_movement_progression"
+            referencedColumns: ["movement_id"]
+          },
+        ]
+      }
+      body_metrics: {
+        Row: {
+          body_fat_pct: number | null
+          created_at: string | null
+          date: string
+          hrv: number | null
+          id: string
+          notes: string | null
+          resting_hr: number | null
+          user_id: string | null
+          weight_kg: number | null
+        }
+        Insert: {
+          body_fat_pct?: number | null
+          created_at?: string | null
+          date: string
+          hrv?: number | null
+          id?: string
+          notes?: string | null
+          resting_hr?: number | null
+          user_id?: string | null
+          weight_kg?: number | null
+        }
+        Update: {
+          body_fat_pct?: number | null
+          created_at?: string | null
+          date?: string
+          hrv?: number | null
+          id?: string
+          notes?: string | null
+          resting_hr?: number | null
+          user_id?: string | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      body_parts: {
+        Row: {
+          id: string
+          name: string
+          zone: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          zone?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          zone?: string | null
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          page: string | null
+          rating: number | null
+          type: string | null
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          page?: string | null
+          rating?: number | null
+          type?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          page?: string | null
+          rating?: number | null
+          type?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
+      movements: {
+        Row: {
+          category: string | null
+          coaching_points: string[] | null
+          common_mistakes: string[] | null
+          created_at: string | null
+          equipment: string[] | null
+          id: string
+          is_unilateral: boolean | null
+          muscle_groups: string[] | null
+          name: string
+          notes: string | null
+          subcategory: string | null
+        }
+        Insert: {
+          category?: string | null
+          coaching_points?: string[] | null
+          common_mistakes?: string[] | null
+          created_at?: string | null
+          equipment?: string[] | null
+          id?: string
+          is_unilateral?: boolean | null
+          muscle_groups?: string[] | null
+          name: string
+          notes?: string | null
+          subcategory?: string | null
+        }
+        Update: {
+          category?: string | null
+          coaching_points?: string[] | null
+          common_mistakes?: string[] | null
+          created_at?: string | null
+          equipment?: string[] | null
+          id?: string
+          is_unilateral?: boolean | null
+          muscle_groups?: string[] | null
+          name?: string
+          notes?: string | null
+          subcategory?: string | null
+        }
+        Relationships: []
+      }
+      nutrition_logs: {
+        Row: {
+          calories: number | null
+          carbs_g: number | null
+          created_at: string | null
+          date: string
+          fat_g: number | null
+          hydration_ml: number | null
+          id: string
+          notes: string | null
+          protein_g: number | null
+          user_id: string | null
+        }
+        Insert: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          date: string
+          fat_g?: number | null
+          hydration_ml?: number | null
+          id?: string
+          notes?: string | null
+          protein_g?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          date?: string
+          fat_g?: number | null
+          hydration_ml?: number | null
+          id?: string
+          notes?: string | null
+          protein_g?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      personal_records: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          is_demo: boolean | null
+          movement_id: string | null
+          movement_name: string | null
+          notes: string | null
+          session_id: string | null
+          unit: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          is_demo?: boolean | null
+          movement_id?: string | null
+          movement_name?: string | null
+          notes?: string | null
+          session_id?: string | null
+          unit?: string | null
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          is_demo?: boolean | null
+          movement_id?: string | null
+          movement_name?: string | null
+          notes?: string | null
+          session_id?: string | null
+          unit?: string | null
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_records_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_records_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "v_movement_progression"
+            referencedColumns: ["movement_id"]
+          },
+          {
+            foreignKeyName: "personal_records_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_records_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_sessions_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_sessions: {
+        Row: {
+          day_number: number | null
+          id: string
+          notes: string | null
+          program_id: string | null
+          session_template: Json | null
+          week_number: number | null
+        }
+        Insert: {
+          day_number?: number | null
+          id?: string
+          notes?: string | null
+          program_id?: string | null
+          session_template?: Json | null
+          week_number?: number | null
+        }
+        Update: {
+          day_number?: number | null
+          id?: string
+          notes?: string | null
+          program_id?: string | null
+          session_template?: Json | null
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programs: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_weeks: number | null
+          goal: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          sport: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          goal?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          sport?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          goal?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          sport?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      session_blocks: {
+        Row: {
+          block_order: number | null
+          block_type: string | null
+          complex_label: string | null
+          id: string
+          is_complex: boolean | null
+          notes: string | null
+          session_id: string
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          block_order?: number | null
+          block_type?: string | null
+          complex_label?: string | null
+          id?: string
+          is_complex?: boolean | null
+          notes?: string | null
+          session_id: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          block_order?: number | null
+          block_type?: string | null
+          complex_label?: string | null
+          id?: string
+          is_complex?: boolean | null
+          notes?: string | null
+          session_id?: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_blocks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_blocks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_sessions_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_pain_alerts: {
+        Row: {
+          body_part_id: string | null
+          body_part_label: string
+          id: string
+          notes: string | null
+          session_id: string
+          severity: number | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body_part_id?: string | null
+          body_part_label: string
+          id?: string
+          notes?: string | null
+          session_id: string
+          severity?: number | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body_part_id?: string | null
+          body_part_label?: string
+          id?: string
+          notes?: string | null
+          session_id?: string
+          severity?: number | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_pain_alerts_body_part_id_fkey"
+            columns: ["body_part_id"]
+            isOneToOne: false
+            referencedRelation: "body_parts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_pain_alerts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_pain_alerts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_sessions_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_types: {
+        Row: {
+          category: string | null
+          color: string | null
+          created_at: string | null
+          emoji: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          created_at: string | null
+          date: string
+          deleted_at: string | null
+          duration_min: number | null
+          energy_level: number | null
+          feeling_post: number | null
+          id: string
+          is_competition: boolean | null
+          is_demo: boolean | null
+          location: string | null
+          meta: Json | null
+          notes: string | null
+          rpe: number | null
+          session_type_id: string
+          sleep_hours: number | null
+          sleep_quality: number | null
+          start_time: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          deleted_at?: string | null
+          duration_min?: number | null
+          energy_level?: number | null
+          feeling_post?: number | null
+          id?: string
+          is_competition?: boolean | null
+          is_demo?: boolean | null
+          location?: string | null
+          meta?: Json | null
+          notes?: string | null
+          rpe?: number | null
+          session_type_id: string
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          start_time?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          deleted_at?: string | null
+          duration_min?: number | null
+          energy_level?: number | null
+          feeling_post?: number | null
+          id?: string
+          is_competition?: boolean | null
+          is_demo?: boolean | null
+          location?: string | null
+          meta?: Json | null
+          notes?: string | null
+          rpe?: number | null
+          session_type_id?: string
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          start_time?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_session_type_id_fkey"
+            columns: ["session_type_id"]
+            isOneToOne: false
+            referencedRelation: "session_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profile: {
+        Row: {
+          birth_date: string | null
+          box_name: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          goal: string | null
+          height_cm: number | null
+          id: string
+          level: string | null
+          notes: string | null
+          sports: string[] | null
+          theme_color: string | null
+          updated_at: string | null
+          user_id: string | null
+          weekly_target: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          birth_date?: string | null
+          box_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          goal?: string | null
+          height_cm?: number | null
+          id?: string
+          level?: string | null
+          notes?: string | null
+          sports?: string[] | null
+          theme_color?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_target?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          birth_date?: string | null
+          box_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          goal?: string | null
+          height_cm?: number | null
+          id?: string
+          level?: string | null
+          notes?: string | null
+          sports?: string[] | null
+          theme_color?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_target?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      wod_components: {
+        Row: {
+          calories: number | null
+          component_order: number | null
+          distance_m: number | null
+          id: string
+          movement_id: string
+          movement_label: string
+          notes: string | null
+          reps: number | null
+          unit: string | null
+          weight_kg: number | null
+          wod_id: string
+        }
+        Insert: {
+          calories?: number | null
+          component_order?: number | null
+          distance_m?: number | null
+          id?: string
+          movement_id: string
+          movement_label: string
+          notes?: string | null
+          reps?: number | null
+          unit?: string | null
+          weight_kg?: number | null
+          wod_id: string
+        }
+        Update: {
+          calories?: number | null
+          component_order?: number | null
+          distance_m?: number | null
+          id?: string
+          movement_id?: string
+          movement_label?: string
+          notes?: string | null
+          reps?: number | null
+          unit?: string | null
+          weight_kg?: number | null
+          wod_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wod_components_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wod_components_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "v_movement_progression"
+            referencedColumns: ["movement_id"]
+          },
+          {
+            foreignKeyName: "wod_components_wod_id_fkey"
+            columns: ["wod_id"]
+            isOneToOne: false
+            referencedRelation: "wods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wod_formats: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      wods: {
+        Row: {
+          description: string | null
+          format_id: string | null
+          format_label: string | null
+          id: string
+          interval_seconds: number | null
+          is_rx: boolean | null
+          notes: string | null
+          result_detail: string | null
+          result_extra_reps: number | null
+          result_reps: number | null
+          result_rounds: number | null
+          result_time_sec: number | null
+          result_type: string | null
+          rounds: number | null
+          scaled_notes: string | null
+          session_id: string
+          time_cap_min: number | null
+          user_id: string | null
+          wod_order: number | null
+        }
+        Insert: {
+          description?: string | null
+          format_id?: string | null
+          format_label?: string | null
+          id?: string
+          interval_seconds?: number | null
+          is_rx?: boolean | null
+          notes?: string | null
+          result_detail?: string | null
+          result_extra_reps?: number | null
+          result_reps?: number | null
+          result_rounds?: number | null
+          result_time_sec?: number | null
+          result_type?: string | null
+          rounds?: number | null
+          scaled_notes?: string | null
+          session_id: string
+          time_cap_min?: number | null
+          user_id?: string | null
+          wod_order?: number | null
+        }
+        Update: {
+          description?: string | null
+          format_id?: string | null
+          format_label?: string | null
+          id?: string
+          interval_seconds?: number | null
+          is_rx?: boolean | null
+          notes?: string | null
+          result_detail?: string | null
+          result_extra_reps?: number | null
+          result_reps?: number | null
+          result_rounds?: number | null
+          result_time_sec?: number | null
+          result_type?: string | null
+          rounds?: number | null
+          scaled_notes?: string | null
+          session_id?: string
+          time_cap_min?: number | null
+          user_id?: string | null
+          wod_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wods_format_id_fkey"
+            columns: ["format_id"]
+            isOneToOne: false
+            referencedRelation: "wod_formats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wods_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wods_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_sessions_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      v_movement_progression: {
+        Row: {
+          category: string | null
+          date: string | null
+          is_pr: boolean | null
+          movement: string | null
+          movement_id: string | null
+          reps: number | null
+          tempo: string | null
+          user_id: string | null
+          weight_kg: number | null
+        }
+        Relationships: []
+      }
+      v_pain_timeline: {
+        Row: {
+          body_part_label: string | null
+          date: string | null
+          rpe: number | null
+          session_type: string | null
+          severity: number | null
+          type: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_sessions_summary: {
+        Row: {
+          blocks_count: number | null
+          date: string | null
+          duration_min: number | null
+          energy_level: number | null
+          feeling_post: number | null
+          id: string | null
+          is_competition: boolean | null
+          notes: string | null
+          pain_alerts_count: number | null
+          rpe: number | null
+          session_type: string | null
+          sleep_hours: number | null
+          sleep_quality: number | null
+          type_color: string | null
+          type_emoji: string | null
+          user_id: string | null
+          wods_count: number | null
+        }
+        Relationships: []
+      }
+      v_weekly_volume: {
+        Row: {
+          avg_energy: number | null
+          avg_rpe: number | null
+          avg_sleep: number | null
+          sessions_count: number | null
+          total_minutes: number | null
+          user_id: string | null
+          week: string | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      migrate_user_data: { Args: { old_uid: string }; Returns: undefined }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const
