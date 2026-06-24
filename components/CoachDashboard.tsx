@@ -30,10 +30,12 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
   return (
     <div className="bg-gray-50">
       <div className="max-w-lg mx-auto px-4 pb-4">
-        <div className="pt-8 pb-4">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">{orgName}</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()}</p>
-        </div>
+        <Link href="/box/profile" className="block pt-8 pb-4 hover:opacity-80 transition">
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-1.5">
+            {orgName} <span className="text-gray-300 text-lg">›</span>
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
+        </Link>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4 flex items-center justify-between">
           <div>

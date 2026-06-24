@@ -40,6 +40,8 @@ export default function ContextSwitcher() {
         <span className="text-gray-400 text-xs">▾</span>
       </button>
 
+      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
+
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden">
           <button onClick={() => choose({ type: 'personal' })}
