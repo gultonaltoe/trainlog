@@ -35,7 +35,10 @@ function BoxProfile() {
     if (!p) return
     setSaving(true)
     try {
-      await updateOrgProfile(p.id, { name: p.name, description: p.description, address: p.address, phone: p.phone, website: p.website })
+      await updateOrgProfile(p.id, {
+        name: p.name, description: p.description, address: p.address, phone: p.phone, website: p.website,
+        defaultDurationMin: p.defaultDurationMin, defaultCapacity: p.defaultCapacity,
+      })
       toast.success('Box enregistrée')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur')
@@ -76,6 +79,23 @@ function BoxProfile() {
                 placeholder={r.placeholder} onChange={e => upd(r.key, e.target.value)} />
             </div>
           ))}
+        </div>
+
+        {/* Planning defaults — pre-fill the class builder */}
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2">Réglages planning</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>Durée par défaut (min)</label>
+            <input type="number" min={15} step={15} className={inputCls} disabled={!canEdit}
+              value={p.defaultDurationMin}
+              onChange={e => setP(prev => prev ? { ...prev, defaultDurationMin: parseInt(e.target.value) || 0 } : prev)} />
+          </div>
+          <div>
+            <label className={labelCls}>Places par défaut</label>
+            <input type="number" min={1} className={inputCls} disabled={!canEdit}
+              value={p.defaultCapacity}
+              onChange={e => setP(prev => prev ? { ...prev, defaultCapacity: parseInt(e.target.value) || 0 } : prev)} />
+          </div>
         </div>
 
         {canEdit && (

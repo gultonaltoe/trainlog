@@ -169,6 +169,50 @@ export type Database = {
         }
         Relationships: []
       }
+      classes: {
+        Row: {
+          capacity: number | null
+          coach_user_id: string | null
+          created_at: string
+          date: string
+          duration_min: number
+          id: string
+          organization_id: string
+          start_time: string
+          title: string
+        }
+        Insert: {
+          capacity?: number | null
+          coach_user_id?: string | null
+          created_at?: string
+          date: string
+          duration_min?: number
+          id?: string
+          organization_id: string
+          start_time: string
+          title: string
+        }
+        Update: {
+          capacity?: number | null
+          coach_user_id?: string | null
+          created_at?: string
+          date?: string
+          duration_min?: number
+          id?: string
+          organization_id?: string
+          start_time?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           created_at: string | null

@@ -1,11 +1,4 @@
 import { supabase } from './supabase'
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-// `classes` lands in the generated Database types once the migration is applied
-// and `supabase gen types` is re-run. Until then, use an untyped handle for this
-// one table so the rest of the app stays strictly typed.
-// TODO(after regen): drop `db` and use `supabase.from('classes')` directly.
-const db = supabase as unknown as SupabaseClient
 
 export type GymClass = {
   id: string
@@ -30,51 +23,68 @@ function toClass(r: ClassRow): GymClass {
   }
 }
 
+function iso(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 /** Classes of a box between two dates (inclusive), ordered by day then time. */
-export async function getClassesForWeek(orgId: string, fromISO: string, toISO: string): Promise<GymClass[]> {
-  const { data, error } = await db.from('classes')
+export async function getClassesInRange(orgId: string, fromISO: string, toISO: string): Promise<GymClass[]> {
+  const { data, error } = await supabase.from('classes')
     .select('id, title, date, start_time, duration_min, capacity, coach_user_id')
     .eq('organization_id', orgId)
     .gte('date', fromISO).lte('date', toISO)
     .order('date', { ascending: true }).order('start_time', { ascending: true })
-  if (error) throw new Error(`getClassesForWeek: ${error.message}`)
-  return ((data ?? []) as ClassRow[]).map(toClass)
+  if (error) throw new Error(`getClassesInRange: ${error.message}`)
+  return (data ?? []).map(toClass)
 }
 
-export type NewClass = {
+// 0 = Monday … 6 = Sunday
+export type WeeklySlot = { weekday: number; time: string }
+
+export type WeeklyClassInput = {
   orgId: string
   title: string
-  date: string        // first occurrence, YYYY-MM-DD
-  startTime: string   // HH:MM
-  durationMin: number
-  capacity: number | null
   coachUserId: string | null
-  repeatWeeks: number // 1 = just this date; N = this + (N-1) following weeks
+  capacity: number
+  durationMin: number
+  startMondayISO: string  // Monday of the first week to generate
+  weeks: number           // how many weeks to repeat the slots
+  slots: WeeklySlot[]      // e.g. [{weekday:0,time:'12:00'}, {weekday:1,time:'15:00'}]
 }
 
-/** Create a class, materializing weekly recurrence into one row per week. */
-export async function createClasses(input: NewClass): Promise<number> {
-  const base = new Date(input.date + 'T00:00:00')
-  const weeks = Math.max(1, Math.min(52, input.repeatWeeks))
-  const rows = Array.from({ length: weeks }, (_, w) => {
-    const d = new Date(base); d.setDate(base.getDate() + w * 7)
-    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    return {
-      organization_id: input.orgId,
-      title: input.title.trim(),
-      date: ds,
-      start_time: input.startTime,
-      duration_min: input.durationMin,
-      capacity: input.capacity,
-      coach_user_id: input.coachUserId,
+/**
+ * Create classes from weekly slots, materialized into one row per occurrence.
+ * Lets a box set "Monday 12:00, Tuesday 15:00 …" repeating for N weeks in one go.
+ */
+export async function createClassesFromSlots(input: WeeklyClassInput): Promise<number> {
+  const start = new Date(input.startMondayISO + 'T00:00:00')
+  const weeks = Math.max(1, Math.min(52, input.weeks))
+  const rows: {
+    organization_id: string; title: string; date: string; start_time: string
+    duration_min: number; capacity: number; coach_user_id: string | null
+  }[] = []
+  for (let w = 0; w < weeks; w++) {
+    for (const slot of input.slots) {
+      const d = new Date(start)
+      d.setDate(start.getDate() + w * 7 + slot.weekday)
+      rows.push({
+        organization_id: input.orgId,
+        title: input.title.trim(),
+        date: iso(d),
+        start_time: slot.time,
+        duration_min: input.durationMin,
+        capacity: input.capacity,
+        coach_user_id: input.coachUserId,
+      })
     }
-  })
-  const { error } = await db.from('classes').insert(rows)
-  if (error) throw new Error(`createClasses: ${error.message}`)
+  }
+  if (rows.length === 0) return 0
+  const { error } = await supabase.from('classes').insert(rows)
+  if (error) throw new Error(`createClassesFromSlots: ${error.message}`)
   return rows.length
 }
 
 export async function deleteClass(id: string): Promise<void> {
-  const { error } = await db.from('classes').delete().eq('id', id)
+  const { error } = await supabase.from('classes').delete().eq('id', id)
   if (error) throw new Error(`deleteClass: ${error.message}`)
 }

@@ -87,7 +87,13 @@ export type OrgProfile = {
   phone: string
   website: string
   joinCode: string | null
+  // Planning defaults (used to pre-fill the class builder)
+  defaultDurationMin: number
+  defaultCapacity: number
 }
+
+export const DEFAULT_DURATION_MIN = 60
+export const DEFAULT_CAPACITY = 12
 
 /** Box info — readable by any active member of the box (via read_orgs RLS). */
 export async function getOrganization(orgId: string): Promise<OrgProfile> {
@@ -95,27 +101,34 @@ export async function getOrganization(orgId: string): Promise<OrgProfile> {
     .from('organizations').select('id, name, settings, join_code').eq('id', orgId).single()
   if (error) throw new Error(`getOrganization: ${error.message}`)
   const s = (data.settings ?? {}) as Record<string, unknown>
+  const planning = (s.planning ?? {}) as Record<string, unknown>
   return {
-    id:          data.id,
-    name:        data.name,
-    description: (s.description as string) ?? '',
-    address:     (s.address as string) ?? '',
-    phone:       (s.phone as string) ?? '',
-    website:     (s.website as string) ?? '',
-    joinCode:    data.join_code,
+    id:                 data.id,
+    name:               data.name,
+    description:        (s.description as string) ?? '',
+    address:            (s.address as string) ?? '',
+    phone:              (s.phone as string) ?? '',
+    website:            (s.website as string) ?? '',
+    joinCode:           data.join_code,
+    defaultDurationMin: (planning.defaultDurationMin as number) ?? DEFAULT_DURATION_MIN,
+    defaultCapacity:    (planning.defaultCapacity as number) ?? DEFAULT_CAPACITY,
   }
 }
 
-/** Owner edits the box info (name + free-form fields stored in settings jsonb). */
+/** Owner edits the box info + planning defaults (stored in settings jsonb). */
 export async function updateOrgProfile(
   orgId: string,
-  p: { name: string; description: string; address: string; phone: string; website: string },
+  p: {
+    name: string; description: string; address: string; phone: string; website: string
+    defaultDurationMin: number; defaultCapacity: number
+  },
 ): Promise<void> {
   const settings: Json = {
     description: p.description,
     address:     p.address,
     phone:       p.phone,
     website:     p.website,
+    planning:    { defaultDurationMin: p.defaultDurationMin, defaultCapacity: p.defaultCapacity },
   }
   const { error } = await supabase
     .from('organizations')
