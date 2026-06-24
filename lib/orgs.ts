@@ -53,6 +53,8 @@ export async function createOrganization(name: string): Promise<string> {
   return id
 }
 
+export type EmploymentStatus = 'active' | 'on_leave' | 'inactive'
+
 export type OrgMember = {
   membershipId: string
   userId: string
@@ -60,6 +62,7 @@ export type OrgMember = {
   role: Role
   status: MembershipStatus
   dataSharing: boolean
+  employmentStatus: EmploymentStatus | null
 }
 
 /**
@@ -70,12 +73,13 @@ export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
   const { data, error } = await supabase.rpc('get_org_member_directory', { p_org_id: orgId })
   if (error) throw new Error(`getOrgMembers: ${error.message}`)
   return (data ?? []).map(m => ({
-    membershipId: m.membership_id,
-    userId:       m.user_id,
-    firstName:    m.first_name,
-    role:         m.role as Role,
-    status:       m.status as MembershipStatus,
-    dataSharing:  m.data_sharing,
+    membershipId:     m.membership_id,
+    userId:           m.user_id,
+    firstName:        m.first_name,
+    role:             m.role as Role,
+    status:           m.status as MembershipStatus,
+    dataSharing:      m.data_sharing,
+    employmentStatus: (m.employment_status as EmploymentStatus | null) ?? null,
   }))
 }
 
@@ -169,6 +173,24 @@ export async function requestToJoinBox(code: string): Promise<string> {
 export async function setMembershipStatus(membershipId: string, status: MembershipStatus): Promise<void> {
   const { error } = await supabase.from('memberships').update({ status }).eq('id', membershipId)
   if (error) throw new Error(`setMembershipStatus: ${error.message}`)
+}
+
+/** Change a member's role within the box (owner/coach/staff/member). */
+export async function updateMembershipRole(membershipId: string, role: Role): Promise<void> {
+  const { error } = await supabase.from('memberships').update({ role }).eq('id', membershipId)
+  if (error) throw new Error(`updateMembershipRole: ${error.message}`)
+}
+
+/** Set a staff member's employment status (active / on leave / inactive). */
+export async function setEmploymentStatus(membershipId: string, employment: EmploymentStatus): Promise<void> {
+  const { error } = await supabase.from('memberships').update({ employment_status: employment }).eq('id', membershipId)
+  if (error) throw new Error(`setEmploymentStatus: ${error.message}`)
+}
+
+/** Remove someone from the box (soft — sets membership inactive). */
+export async function removeMembership(membershipId: string): Promise<void> {
+  const { error } = await supabase.from('memberships').update({ status: 'inactive' }).eq('id', membershipId)
+  if (error) throw new Error(`removeMembership: ${error.message}`)
 }
 
 /** Member toggles whether this box's coaches can see their training data. */
