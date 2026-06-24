@@ -25,6 +25,7 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
     { href: '/box/staff',    icon: '🧑‍🏫', title: 'Staff',         desc: 'Coachs et équipe' },
     { href: '/box/planning', icon: '📅', title: 'Planning',      desc: 'Cours et réservations' },
     { href: '/box/profile',  icon: 'ℹ️', title: 'Infos de la box', desc: 'Nom, adresse, contact' },
+    { href: '/box/settings', icon: '⚙️', title: 'Réglages',       desc: 'Types de séances, préférences' },
   ]
 
   return (

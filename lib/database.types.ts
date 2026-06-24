@@ -247,6 +247,7 @@ export type Database = {
         Row: {
           created_at: string
           data_sharing: boolean
+          employment_status: string | null
           id: string
           organization_id: string
           role: string
@@ -256,6 +257,7 @@ export type Database = {
         Insert: {
           created_at?: string
           data_sharing?: boolean
+          employment_status?: string | null
           id?: string
           organization_id: string
           role: string
@@ -265,6 +267,7 @@ export type Database = {
         Update: {
           created_at?: string
           data_sharing?: boolean
+          employment_status?: string | null
           id?: string
           organization_id?: string
           role?: string
@@ -1046,6 +1049,7 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: {
           data_sharing: boolean
+          employment_status: string
           first_name: string
           membership_id: string
           role: string

@@ -96,6 +96,16 @@ export type OrgProfile = {
 export const DEFAULT_DURATION_MIN = 60
 export const DEFAULT_CAPACITY = 12
 
+// Sensible starting set, shown by default until the box customizes its types.
+export const DEFAULT_SESSION_TYPES: SessionType[] = [
+  { name: 'CrossFit',      defaultDurationMin: 60, defaultCapacity: 14 },
+  { name: 'Endurance',     defaultDurationMin: 60, defaultCapacity: 12 },
+  { name: 'HIIT',          defaultDurationMin: 45, defaultCapacity: 16 },
+  { name: 'Hyrox',         defaultDurationMin: 60, defaultCapacity: 12 },
+  { name: 'Haltérophilie', defaultDurationMin: 90, defaultCapacity: 8 },
+  { name: 'Team WOD',      defaultDurationMin: 60, defaultCapacity: 20 },
+]
+
 /** Box info + settings — readable by any active member of the box (via read_orgs RLS). */
 export async function getOrganization(orgId: string): Promise<OrgProfile> {
   const { data, error } = await supabase

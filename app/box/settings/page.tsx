@@ -1,8 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import { getOrganization, updateOrgSessionTypes, type SessionType, DEFAULT_DURATION_MIN, DEFAULT_CAPACITY } from '@/lib/orgs'
+import { getOrganization, updateOrgSessionTypes, DEFAULT_SESSION_TYPES, DEFAULT_DURATION_MIN, DEFAULT_CAPACITY, type SessionType } from '@/lib/orgs'
 import { toast } from '@/lib/toast'
 
 const fieldCls = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
@@ -18,7 +17,8 @@ export default function BoxSettingsPage() {
   const load = useCallback(async () => {
     if (!orgId) return
     const info = await getOrganization(orgId)
-    setTypes(info.sessionTypes)
+    // Pre-fill the standard set until the box saves its own.
+    setTypes(info.sessionTypes.length > 0 ? info.sessionTypes : DEFAULT_SESSION_TYPES)
     setLoading(false)
   }, [orgId])
   useEffect(() => { void load() }, [load])
@@ -46,18 +46,6 @@ export default function BoxSettingsPage() {
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Réglages</h1>
           <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
         </div>
-
-        <Link href="/box/profile"
-          className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 p-4 mb-5 hover:shadow-sm transition">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">ℹ️</span>
-            <div>
-              <p className="text-sm font-bold text-gray-800">Infos de la box</p>
-              <p className="text-xs text-gray-400">Nom, adresse, contact</p>
-            </div>
-          </div>
-          <span className="text-gray-300">›</span>
-        </Link>
 
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Types de séances</p>
         <p className="text-xs text-gray-400 mb-3">Définis tes types de cours avec durée et places par défaut. Ils pré-remplissent le planning.</p>

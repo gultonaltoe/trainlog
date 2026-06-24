@@ -1,90 +1,104 @@
 import { supabase } from './supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-export type GymClass = {
+// `class_schedules` lands in the generated Database types once the migration is
+// applied and `supabase gen types` is re-run. Until then, use an untyped handle
+// for this one table so the rest of the app stays strictly typed.
+// TODO(after regen): drop `db` and use `supabase.from('class_schedules')`.
+const db = supabase as unknown as SupabaseClient
+
+export type ClassSchedule = {
   id: string
   title: string
-  date: string        // YYYY-MM-DD
-  startTime: string   // HH:MM
+  sessionType: string | null
+  weekday: number       // 0 = Monday
+  startTime: string     // HH:MM
   durationMin: number
-  capacity: number | null
+  capacity: number
   coachUserId: string | null
+  startDate: string     // YYYY-MM-DD
 }
 
-type ClassRow = {
-  id: string; title: string; date: string; start_time: string
-  duration_min: number; capacity: number | null; coach_user_id: string | null
+// A concrete occurrence of a schedule on a given date (for display / future booking).
+export type ClassOccurrence = ClassSchedule & { date: string }
+
+type SchedRow = {
+  id: string; title: string; session_type: string | null; weekday: number; start_time: string
+  duration_min: number; capacity: number; coach_user_id: string | null; start_date: string
 }
 
-function toClass(r: ClassRow): GymClass {
+function toSchedule(r: SchedRow): ClassSchedule {
   return {
-    id: r.id, title: r.title, date: r.date,
-    startTime: (r.start_time ?? '').slice(0, 5),
-    durationMin: r.duration_min, capacity: r.capacity, coachUserId: r.coach_user_id,
+    id: r.id, title: r.title, sessionType: r.session_type, weekday: r.weekday,
+    startTime: (r.start_time ?? '').slice(0, 5), durationMin: r.duration_min,
+    capacity: r.capacity, coachUserId: r.coach_user_id, startDate: r.start_date,
   }
 }
 
-function iso(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+/** Active recurring schedules of a box. */
+export async function getSchedules(orgId: string): Promise<ClassSchedule[]> {
+  const { data, error } = await db.from('class_schedules')
+    .select('id, title, session_type, weekday, start_time, duration_min, capacity, coach_user_id, start_date')
+    .eq('organization_id', orgId).eq('active', true)
+  if (error) throw new Error(`getSchedules: ${error.message}`)
+  return ((data ?? []) as SchedRow[]).map(toSchedule)
 }
 
-/** Classes of a box between two dates (inclusive), ordered by day then time. */
-export async function getClassesInRange(orgId: string, fromISO: string, toISO: string): Promise<GymClass[]> {
-  const { data, error } = await supabase.from('classes')
-    .select('id, title, date, start_time, duration_min, capacity, coach_user_id')
-    .eq('organization_id', orgId)
-    .gte('date', fromISO).lte('date', toISO)
-    .order('date', { ascending: true }).order('start_time', { ascending: true })
-  if (error) throw new Error(`getClassesInRange: ${error.message}`)
-  return (data ?? []).map(toClass)
+/** Expand schedules into concrete occurrences within [fromISO, toISO], sorted. */
+export function occurrencesInRange(schedules: ClassSchedule[], fromISO: string, toISO: string): ClassOccurrence[] {
+  const from = new Date(fromISO + 'T00:00:00')
+  const to = new Date(toISO + 'T00:00:00')
+  const out: ClassOccurrence[] = []
+  for (const s of schedules) {
+    const startD = new Date(s.startDate + 'T00:00:00')
+    const begin = startD > from ? startD : from
+    const beginWeekday = (begin.getDay() + 6) % 7          // 0 = Monday
+    const d = new Date(begin)
+    d.setDate(d.getDate() + ((s.weekday - beginWeekday + 7) % 7))
+    while (d <= to) {
+      out.push({ ...s, date: iso(d) })
+      d.setDate(d.getDate() + 7)
+    }
+  }
+  return out.sort((a, b) => a.date === b.date ? a.startTime.localeCompare(b.startTime) : a.date.localeCompare(b.date))
 }
 
-// 0 = Monday … 6 = Sunday
 export type WeeklySlot = { weekday: number; time: string }
 
-export type WeeklyClassInput = {
+export type NewSchedule = {
   orgId: string
   title: string
+  sessionType: string | null
   coachUserId: string | null
   capacity: number
   durationMin: number
-  startMondayISO: string  // Monday of the first week to generate
-  weeks: number           // how many weeks to repeat the slots
-  slots: WeeklySlot[]      // e.g. [{weekday:0,time:'12:00'}, {weekday:1,time:'15:00'}]
+  slots: WeeklySlot[]      // each slot becomes its own recurring schedule
+  startDateISO: string     // recurs weekly from here, forever
 }
 
-/**
- * Create classes from weekly slots, materialized into one row per occurrence.
- * Lets a box set "Monday 12:00, Tuesday 15:00 …" repeating for N weeks in one go.
- */
-export async function createClassesFromSlots(input: WeeklyClassInput): Promise<number> {
-  const start = new Date(input.startMondayISO + 'T00:00:00')
-  const weeks = Math.max(1, Math.min(52, input.weeks))
-  const rows: {
-    organization_id: string; title: string; date: string; start_time: string
-    duration_min: number; capacity: number; coach_user_id: string | null
-  }[] = []
-  for (let w = 0; w < weeks; w++) {
-    for (const slot of input.slots) {
-      const d = new Date(start)
-      d.setDate(start.getDate() + w * 7 + slot.weekday)
-      rows.push({
-        organization_id: input.orgId,
-        title: input.title.trim(),
-        date: iso(d),
-        start_time: slot.time,
-        duration_min: input.durationMin,
-        capacity: input.capacity,
-        coach_user_id: input.coachUserId,
-      })
-    }
-  }
+/** Create one recurring schedule per slot (recurs weekly until removed). */
+export async function createSchedules(input: NewSchedule): Promise<number> {
+  const rows = input.slots.map(s => ({
+    organization_id: input.orgId,
+    title: input.title.trim(),
+    session_type: input.sessionType,
+    weekday: s.weekday,
+    start_time: s.time,
+    duration_min: input.durationMin,
+    capacity: input.capacity,
+    coach_user_id: input.coachUserId,
+    start_date: input.startDateISO,
+  }))
   if (rows.length === 0) return 0
-  const { error } = await supabase.from('classes').insert(rows)
-  if (error) throw new Error(`createClassesFromSlots: ${error.message}`)
+  const { error } = await db.from('class_schedules').insert(rows)
+  if (error) throw new Error(`createSchedules: ${error.message}`)
   return rows.length
 }
 
-export async function deleteClass(id: string): Promise<void> {
-  const { error } = await supabase.from('classes').delete().eq('id', id)
-  if (error) throw new Error(`deleteClass: ${error.message}`)
+/** Remove a recurring schedule (stops all future occurrences). */
+export async function deleteSchedule(id: string): Promise<void> {
+  const { error } = await db.from('class_schedules').delete().eq('id', id)
+  if (error) throw new Error(`deleteSchedule: ${error.message}`)
 }
