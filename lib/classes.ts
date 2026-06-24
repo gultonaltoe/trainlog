@@ -1,11 +1,4 @@
 import { supabase } from './supabase'
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-// `class_schedules` lands in the generated Database types once the migration is
-// applied and `supabase gen types` is re-run. Until then, use an untyped handle
-// for this one table so the rest of the app stays strictly typed.
-// TODO(after regen): drop `db` and use `supabase.from('class_schedules')`.
-const db = supabase as unknown as SupabaseClient
 
 export type ClassSchedule = {
   id: string
@@ -39,7 +32,7 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 
 /** Active recurring schedules of a box. */
 export async function getSchedules(orgId: string): Promise<ClassSchedule[]> {
-  const { data, error } = await db.from('class_schedules')
+  const { data, error } = await supabase.from('class_schedules')
     .select('id, title, session_type, weekday, start_time, duration_min, capacity, coach_user_id, start_date')
     .eq('organization_id', orgId).eq('active', true)
   if (error) throw new Error(`getSchedules: ${error.message}`)
@@ -92,13 +85,13 @@ export async function createSchedules(input: NewSchedule): Promise<number> {
     start_date: input.startDateISO,
   }))
   if (rows.length === 0) return 0
-  const { error } = await db.from('class_schedules').insert(rows)
+  const { error } = await supabase.from('class_schedules').insert(rows)
   if (error) throw new Error(`createSchedules: ${error.message}`)
   return rows.length
 }
 
 /** Remove a recurring schedule (stops all future occurrences). */
 export async function deleteSchedule(id: string): Promise<void> {
-  const { error } = await db.from('class_schedules').delete().eq('id', id)
+  const { error } = await supabase.from('class_schedules').delete().eq('id', id)
   if (error) throw new Error(`deleteSchedule: ${error.message}`)
 }

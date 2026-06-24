@@ -6,6 +6,8 @@ import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, type
 import { toast } from '@/lib/toast'
 
 const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+const DAY_ABBR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const DAY_WK = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di']
 const DAY_HDR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 const STAFF_ROLES: Role[] = ['owner', 'coach', 'staff']
@@ -73,6 +75,9 @@ export default function PlanningPage() {
   if (!org) return null
 
   const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(range.monday); d.setDate(range.monday.getDate() + i); return d })
+  const todayISO = iso(new Date())
+  const defaultDay = (todayISO >= range.fromISO && todayISO <= range.toISO) ? todayISO : range.fromISO
+  const activeDay = selectedDay ?? defaultDay
 
   return (
     <div className="bg-gray-50">
@@ -109,54 +114,54 @@ export default function PlanningPage() {
 
         {loading ? (
           <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
-        ) : view === 'week' ? (
-          <div className="space-y-4">
-            {weekDays.map((d, i) => {
-              const items = onDay(iso(d))
-              return (
-                <div key={i}>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                    {DAY_LABELS[i]} <span className="text-gray-300">{d.getDate()}</span>
-                  </p>
-                  {items.length === 0 ? <p className="text-xs text-gray-300 pl-1">—</p> : (
-                    <div className="space-y-2">{items.map(c => <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete} />)}</div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
         ) : (
           <>
-            <div className="bg-white rounded-2xl border border-gray-200 p-3 mb-4">
-              <div className="grid grid-cols-7 mb-1">
-                {DAY_HDR.map((d, i) => <p key={i} className="text-center text-[10px] font-bold text-gray-400">{d}</p>)}
+            {view === 'week' ? (
+              <div className="bg-white rounded-2xl border border-gray-200 p-3 mb-4">
+                <div className="grid grid-cols-7 gap-1">
+                  {weekDays.map((d, i) => {
+                    const ds = iso(d); const count = onDay(ds).length; const sel = activeDay === ds
+                    return (
+                      <button key={i} onClick={() => setSelectedDay(ds)}
+                        className="min-h-16 rounded-lg flex flex-col items-center justify-center gap-0.5"
+                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? '#FFF7ED' : '#F9FAFB' }}>
+                        <span className={`text-[10px] font-bold ${sel ? 'text-white' : 'text-gray-400'}`}>{DAY_WK[i]}</span>
+                        <span className={`text-sm font-black ${sel ? 'text-white' : 'text-gray-700'}`}>{d.getDate()}</span>
+                        {count > 0 && <span className={`text-[8px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-7 gap-1">
-                {monthCells(anchor.getFullYear(), anchor.getMonth()).map((day, i) => {
-                  if (!day) return <div key={i} />
-                  const ds = iso(new Date(anchor.getFullYear(), anchor.getMonth(), day))
-                  const count = onDay(ds).length
-                  const sel = selectedDay === ds
-                  return (
-                    <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center"
-                      style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? '#FFF7ED' : '#F9FAFB' }}>
-                      <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-gray-700'}`}>{day}</span>
-                      {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            {selectedDay && (
-              <div className="space-y-2">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  {new Date(selectedDay + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </p>
-                {onDay(selectedDay).length === 0
-                  ? <p className="text-xs text-gray-300">Aucun cours ce jour.</p>
-                  : onDay(selectedDay).map(c => <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete} />)}
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-200 p-3 mb-4">
+                <div className="grid grid-cols-7 mb-1">
+                  {DAY_HDR.map((d, i) => <p key={i} className="text-center text-[10px] font-bold text-gray-400">{d}</p>)}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {monthCells(anchor.getFullYear(), anchor.getMonth()).map((day, i) => {
+                    if (!day) return <div key={i} />
+                    const ds = iso(new Date(anchor.getFullYear(), anchor.getMonth(), day))
+                    const count = onDay(ds).length; const sel = activeDay === ds
+                    return (
+                      <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center"
+                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? '#FFF7ED' : '#F9FAFB' }}>
+                        <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-gray-700'}`}>{day}</span>
+                        {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
+
+            {/* Selected day's classes */}
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              {new Date(activeDay + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+            {onDay(activeDay).length === 0
+              ? <p className="text-sm text-gray-300 py-2">Aucun cours ce jour.</p>
+              : <div className="space-y-2">{onDay(activeDay).map(c => <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete} />)}</div>}
           </>
         )}
       </div>
@@ -200,9 +205,10 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
   const fieldCls = 'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
   const labelCls = 'block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5'
 
+  const types = sessionTypes.length > 0 ? sessionTypes : DEFAULT_SESSION_TYPES
   const pickType = (name: string) => {
     setType(name)
-    const t = sessionTypes.find(s => s.name === name)
+    const t = types.find(s => s.name === name)
     if (t) { setTitle(t.name); setDuration(t.defaultDurationMin); setCapacity(String(t.defaultCapacity)) }
   }
   const updSlot = (i: number, patch: Partial<WeeklySlot>) => setSlots(s => s.map((x, j) => j === i ? { ...x, ...patch } : x))
@@ -237,7 +243,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
             <label className={labelCls}>Type de séance</label>
             <select className={fieldCls} value={type} onChange={e => pickType(e.target.value)}>
               <option value="">— Choisir —</option>
-              {sessionTypes.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+              {types.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
             </select>
           </div>
           <div>
@@ -266,14 +272,22 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
             <label className={labelCls}>Jours &amp; horaires</label>
             <div className="space-y-2">
               {slots.map((s, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <select className={`${fieldCls} flex-1`} value={s.weekday} onChange={e => updSlot(i, { weekday: parseInt(e.target.value) })}>
-                    {DAY_LABELS.map((d, idx) => <option key={idx} value={idx}>{d}</option>)}
-                  </select>
-                  <input type="time" className={`${fieldCls} w-28`} value={s.time} onChange={e => updSlot(i, { time: e.target.value })} />
-                  {slots.length > 1 && (
-                    <button onClick={() => setSlots(arr => arr.filter((_, j) => j !== i))} className="text-gray-300 hover:text-red-500 text-xl px-1">×</button>
-                  )}
+                <div key={i} className="rounded-xl border border-gray-200 p-2.5">
+                  <div className="flex gap-1 mb-2">
+                    {DAY_ABBR.map((d, idx) => (
+                      <button key={idx} onClick={() => updSlot(i, { weekday: idx })}
+                        className="flex-1 h-8 rounded-lg text-[11px] font-bold transition"
+                        style={s.weekday === idx ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { background: '#F3F4F6', color: '#6B7280' }}>
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="time" className={`${fieldCls} flex-1`} value={s.time} onChange={e => updSlot(i, { time: e.target.value })} />
+                    {slots.length > 1 && (
+                      <button onClick={() => setSlots(arr => arr.filter((_, j) => j !== i))} className="text-gray-300 hover:text-red-500 text-xl px-2">×</button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

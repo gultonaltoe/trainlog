@@ -169,6 +169,59 @@ export type Database = {
         }
         Relationships: []
       }
+      class_schedules: {
+        Row: {
+          active: boolean
+          capacity: number
+          coach_user_id: string | null
+          created_at: string
+          duration_min: number
+          id: string
+          organization_id: string
+          session_type: string | null
+          start_date: string
+          start_time: string
+          title: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          capacity: number
+          coach_user_id?: string | null
+          created_at?: string
+          duration_min?: number
+          id?: string
+          organization_id: string
+          session_type?: string | null
+          start_date?: string
+          start_time: string
+          title: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          capacity?: number
+          coach_user_id?: string | null
+          created_at?: string
+          duration_min?: number
+          id?: string
+          organization_id?: string
+          session_type?: string | null
+          start_date?: string
+          start_time?: string
+          title?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           capacity: number | null
