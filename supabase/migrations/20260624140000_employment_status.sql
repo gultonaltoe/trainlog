@@ -16,6 +16,8 @@ update public.memberships
   where role in ('owner', 'coach', 'staff') and employment_status is null;
 
 -- Add employment_status to the directory (extends the previous signature).
+-- Return type changes, so the old function must be dropped first.
+drop function if exists public.get_org_member_directory(uuid);
 create or replace function public.get_org_member_directory(p_org_id uuid)
 returns table (
   membership_id     uuid,
