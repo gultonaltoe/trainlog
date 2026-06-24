@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import { getOrgMembers, getOrganization, type OrgMember, type Role } from '@/lib/orgs'
+import { getOrgMembers, getOrganization, DEFAULT_DURATION_MIN, DEFAULT_CAPACITY, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
 import { getClassesInRange, createClassesFromSlots, deleteClass, type GymClass, type WeeklySlot } from '@/lib/classes'
 import { toast } from '@/lib/toast'
 
@@ -28,7 +28,7 @@ export default function PlanningPage() {
   const [anchor, setAnchor] = useState(() => new Date())
   const [classes, setClasses] = useState<GymClass[]>([])
   const [coaches, setCoaches] = useState<OrgMember[]>([])
-  const [defaults, setDefaults] = useState({ duration: 60, capacity: 12 })
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
@@ -53,7 +53,7 @@ export default function PlanningPage() {
     ])
     setClasses(cls)
     setCoaches(mem.filter(m => m.status === 'active' && STAFF_ROLES.includes(m.role)))
-    setDefaults({ duration: info.defaultDurationMin, capacity: info.defaultCapacity })
+    setSessionTypes(info.sessionTypes)
     setLoading(false)
   }, [orgId, range.fromISO, range.toISO])
 
@@ -164,7 +164,7 @@ export default function PlanningPage() {
       </div>
 
       {showForm && orgId && (
-        <ClassForm orgId={orgId} coaches={coaches} monday={range.monday} defaults={defaults}
+        <ClassForm orgId={orgId} coaches={coaches} monday={range.monday} sessionTypes={sessionTypes}
           onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); void load() }} />
       )}
     </div>
@@ -187,15 +187,22 @@ function ClassRow({ c, coachName, onDelete }: { c: GymClass; coachName: (id: str
   )
 }
 
-function ClassForm({ orgId, coaches, monday, defaults, onClose, onSaved }: {
-  orgId: string; coaches: OrgMember[]; monday: Date; defaults: { duration: number; capacity: number }
+function ClassForm({ orgId, coaches, monday, sessionTypes, onClose, onSaved }: {
+  orgId: string; coaches: OrgMember[]; monday: Date; sessionTypes: SessionType[]
   onClose: () => void; onSaved: () => void
 }) {
   const [title, setTitle] = useState('')
   const [coach, setCoach] = useState('')
-  const [capacity, setCapacity] = useState(String(defaults.capacity))
-  const [duration, setDuration] = useState(defaults.duration)
+  const [capacity, setCapacity] = useState(String(DEFAULT_CAPACITY))
+  const [duration, setDuration] = useState(DEFAULT_DURATION_MIN)
   const [weeks, setWeeks] = useState(4)
+
+  // Picking a session type pre-fills title, duration and capacity.
+  const pickType = (name: string) => {
+    const t = sessionTypes.find(s => s.name === name)
+    if (!t) return
+    setTitle(t.name); setDuration(t.defaultDurationMin); setCapacity(String(t.defaultCapacity))
+  }
   const [slots, setSlots] = useState<WeeklySlot[]>([{ weekday: 0, time: '18:00' }])
   const [saving, setSaving] = useState(false)
 
@@ -229,6 +236,15 @@ function ClassForm({ orgId, coaches, monday, defaults, onClose, onSaved }: {
         <h2 className="text-lg font-black text-gray-900 mb-4">Créer des cours</h2>
 
         <div className="space-y-3">
+          {sessionTypes.length > 0 && (
+            <div>
+              <label className={labelCls}>Type de séance</label>
+              <select className={fieldCls} defaultValue="" onChange={e => pickType(e.target.value)}>
+                <option value="">— Choisir (pré-remplit) —</option>
+                {sessionTypes.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className={labelCls}>Titre</label>
             <input className={fieldCls} value={title} autoFocus placeholder="WOD, Haltéro, Open gym…" onChange={e => setTitle(e.target.value)} />

@@ -79,6 +79,9 @@ export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
   }))
 }
 
+// A box-defined class type with default duration/capacity (pre-fills the builder).
+export type SessionType = { name: string; defaultDurationMin: number; defaultCapacity: number }
+
 export type OrgProfile = {
   id: string
   name: string
@@ -87,54 +90,54 @@ export type OrgProfile = {
   phone: string
   website: string
   joinCode: string | null
-  // Planning defaults (used to pre-fill the class builder)
-  defaultDurationMin: number
-  defaultCapacity: number
+  sessionTypes: SessionType[]
 }
 
 export const DEFAULT_DURATION_MIN = 60
 export const DEFAULT_CAPACITY = 12
 
-/** Box info — readable by any active member of the box (via read_orgs RLS). */
+/** Box info + settings — readable by any active member of the box (via read_orgs RLS). */
 export async function getOrganization(orgId: string): Promise<OrgProfile> {
   const { data, error } = await supabase
     .from('organizations').select('id, name, settings, join_code').eq('id', orgId).single()
   if (error) throw new Error(`getOrganization: ${error.message}`)
   const s = (data.settings ?? {}) as Record<string, unknown>
-  const planning = (s.planning ?? {}) as Record<string, unknown>
   return {
-    id:                 data.id,
-    name:               data.name,
-    description:        (s.description as string) ?? '',
-    address:            (s.address as string) ?? '',
-    phone:              (s.phone as string) ?? '',
-    website:            (s.website as string) ?? '',
-    joinCode:           data.join_code,
-    defaultDurationMin: (planning.defaultDurationMin as number) ?? DEFAULT_DURATION_MIN,
-    defaultCapacity:    (planning.defaultCapacity as number) ?? DEFAULT_CAPACITY,
+    id:           data.id,
+    name:         data.name,
+    description:  (s.description as string) ?? '',
+    address:      (s.address as string) ?? '',
+    phone:        (s.phone as string) ?? '',
+    website:      (s.website as string) ?? '',
+    joinCode:     data.join_code,
+    sessionTypes: Array.isArray(s.sessionTypes) ? (s.sessionTypes as SessionType[]) : [],
   }
 }
 
-/** Owner edits the box info + planning defaults (stored in settings jsonb). */
-export async function updateOrgProfile(
+// Read the raw settings object so updates can merge instead of clobbering.
+async function readSettings(orgId: string): Promise<Record<string, unknown>> {
+  const { data, error } = await supabase.from('organizations').select('settings').eq('id', orgId).single()
+  if (error) throw new Error(`readSettings: ${error.message}`)
+  return (data.settings ?? {}) as Record<string, unknown>
+}
+
+/** Owner edits the box info (name + contact fields). Merges into settings. */
+export async function updateOrgInfo(
   orgId: string,
-  p: {
-    name: string; description: string; address: string; phone: string; website: string
-    defaultDurationMin: number; defaultCapacity: number
-  },
+  info: { name: string; description: string; address: string; phone: string; website: string },
 ): Promise<void> {
-  const settings: Json = {
-    description: p.description,
-    address:     p.address,
-    phone:       p.phone,
-    website:     p.website,
-    planning:    { defaultDurationMin: p.defaultDurationMin, defaultCapacity: p.defaultCapacity },
-  }
-  const { error } = await supabase
-    .from('organizations')
-    .update({ name: p.name.trim(), settings })
-    .eq('id', orgId)
-  if (error) throw new Error(`updateOrgProfile: ${error.message}`)
+  const s = await readSettings(orgId)
+  const settings = { ...s, description: info.description, address: info.address, phone: info.phone, website: info.website } as unknown as Json
+  const { error } = await supabase.from('organizations').update({ name: info.name.trim(), settings }).eq('id', orgId)
+  if (error) throw new Error(`updateOrgInfo: ${error.message}`)
+}
+
+/** Owner manages the box's session types. Merges into settings. */
+export async function updateOrgSessionTypes(orgId: string, sessionTypes: SessionType[]): Promise<void> {
+  const s = await readSettings(orgId)
+  const settings = { ...s, sessionTypes } as unknown as Json
+  const { error } = await supabase.from('organizations').update({ settings }).eq('id', orgId)
+  if (error) throw new Error(`updateOrgSessionTypes: ${error.message}`)
 }
 
 /** The box's shareable join code (members enter it to request to join). */
