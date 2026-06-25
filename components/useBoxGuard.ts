@@ -8,7 +8,7 @@ export type ActiveOrg = { orgId: string; orgName: string; role: Role }
 
 /**
  * For box (coaching) pages: ensures the active view is a box and the user is
- * owner/coach/staff. Redirects to "/" otherwise. Returns the active org, or
+ * owner/coach. Redirects to "/" otherwise. Returns the active org, or
  * null while loading/redirecting (render nothing in that case).
  */
 export function useBoxGuard(): ActiveOrg | null {

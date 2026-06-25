@@ -11,7 +11,7 @@ const DAY_ABBR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const DAY_WK = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di']
 const DAY_HDR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
-const STAFF_ROLES: Role[] = ['owner', 'coach', 'staff']
+const STAFF_ROLES: Role[] = ['owner', 'coach']
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 function mondayOfWeek(d: Date) { const m = new Date(d); m.setDate(d.getDate() - ((d.getDay() + 6) % 7)); m.setHours(0, 0, 0, 0); return m }

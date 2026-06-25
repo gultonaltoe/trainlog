@@ -73,7 +73,7 @@ export async function getBookingsInRange(orgId: string, fromISO: string, toISO: 
 
 type AttendeeRow = { user_id: string; first_name: string | null; status: ReservationStatus; wl_position: number; notified: boolean }
 
-/** Attendee list for one occurrence (staff only). */
+/** Attendee list for one occurrence (owner/coach only). */
 export async function getOccurrenceAttendees(scheduleId: string, date: string): Promise<Attendee[]> {
   const { data, error } = await supabase.rpc('get_occurrence_attendees', { p_schedule_id: scheduleId, p_date: date })
   if (error) throw new Error(`getOccurrenceAttendees: ${error.message}`)

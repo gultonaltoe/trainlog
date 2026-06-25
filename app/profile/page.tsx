@@ -8,7 +8,7 @@ import { getSessionUserId } from '@/lib/auth'
 import { useAppContext } from '@/components/AppContext'
 
 const ROLE_LABEL: Record<string, string> = {
-  owner: 'Propriétaire', coach: 'Coach', staff: 'Staff', member: 'Membre',
+  owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
 }
 
 type Profile = {

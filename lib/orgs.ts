@@ -6,7 +6,7 @@ import type { Json } from './database.types'
 // "Athlete" is not a role — every user owns their training data regardless.
 // These functions only concern the org/role layer.
 
-export type Role = 'owner' | 'coach' | 'staff' | 'member'
+export type Role = 'owner' | 'coach' | 'member'
 export type MembershipStatus = 'active' | 'invited' | 'pending' | 'inactive'
 
 export type Membership = {
