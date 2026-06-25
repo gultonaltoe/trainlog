@@ -177,6 +177,22 @@ export default function Dashboard() {
         </div>
 
 
+        {/* Réservation de cours — visible quand on est dans le contexte d'une box */}
+        {active.type === 'org' && (
+          <Link href="/box/book"
+            className="flex items-center justify-between rounded-2xl p-4 mb-4 text-white"
+            style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-2xl">📅</span>
+              <div className="min-w-0">
+                <p className="text-sm font-black truncate">Réserver un cours</p>
+                <p className="text-xs text-white/80 truncate">{active.orgName}</p>
+              </div>
+            </div>
+            <span className="text-white/80">›</span>
+          </Link>
+        )}
+
         {/* Bannière données démo */}
         {!loading && sessions.some(s => s.is_demo) && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">

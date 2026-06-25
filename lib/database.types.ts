@@ -182,6 +182,7 @@ export type Database = {
           start_date: string
           start_time: string
           title: string
+          waitlist_capacity: number | null
           weekday: number
         }
         Insert: {
@@ -196,6 +197,7 @@ export type Database = {
           start_date?: string
           start_time: string
           title: string
+          waitlist_capacity?: number | null
           weekday: number
         }
         Update: {
@@ -210,6 +212,7 @@ export type Database = {
           start_date?: string
           start_time?: string
           title?: string
+          waitlist_capacity?: number | null
           weekday?: number
         }
         Relationships: [
@@ -218,6 +221,54 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_reservations: {
+        Row: {
+          created_at: string
+          id: string
+          notified_at: string | null
+          occurrence_date: string
+          organization_id: string
+          schedule_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notified_at?: string | null
+          occurrence_date: string
+          organization_id: string
+          schedule_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notified_at?: string | null
+          occurrence_date?: string
+          organization_id?: string
+          schedule_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_reservations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_reservations_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "class_schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -1113,6 +1164,40 @@ export type Database = {
       has_org_role: {
         Args: { allowed_roles: string[]; org_id: string }
         Returns: boolean
+      }
+      book_class: {
+        Args: { p_schedule_id: string; p_date: string }
+        Returns: string
+      }
+      cancel_class: {
+        Args: { p_schedule_id: string; p_date: string }
+        Returns: string
+      }
+      claim_waitlist_spot: {
+        Args: { p_schedule_id: string; p_date: string }
+        Returns: string
+      }
+      get_bookings_in_range: {
+        Args: { p_org_id: string; p_from: string; p_to: string }
+        Returns: {
+          schedule_id: string
+          occurrence_date: string
+          booked_count: number
+          waitlist_count: number
+          my_status: string
+          my_position: number
+          my_notified: boolean
+        }[]
+      }
+      get_occurrence_attendees: {
+        Args: { p_schedule_id: string; p_date: string }
+        Returns: {
+          user_id: string
+          first_name: string
+          status: string
+          wl_position: number
+          notified: boolean
+        }[]
       }
       migrate_user_data: { Args: { old_uid: string }; Returns: undefined }
       request_to_join_box: { Args: { p_code: string }; Returns: string }

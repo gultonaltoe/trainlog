@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, getOrganization, DEFAULT_SESSION_TYPES, DEFAULT_CAPACITY, DEFAULT_DURATION_MIN, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
 import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
+import { getBookingsInRange, getOccurrenceAttendees, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
 import { toast } from '@/lib/toast'
 
 const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -34,6 +35,8 @@ export default function PlanningPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  const [bookings, setBookings] = useState<Map<string, OccBooking>>(new Map())
+  const [attendeesFor, setAttendeesFor] = useState<ClassOccurrence | null>(null)
 
   const range = useMemo(() => {
     if (view === 'week') {
@@ -58,6 +61,16 @@ export default function PlanningPage() {
   }, [orgId])
 
   useEffect(() => { void load() }, [load])
+
+  // Booking counts depend on the visible range, so reload them on navigation.
+  useEffect(() => {
+    if (!orgId) return
+    let alive = true
+    getBookingsInRange(orgId, range.fromISO, range.toISO)
+      .then(m => { if (alive) setBookings(m) })
+      .catch(() => { if (alive) setBookings(new Map()) })
+    return () => { alive = false }
+  }, [orgId, range.fromISO, range.toISO])
 
   const coachName = (id: string | null) => id ? (coaches.find(c => c.userId === id)?.firstName ?? 'Coach') : null
   const onDay = (ds: string) => occurrences.filter(c => c.date === ds)
@@ -161,7 +174,10 @@ export default function PlanningPage() {
             </p>
             {onDay(activeDay).length === 0
               ? <p className="text-sm text-gray-300 py-2">Aucun cours ce jour.</p>
-              : <div className="space-y-2">{onDay(activeDay).map(c => <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete} />)}</div>}
+              : <div className="space-y-2">{onDay(activeDay).map(c => (
+                  <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete}
+                    booking={bookings.get(bookingKey(c.id, c.date))} onOpen={() => setAttendeesFor(c)} />
+                ))}</div>}
           </>
         )}
       </div>
@@ -170,22 +186,92 @@ export default function PlanningPage() {
         <ScheduleForm orgId={orgId} coaches={coaches} sessionTypes={sessionTypes}
           onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); void load() }} />
       )}
+
+      {attendeesFor && (
+        <AttendeesSheet occ={attendeesFor} onClose={() => setAttendeesFor(null)} />
+      )}
     </div>
   )
 }
 
-function OccRow({ c, coachName, onDelete }: { c: ClassOccurrence; coachName: (id: string | null) => string | null; onDelete: (c: ClassOccurrence) => void }) {
+function OccRow({ c, coachName, onDelete, booking, onOpen }: {
+  c: ClassOccurrence; coachName: (id: string | null) => string | null
+  onDelete: (c: ClassOccurrence) => void; booking?: OccBooking; onOpen: () => void
+}) {
+  const booked = booking?.bookedCount ?? 0
+  const waiting = booking?.waitlistCount ?? 0
+  const full = booked >= c.capacity
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between gap-2">
-      <div className="min-w-0">
+      <button onClick={onOpen} className="min-w-0 text-left flex-1">
         <p className="text-sm font-bold text-gray-800 truncate">{c.title}</p>
         <p className="text-xs text-gray-400">
           {c.startTime} · {c.durationMin} min
           {coachName(c.coachUserId) && ` · ${coachName(c.coachUserId)}`}
-          {` · ${c.capacity} places`}
         </p>
-      </div>
+        <p className="text-xs mt-0.5">
+          <span className={`font-bold ${full ? 'text-red-500' : 'text-gray-600'}`}>{booked}/{c.capacity}</span>
+          <span className="text-gray-400"> réservés</span>
+          {waiting > 0 && <span className="text-amber-600 font-semibold"> · {waiting} en attente</span>}
+        </p>
+      </button>
       <button onClick={() => onDelete(c)} className="text-gray-300 hover:text-red-500 text-xl px-2 flex-shrink-0">×</button>
+    </div>
+  )
+}
+
+function AttendeesSheet({ occ, onClose }: { occ: ClassOccurrence; onClose: () => void }) {
+  const [att, setAtt] = useState<Attendee[] | null>(null)
+  useEffect(() => {
+    let alive = true
+    getOccurrenceAttendees(occ.id, occ.date)
+      .then(a => { if (alive) setAtt(a) })
+      .catch(e => { toast.error(e instanceof Error ? e.message : 'Erreur'); if (alive) setAtt([]) })
+    return () => { alive = false }
+  }, [occ.id, occ.date])
+
+  const booked = (att ?? []).filter(a => a.status === 'booked')
+  const waiting = (att ?? []).filter(a => a.status === 'waitlisted')
+  const dateLabel = new Date(occ.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+        <h2 className="text-lg font-black text-gray-900">{occ.title}</h2>
+        <p className="text-xs text-gray-400 mb-4">{dateLabel} · {occ.startTime}</p>
+
+        {att === null ? (
+          <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>
+        ) : (
+          <>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Inscrits ({booked.length}/{occ.capacity})</p>
+            {booked.length === 0
+              ? <p className="text-sm text-gray-300 mb-3">Personne d’inscrit.</p>
+              : <div className="space-y-1.5 mb-4">{booked.map(a => (
+                  <div key={a.userId} className="flex items-center gap-2 text-sm text-gray-800">
+                    <span className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 text-xs font-bold flex items-center justify-center">
+                      {(a.firstName ?? '?').charAt(0).toUpperCase()}
+                    </span>
+                    {a.firstName ?? 'Membre'}
+                  </div>
+                ))}</div>}
+
+            {waiting.length > 0 && (
+              <>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Liste d’attente ({waiting.length})</p>
+                <div className="space-y-1.5">{waiting.map(a => (
+                  <div key={a.userId} className="flex items-center gap-2 text-sm text-gray-600">
+                    <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center">{a.position}</span>
+                    {a.firstName ?? 'Membre'}
+                    {a.notified && <span className="text-[11px] text-amber-600 font-semibold">· prévenu</span>}
+                  </div>
+                ))}</div>
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }
@@ -199,6 +285,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
   const [coach, setCoach] = useState('')
   const [capacity, setCapacity] = useState(String(DEFAULT_CAPACITY))
   const [duration, setDuration] = useState(DEFAULT_DURATION_MIN)
+  const [waitlist, setWaitlist] = useState('')   // empty = use the box default
   const [slots, setSlots] = useState<WeeklySlot[]>([{ weekday: 0, time: '18:00' }])
   const [saving, setSaving] = useState(false)
 
@@ -220,9 +307,10 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
     if (slots.length === 0) { toast.error('Ajoute au moins un créneau'); return }
     setSaving(true)
     try {
+      const wl = waitlist.trim() === '' ? null : Math.max(0, parseInt(waitlist) || 0)
       const n = await createSchedules({
         orgId, title, sessionType: type || null, coachUserId: coach || null,
-        capacity: cap, durationMin: duration, slots, startDateISO: iso(new Date()),
+        capacity: cap, durationMin: duration, waitlistCapacity: wl, slots, startDateISO: iso(new Date()),
       })
       toast.success(`${n} créneau${n > 1 ? 'x' : ''} ajouté${n > 1 ? 's' : ''}`)
       onSaved()
@@ -259,6 +347,12 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
               <label className={labelCls}>Durée (min)</label>
               <input type="number" min={15} step={15} className={fieldCls} value={duration} onChange={e => setDuration(parseInt(e.target.value) || 60)} />
             </div>
+          </div>
+          <div>
+            <label className={labelCls}>Liste d’attente</label>
+            <input type="number" min={0} className={fieldCls} value={waitlist} placeholder="Défaut de la box"
+              onChange={e => setWaitlist(e.target.value)} />
+            <p className="text-[11px] text-gray-400 mt-1">Laisse vide pour utiliser le réglage de la box.</p>
           </div>
           <div>
             <label className={labelCls}>Coach</label>

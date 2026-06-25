@@ -23,3 +23,22 @@ export function useBoxGuard(): ActiveOrg | null {
   if (active.type !== 'org' || active.role === 'member') return null
   return { orgId: active.orgId, orgName: active.orgName, role: active.role }
 }
+
+/**
+ * For member-facing box pages (e.g. booking classes): ensures the active view
+ * is a box, allowing ANY role (owners/coaches are athletes too and can book).
+ * Redirects to "/" when the active view is personal. Returns the active org,
+ * or null while loading/redirecting.
+ */
+export function useBoxMemberGuard(): ActiveOrg | null {
+  const { active, loading } = useAppContext()
+  const router = useRouter()
+  const ok = active.type === 'org'
+
+  useEffect(() => {
+    if (!loading && !ok) router.replace('/')
+  }, [loading, ok, router])
+
+  if (active.type !== 'org') return null
+  return { orgId: active.orgId, orgName: active.orgName, role: active.role }
+}

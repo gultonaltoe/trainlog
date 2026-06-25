@@ -10,6 +10,7 @@ export type ClassSchedule = {
   capacity: number
   coachUserId: string | null
   startDate: string     // YYYY-MM-DD
+  waitlistCapacity: number | null   // per-class override; null = use the box default
 }
 
 // A concrete occurrence of a schedule on a given date (for display / future booking).
@@ -18,6 +19,7 @@ export type ClassOccurrence = ClassSchedule & { date: string }
 type SchedRow = {
   id: string; title: string; session_type: string | null; weekday: number; start_time: string
   duration_min: number; capacity: number; coach_user_id: string | null; start_date: string
+  waitlist_capacity: number | null
 }
 
 function toSchedule(r: SchedRow): ClassSchedule {
@@ -25,6 +27,7 @@ function toSchedule(r: SchedRow): ClassSchedule {
     id: r.id, title: r.title, sessionType: r.session_type, weekday: r.weekday,
     startTime: (r.start_time ?? '').slice(0, 5), durationMin: r.duration_min,
     capacity: r.capacity, coachUserId: r.coach_user_id, startDate: r.start_date,
+    waitlistCapacity: r.waitlist_capacity,
   }
 }
 
@@ -33,7 +36,7 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 /** Active recurring schedules of a box. */
 export async function getSchedules(orgId: string): Promise<ClassSchedule[]> {
   const { data, error } = await supabase.from('class_schedules')
-    .select('id, title, session_type, weekday, start_time, duration_min, capacity, coach_user_id, start_date')
+    .select('id, title, session_type, weekday, start_time, duration_min, capacity, coach_user_id, start_date, waitlist_capacity')
     .eq('organization_id', orgId).eq('active', true)
   if (error) throw new Error(`getSchedules: ${error.message}`)
   return ((data ?? []) as SchedRow[]).map(toSchedule)
@@ -67,6 +70,7 @@ export type NewSchedule = {
   coachUserId: string | null
   capacity: number
   durationMin: number
+  waitlistCapacity: number | null   // per-class override; null = use the box default
   slots: WeeklySlot[]      // each slot becomes its own recurring schedule
   startDateISO: string     // recurs weekly from here, forever
 }
@@ -83,6 +87,7 @@ export async function createSchedules(input: NewSchedule): Promise<number> {
     capacity: input.capacity,
     coach_user_id: input.coachUserId,
     start_date: input.startDateISO,
+    waitlist_capacity: input.waitlistCapacity,
   }))
   if (rows.length === 0) return 0
   const { error } = await supabase.from('class_schedules').insert(rows)
