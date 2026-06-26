@@ -64,14 +64,24 @@ const BOX_NAV: NavItem[] = [
   )},
 ]
 
+// Members inside a box: athlete menu + a "Cours" booking tab.
+const COURS_ITEM: NavItem = { href: '/box/book', label: 'Cours', icon: a => (
+  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={a?2.5:1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+)}
+const MEMBER_BOX_NAV: NavItem[] = [ATHLETE_NAV[0], COURS_ITEM, ...ATHLETE_NAV.slice(1)]
+
 export default function BottomNav() {
   const path = usePathname()
   const { active } = useAppContext()
   if (path === '/welcome') return null
 
-  // Owner/coach in a box get the box menu; everyone else the athlete menu.
+  // Owner/coach get the box menu; members in a box get the athlete menu + Cours;
+  // everyone else the plain athlete menu.
   const inBox = active.type === 'org' && active.role !== 'member'
-  const NAV = inBox ? BOX_NAV : ATHLETE_NAV
+  const memberInBox = active.type === 'org' && active.role === 'member'
+  const NAV = inBox ? BOX_NAV : memberInBox ? MEMBER_BOX_NAV : ATHLETE_NAV
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200"

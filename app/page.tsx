@@ -5,6 +5,7 @@ import { getRecentSessions, getProfile, deleteDemoData } from '@/lib/api'
 import type { SessionSummary, UserProfile } from '@/lib/api'
 import { useAppContext } from '@/components/AppContext'
 import CoachDashboard from '@/components/CoachDashboard'
+import MemberBoxCard from '@/components/MemberBoxCard'
 
 // ── Helpers ───────────────────────────────────────────────
 function toDateStr(d: Date) {
@@ -177,20 +178,9 @@ export default function Dashboard() {
         </div>
 
 
-        {/* Réservation de cours — visible quand on est dans le contexte d'une box */}
+        {/* Réservations de cours — visible quand on est dans le contexte d'une box */}
         {active.type === 'org' && (
-          <Link href="/box/book"
-            className="flex items-center justify-between rounded-2xl p-4 mb-4 text-white"
-            style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-2xl">📅</span>
-              <div className="min-w-0">
-                <p className="text-sm font-black truncate">Réserver un cours</p>
-                <p className="text-xs text-white/80 truncate">{active.orgName}</p>
-              </div>
-            </div>
-            <span className="text-white/80">›</span>
-          </Link>
+          <MemberBoxCard orgId={active.orgId} orgName={active.orgName} />
         )}
 
         {/* Bannière données démo */}

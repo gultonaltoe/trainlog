@@ -1,0 +1,60 @@
+'use client'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { getMyReservations, type MyReservation } from '@/lib/reservations'
+import { endTime } from '@/lib/classes'
+
+const fmtDay = (iso: string) =>
+  new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+
+// Member's box home card: next bookings + a Réserver CTA. Shown on the
+// dashboard when the active view is a box (member context).
+export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgName: string }) {
+  const [upcoming, setUpcoming] = useState<MyReservation[]>([])
+
+  useEffect(() => {
+    let alive = true
+    getMyReservations(orgId)
+      .then(rs => {
+        const now = new Date()
+        const next = rs.filter(r => new Date(`${r.date}T${r.startTime}:00`) >= now).slice(0, 3)
+        if (alive) setUpcoming(next)
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [orgId])
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="min-w-0">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Mes prochains cours</p>
+          <p className="text-sm font-bold text-gray-800 truncate">{orgName}</p>
+        </div>
+        <Link href="/box/book#mine" className="text-xs font-bold text-orange-600 flex-shrink-0">Voir tout</Link>
+      </div>
+
+      {upcoming.length === 0 ? (
+        <p className="text-sm text-gray-300 mb-3">Aucune réservation à venir.</p>
+      ) : (
+        <div className="space-y-1.5 mb-3">
+          {upcoming.map(r => (
+            <div key={`${r.scheduleId}|${r.date}`} className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-gray-800 truncate">{r.title}</span>
+              <span className="text-xs text-gray-500 flex-shrink-0 capitalize">
+                {fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}
+                {r.status === 'waitlisted' && <span className="text-amber-600 font-bold"> · attente</span>}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Link href="/box/book"
+        className="block text-center py-3 rounded-2xl text-white font-black text-sm"
+        style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)' }}>
+        Réserver un cours
+      </Link>
+    </div>
+  )
+}

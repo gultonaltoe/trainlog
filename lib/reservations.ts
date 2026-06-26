@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getSessionUserId } from './auth'
 
 // Member reservations against class occurrences. All mutations go through
 // SECURITY DEFINER RPCs (book_class / cancel_class) so capacity, the cancel
@@ -79,5 +80,39 @@ export async function getOccurrenceAttendees(scheduleId: string, date: string): 
   if (error) throw new Error(`getOccurrenceAttendees: ${error.message}`)
   return ((data ?? []) as AttendeeRow[]).map(r => ({
     userId: r.user_id, firstName: r.first_name, status: r.status, position: r.wl_position, notified: r.notified,
+  }))
+}
+
+// The current member's own reservations (with class details), for "Mes réservations".
+export type MyReservation = {
+  scheduleId: string
+  date: string
+  title: string
+  startTime: string   // HH:MM
+  durationMin: number
+  status: ReservationStatus
+}
+
+type MyRow = {
+  schedule_id: string; occurrence_date: string; status: ReservationStatus
+  class_schedules: { title: string; start_time: string; duration_min: number } | null
+}
+
+/** The current user's reservations in a box (booked + waitlisted), date-ascending. */
+export async function getMyReservations(orgId: string): Promise<MyReservation[]> {
+  const uid = await getSessionUserId()
+  if (!uid) return []
+  const { data, error } = await supabase.from('class_reservations')
+    .select('schedule_id, occurrence_date, status, class_schedules(title, start_time, duration_min)')
+    .eq('organization_id', orgId).eq('user_id', uid)
+    .order('occurrence_date', { ascending: true })
+  if (error) throw new Error(`getMyReservations: ${error.message}`)
+  return ((data ?? []) as unknown as MyRow[]).map(r => ({
+    scheduleId: r.schedule_id,
+    date: r.occurrence_date,
+    title: r.class_schedules?.title ?? 'Cours',
+    startTime: (r.class_schedules?.start_time ?? '').slice(0, 5),
+    durationMin: r.class_schedules?.duration_min ?? 60,
+    status: r.status,
   }))
 }

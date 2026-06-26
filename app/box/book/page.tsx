@@ -6,6 +6,7 @@ import { getBookingsInRange, bookClass, cancelClass, claimWaitlistSpot, bookingK
 import { getOrganization, DEFAULT_BRAND, type OrgBrand } from '@/lib/orgs'
 import { getMyPlans, isUsable, type MemberPlan } from '@/lib/memberPlans'
 import { PLAN_KIND_LABEL } from '@/lib/plans'
+import MyReservations from '@/components/MyReservations'
 import { toast } from '@/lib/toast'
 
 const DAY_WK = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di']
@@ -36,6 +37,8 @@ export default function BookPage() {
   const [brand, setBrand] = useState<OrgBrand>(DEFAULT_BRAND)
   const [policy, setPolicy] = useState('')
   const [showPolicy, setShowPolicy] = useState(false)
+  const [tab, setTab] = useState<'browse' | 'mine'>('browse')
+  useEffect(() => { if (window.location.hash === '#mine') setTab('mine') }, [])
 
   const range = useMemo(() => {
     if (view === 'week') {
@@ -130,15 +133,32 @@ export default function BookPage() {
               <p className="text-sm text-gray-400 mt-0.5 truncate">{org.orgName}</p>
             </div>
           </div>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-xs font-bold flex-shrink-0">
-            {(['week', 'month'] as const).map(v => (
-              <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2"
-                style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
-                {v === 'week' ? 'Semaine' : 'Mois'}
-              </button>
-            ))}
-          </div>
+          {tab === 'browse' && (
+            <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-xs font-bold flex-shrink-0">
+              {(['week', 'month'] as const).map(v => (
+                <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2"
+                  style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+                  {v === 'week' ? 'Semaine' : 'Mois'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Hub toggle: browse & book vs my reservations */}
+        <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-sm font-bold mb-4">
+          {([['browse', 'Réserver'], ['mine', 'Mes réservations']] as const).map(([t, label]) => (
+            <button key={t} onClick={() => setTab(t)} className="flex-1 py-2.5"
+              style={tab === t ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'mine' ? (
+          <MyReservations orgId={orgId!} />
+        ) : (
+        <>{/* ── Réserver (browse + book) ── */}
 
         {/* Member's plan / credits */}
         {(() => {
@@ -233,6 +253,8 @@ export default function BookPage() {
                     busy={busy === bookingKey(c.id, c.date)} onAct={act} />
                 ))}</div>}
           </>
+        )}
+        </>
         )}
       </div>
     </div>
