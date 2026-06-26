@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBoxMemberGuard } from '@/components/useBoxGuard'
 import { getSchedules, occurrencesInRange, type ClassSchedule, type ClassOccurrence } from '@/lib/classes'
 import { getBookingsInRange, bookClass, cancelClass, claimWaitlistSpot, bookingKey, type OccBooking } from '@/lib/reservations'
+import { getOrganization, DEFAULT_BRAND, type OrgBrand } from '@/lib/orgs'
 import { toast } from '@/lib/toast'
 
 const DAY_WK = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di']
@@ -30,6 +31,9 @@ export default function BookPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)   // key being booked/cancelled
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  const [brand, setBrand] = useState<OrgBrand>(DEFAULT_BRAND)
+  const [policy, setPolicy] = useState('')
+  const [showPolicy, setShowPolicy] = useState(false)
 
   const range = useMemo(() => {
     if (view === 'week') {
@@ -50,6 +54,12 @@ export default function BookPage() {
     setLoading(false)
   }, [orgId])
   useEffect(() => { void loadSchedules() }, [loadSchedules])
+
+  // Box branding + cancellation policy (member-facing).
+  useEffect(() => {
+    if (!orgId) return
+    getOrganization(orgId).then(info => { setBrand(info.brand); setPolicy(info.cancellationPolicy) }).catch(() => {})
+  }, [orgId])
 
   const refreshBookings = useCallback(async () => {
     if (!orgId) return
@@ -94,15 +104,24 @@ export default function BookPage() {
     setAnchor(a => { const d = new Date(a); view === 'week' ? d.setDate(a.getDate() + dir * 7) : d.setMonth(a.getMonth() + dir); return d })
   }
 
+  // Apply the box brand color to this surface (members see the box's color).
+  const brandStyle = brand.brandColor ? ({ ['--theme-primary' as string]: brand.brandColor } as React.CSSProperties) : undefined
+
   return (
-    <div className="bg-gray-50">
+    <div className="bg-gray-50" style={brandStyle}>
       <div className="max-w-lg mx-auto px-4 pb-4">
         <div className="pt-8 pb-4 flex items-end justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Réserver</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
+          <div className="flex items-center gap-3 min-w-0">
+            {brand.logoUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={brand.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover border border-gray-200 flex-shrink-0" />
+            )}
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Réserver</h1>
+              <p className="text-sm text-gray-400 mt-0.5 truncate">{org.orgName}</p>
+            </div>
           </div>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-xs font-bold">
+          <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-xs font-bold flex-shrink-0">
             {(['week', 'month'] as const).map(v => (
               <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2"
                 style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
@@ -111,6 +130,17 @@ export default function BookPage() {
             ))}
           </div>
         </div>
+
+        {policy.trim() && (
+          <div className="mb-4">
+            <button onClick={() => setShowPolicy(s => !s)} className="text-xs font-bold text-gray-500 flex items-center gap-1">
+              ⓘ Politique d’annulation <span className="text-gray-300">{showPolicy ? '▴' : '▾'}</span>
+            </button>
+            {showPolicy && (
+              <p className="text-xs text-gray-500 mt-1.5 whitespace-pre-line bg-white border border-gray-200 rounded-xl p-3">{policy}</p>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => shift(-1)} className="w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-600 text-lg leading-none">‹</button>

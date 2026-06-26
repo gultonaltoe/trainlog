@@ -106,6 +106,10 @@ export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
   bookCutoffMin: 0,
 }
 
+// Box branding shown to members in box context.
+export type OrgBrand = { logoUrl: string; brandColor: string }
+export const DEFAULT_BRAND: OrgBrand = { logoUrl: '', brandColor: '' }
+
 export type OrgProfile = {
   id: string
   name: string
@@ -116,6 +120,8 @@ export type OrgProfile = {
   joinCode: string | null
   sessionTypes: SessionType[]
   reservations: ReservationSettings
+  brand: OrgBrand
+  cancellationPolicy: string    // no-show / late-cancel policy text shown on booking
 }
 
 export const DEFAULT_DURATION_MIN = 60
@@ -138,6 +144,7 @@ export async function getOrganization(orgId: string): Promise<OrgProfile> {
   if (error) throw new Error(`getOrganization: ${error.message}`)
   const s = (data.settings ?? {}) as Record<string, unknown>
   const r = (s.reservations ?? {}) as Partial<ReservationSettings>
+  const b = (s.brand ?? {}) as Partial<OrgBrand>
   return {
     id:           data.id,
     name:         data.name,
@@ -148,6 +155,8 @@ export async function getOrganization(orgId: string): Promise<OrgProfile> {
     joinCode:     data.join_code,
     sessionTypes: Array.isArray(s.sessionTypes) ? (s.sessionTypes as SessionType[]) : [],
     reservations: { ...DEFAULT_RESERVATION_SETTINGS, ...r },
+    brand:        { ...DEFAULT_BRAND, ...b },
+    cancellationPolicy: (s.cancellationPolicy as string) ?? '',
   }
 }
 
@@ -183,6 +192,14 @@ export async function updateReservationSettings(orgId: string, reservations: Res
   const settings = { ...s, reservations } as unknown as Json
   const { error } = await supabase.from('organizations').update({ settings }).eq('id', orgId)
   if (error) throw new Error(`updateReservationSettings: ${error.message}`)
+}
+
+/** Owner manages box branding + cancellation policy. Merges into settings. */
+export async function updateOrgBranding(orgId: string, brand: OrgBrand, cancellationPolicy: string): Promise<void> {
+  const s = await readSettings(orgId)
+  const settings = { ...s, brand, cancellationPolicy } as unknown as Json
+  const { error } = await supabase.from('organizations').update({ settings }).eq('id', orgId)
+  if (error) throw new Error(`updateOrgBranding: ${error.message}`)
 }
 
 /** The box's shareable join code (members enter it to request to join). */

@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import { getOrganization, updateOrgSessionTypes, updateReservationSettings, DEFAULT_SESSION_TYPES, DEFAULT_DURATION_MIN, DEFAULT_CAPACITY, DEFAULT_RESERVATION_SETTINGS, type SessionType, type ReservationSettings, type WaitlistMode } from '@/lib/orgs'
+import { getOrganization, updateOrgSessionTypes, updateReservationSettings, updateOrgBranding, DEFAULT_SESSION_TYPES, DEFAULT_DURATION_MIN, DEFAULT_CAPACITY, DEFAULT_RESERVATION_SETTINGS, DEFAULT_BRAND, type SessionType, type ReservationSettings, type WaitlistMode, type OrgBrand } from '@/lib/orgs'
 import { toast } from '@/lib/toast'
 
 const fieldCls = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
@@ -12,9 +12,12 @@ export default function BoxSettingsPage() {
   const canEdit = org?.role === 'owner'
   const [types, setTypes] = useState<SessionType[]>([])
   const [resa, setResa] = useState<ReservationSettings>(DEFAULT_RESERVATION_SETTINGS)
+  const [brand, setBrand] = useState<OrgBrand>(DEFAULT_BRAND)
+  const [policy, setPolicy] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savingResa, setSavingResa] = useState(false)
+  const [savingBrand, setSavingBrand] = useState(false)
 
   const load = useCallback(async () => {
     if (!orgId) return
@@ -22,6 +25,8 @@ export default function BoxSettingsPage() {
     // Pre-fill the standard set until the box saves its own.
     setTypes(info.sessionTypes.length > 0 ? info.sessionTypes : DEFAULT_SESSION_TYPES)
     setResa(info.reservations)
+    setBrand(info.brand)
+    setPolicy(info.cancellationPolicy)
     setLoading(false)
   }, [orgId])
   useEffect(() => { void load() }, [load])
@@ -29,6 +34,16 @@ export default function BoxSettingsPage() {
   const addType = () => setTypes(t => [...t, { name: '', defaultDurationMin: DEFAULT_DURATION_MIN, defaultCapacity: DEFAULT_CAPACITY }])
   const updType = (i: number, patch: Partial<SessionType>) => setTypes(t => t.map((x, j) => j === i ? { ...x, ...patch } : x))
   const updResa = (patch: Partial<ReservationSettings>) => setResa(r => ({ ...r, ...patch }))
+
+  const saveBrand = async () => {
+    if (!orgId) return
+    setSavingBrand(true)
+    try {
+      await updateOrgBranding(orgId, { logoUrl: brand.logoUrl.trim(), brandColor: brand.brandColor.trim() }, policy.trim())
+      toast.success('Marque enregistrée')
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setSavingBrand(false)
+  }
 
   const save = async () => {
     if (!orgId) return
@@ -185,6 +200,51 @@ export default function BoxSettingsPage() {
               className="w-full mt-4 py-3.5 rounded-2xl text-white font-black text-base disabled:opacity-50"
               style={{ background: 'var(--theme-primary, #F97316)' }}>
               {savingResa ? 'Enregistrement…' : 'Enregistrer les réservations'}
+            </button>
+          )}
+        </div>
+
+        {/* Marque & politique */}
+        <div className="mt-10">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Marque &amp; politique</p>
+          <p className="text-xs text-gray-400 mb-3">Logo, couleur et politique d’annulation — visibles par tes membres.</p>
+
+          {loading ? (
+            <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-4">
+              <label className="text-[11px] text-gray-400 block">Logo (URL)
+                <input type="url" className={fieldCls} value={brand.logoUrl} disabled={!canEdit}
+                  placeholder="https://…/logo.png"
+                  onChange={e => setBrand(b => ({ ...b, logoUrl: e.target.value }))} />
+              </label>
+              {brand.logoUrl.trim() && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={brand.logoUrl} alt="Logo" className="h-12 w-auto rounded-lg border border-gray-100" />
+              )}
+              <label className="text-[11px] text-gray-400 block">Couleur de marque
+                <div className="flex items-center gap-2 mt-1">
+                  <input type="color" disabled={!canEdit} value={brand.brandColor || '#F97316'}
+                    onChange={e => setBrand(b => ({ ...b, brandColor: e.target.value }))}
+                    className="h-9 w-12 rounded border border-gray-300 bg-white" />
+                  <input type="text" className={fieldCls} value={brand.brandColor} disabled={!canEdit}
+                    placeholder="#F97316 (vide = orange par défaut)"
+                    onChange={e => setBrand(b => ({ ...b, brandColor: e.target.value }))} />
+                </div>
+              </label>
+              <label className="text-[11px] text-gray-400 block">Politique d’annulation / no-show
+                <textarea rows={3} className={fieldCls} value={policy} disabled={!canEdit}
+                  placeholder="Ex : annulation gratuite jusqu’à 2h avant. Au-delà, le cours est décompté."
+                  onChange={e => setPolicy(e.target.value)} />
+              </label>
+            </div>
+          )}
+
+          {canEdit && !loading && (
+            <button onClick={saveBrand} disabled={savingBrand}
+              className="w-full mt-4 py-3.5 rounded-2xl text-white font-black text-base disabled:opacity-50"
+              style={{ background: 'var(--theme-primary, #F97316)' }}>
+              {savingBrand ? 'Enregistrement…' : 'Enregistrer la marque'}
             </button>
           )}
         </div>
