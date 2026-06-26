@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, getBoxJoinCode, setMembershipStatus, type OrgMember } from '@/lib/orgs'
 import { getPlans, formatPrice, PLAN_KIND_LABEL, type MembershipPlan } from '@/lib/plans'
-import { getMemberPlans, assignPlan, cancelMemberPlan, type MemberPlan } from '@/lib/memberPlans'
+import { getMemberPlans, assignPlan, cancelMemberPlan, getOrgActivePlans, type MemberPlan, type MemberPlanSummary } from '@/lib/memberPlans'
 import { toast } from '@/lib/toast'
 
 export default function MembersPage() {
@@ -11,23 +11,28 @@ export default function MembersPage() {
   const [members, setMembers] = useState<OrgMember[]>([])
   const [joinCode, setJoinCode] = useState<string | null>(null)
   const [plans, setPlans] = useState<MembershipPlan[]>([])
+  const [planByUser, setPlanByUser] = useState<Map<string, MemberPlanSummary>>(new Map())
   const [sheetFor, setSheetFor] = useState<OrgMember | null>(null)
+  const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const orgId = org?.orgId
 
   const load = useCallback(async () => {
     if (!orgId) return
-    const [all, code, pl] = await Promise.all([getOrgMembers(orgId), getBoxJoinCode(orgId), getPlans(orgId)])
+    const [all, code, pl, mp] = await Promise.all([getOrgMembers(orgId), getBoxJoinCode(orgId), getPlans(orgId), getOrgActivePlans(orgId)])
     setMembers(all)
     setJoinCode(code)
     setPlans(pl.filter(p => p.active))
+    setPlanByUser(mp)
     setLoading(false)
   }, [orgId])
 
   useEffect(() => { void load() }, [load])
 
+  const q = query.trim().toLowerCase()
   const pending = members.filter(m => m.status === 'pending')
-  const active  = members.filter(m => m.status === 'active' && m.role === 'member')
+  const active  = members.filter(m => m.status === 'active' && m.role === 'member'
+    && (!q || (m.firstName ?? '').toLowerCase().includes(q)))
 
   const decide = async (m: OrgMember, approve: boolean) => {
     await setMembershipStatus(m.membershipId, approve ? 'active' : 'inactive')
@@ -92,25 +97,36 @@ export default function MembersPage() {
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
           Membres {!loading && `(${active.length})`}
         </p>
+        {!loading && members.some(m => m.status === 'active' && m.role === 'member') && (
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un membre…"
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 mb-2 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+        )}
         {loading ? (
           <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
         ) : active.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">Aucun membre actif pour l’instant.</p>
+          <p className="text-sm text-gray-400 text-center py-8">{query ? 'Aucun membre ne correspond.' : 'Aucun membre actif pour l’instant.'}</p>
         ) : (
           <div className="space-y-2">
-            {active.map(m => (
-              <button key={m.membershipId} onClick={() => setSheetFor(m)}
-                className="w-full text-left bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between hover:shadow-sm transition">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">👤</div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-800 truncate">{m.firstName ?? 'Membre'}</p>
-                    <p className="text-[11px] text-gray-400">{m.dataSharing ? 'Données partagées' : 'Données privées'}</p>
+            {active.map(m => {
+              const plan = planByUser.get(m.userId)
+              return (
+                <button key={m.membershipId} onClick={() => setSheetFor(m)}
+                  className="w-full text-left bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between hover:shadow-sm transition">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">👤</div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-800 truncate">{m.firstName ?? 'Membre'}</p>
+                      <p className="text-[11px] truncate">
+                        {plan
+                          ? <span className="text-gray-500">{plan.planName}{plan.creditsRemaining != null ? ` · ${plan.creditsRemaining} cr.` : ''}</span>
+                          : <span className="text-amber-600 font-semibold">Aucun abonnement</span>}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <span className="text-[11px] font-bold text-orange-600 flex-shrink-0">Abonnement ›</span>
-              </button>
-            ))}
+                  <span className="text-[11px] font-bold text-orange-600 flex-shrink-0">Abonnement ›</span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>

@@ -52,6 +52,21 @@ export async function getMyPlans(orgId: string): Promise<MemberPlan[]> {
   return ((data ?? []) as unknown as Row[]).map(toMemberPlan)
 }
 
+export type MemberPlanSummary = { planName: string; planKind: PlanKind; creditsRemaining: number | null; endsOn: string | null }
+
+/** Map of userId → their newest active plan, for the roster (owner/coach). */
+export async function getOrgActivePlans(orgId: string): Promise<Map<string, MemberPlanSummary>> {
+  const { data, error } = await supabase.from('member_plans').select(SELECT)
+    .eq('organization_id', orgId).eq('status', 'active')
+    .order('created_at', { ascending: false })
+  if (error) throw new Error(`getOrgActivePlans: ${error.message}`)
+  const map = new Map<string, MemberPlanSummary>()
+  for (const mp of ((data ?? []) as unknown as Row[]).map(toMemberPlan)) {
+    if (!map.has(mp.userId)) map.set(mp.userId, { planName: mp.planName, planKind: mp.planKind, creditsRemaining: mp.creditsRemaining, endsOn: mp.endsOn })
+  }
+  return map
+}
+
 /** Owner/coach assigns a plan to a member. Derives end date + credits from the plan. */
 export async function assignPlan(orgId: string, userId: string, plan: MembershipPlan): Promise<void> {
   const startsOn = new Date()
