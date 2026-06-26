@@ -2,6 +2,7 @@
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { normalizeEmail } from '@/lib/auth'
 
 function AuthForm() {
   const searchParams = useSearchParams()
@@ -17,7 +18,7 @@ function AuthForm() {
     setLoading(true)
     setError('')
     const { error: err } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
+      email: normalizeEmail(email),
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
     setLoading(false)

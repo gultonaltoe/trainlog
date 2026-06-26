@@ -12,6 +12,18 @@ export class NotAuthenticatedError extends Error {
   }
 }
 
+/**
+ * Canonical email for auth: lowercased + trimmed; for gmail/googlemail the dots
+ * in the local part are stripped and the domain unified. Prevents dot-variant
+ * duplicate accounts (Gmail ignores dots; Supabase treats them as distinct).
+ * Mirrors the SQL normalize_email() used for invite matching.
+ */
+export function normalizeEmail(email: string): string {
+  const e = email.trim().toLowerCase()
+  const m = e.match(/^([^@]+)@(?:gmail|googlemail)\.com$/)
+  return m ? `${m[1].replace(/\./g, '')}@gmail.com` : e
+}
+
 /** The current signed-in user's id, or null if logged out. */
 export async function getSessionUserId(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession()
