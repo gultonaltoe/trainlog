@@ -2,20 +2,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, getBoxJoinCode, setMembershipStatus, type OrgMember } from '@/lib/orgs'
+import { getPlans, formatPrice, PLAN_KIND_LABEL, type MembershipPlan } from '@/lib/plans'
+import { getMemberPlans, assignPlan, cancelMemberPlan, type MemberPlan } from '@/lib/memberPlans'
 import { toast } from '@/lib/toast'
 
 export default function MembersPage() {
   const org = useBoxGuard()
   const [members, setMembers] = useState<OrgMember[]>([])
   const [joinCode, setJoinCode] = useState<string | null>(null)
+  const [plans, setPlans] = useState<MembershipPlan[]>([])
+  const [sheetFor, setSheetFor] = useState<OrgMember | null>(null)
   const [loading, setLoading] = useState(true)
   const orgId = org?.orgId
 
   const load = useCallback(async () => {
     if (!orgId) return
-    const [all, code] = await Promise.all([getOrgMembers(orgId), getBoxJoinCode(orgId)])
+    const [all, code, pl] = await Promise.all([getOrgMembers(orgId), getBoxJoinCode(orgId), getPlans(orgId)])
     setMembers(all)
     setJoinCode(code)
+    setPlans(pl.filter(p => p.active))
     setLoading(false)
   }, [orgId])
 
@@ -94,7 +99,8 @@ export default function MembersPage() {
         ) : (
           <div className="space-y-2">
             {active.map(m => (
-              <div key={m.membershipId} className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between">
+              <button key={m.membershipId} onClick={() => setSheetFor(m)}
+                className="w-full text-left bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between hover:shadow-sm transition">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">👤</div>
                   <div className="min-w-0">
@@ -102,8 +108,95 @@ export default function MembersPage() {
                     <p className="text-[11px] text-gray-400">{m.dataSharing ? 'Données partagées' : 'Données privées'}</p>
                   </div>
                 </div>
+                <span className="text-[11px] font-bold text-orange-600 flex-shrink-0">Abonnement ›</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {sheetFor && orgId && (
+        <MemberPlanSheet orgId={orgId} member={sheetFor} plans={plans} onClose={() => setSheetFor(null)} />
+      )}
+    </div>
+  )
+}
+
+function MemberPlanSheet({ orgId, member, plans, onClose }: {
+  orgId: string; member: OrgMember; plans: MembershipPlan[]; onClose: () => void
+}) {
+  const [assigned, setAssigned] = useState<MemberPlan[] | null>(null)
+  const [planId, setPlanId] = useState(plans[0]?.id ?? '')
+  const [busy, setBusy] = useState(false)
+
+  const reload = useCallback(async () => {
+    try { setAssigned(await getMemberPlans(orgId, member.userId)) }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur'); setAssigned([]) }
+  }, [orgId, member.userId])
+  useEffect(() => { void reload() }, [reload])
+
+  const assign = async () => {
+    const plan = plans.find(p => p.id === planId)
+    if (!plan) { toast.error('Choisis un plan'); return }
+    setBusy(true)
+    try { await assignPlan(orgId, member.userId, plan); toast.success('Plan attribué'); await reload() }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setBusy(false)
+  }
+  const cancel = async (mp: MemberPlan) => {
+    if (!window.confirm(`Annuler le plan « ${mp.planName} » ?`)) return
+    await cancelMemberPlan(mp.id); toast.success('Plan annulé'); await reload()
+  }
+
+  const fieldCls = 'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+        <h2 className="text-lg font-black text-gray-900 mb-1">{member.firstName ?? 'Membre'}</h2>
+        <p className="text-xs text-gray-400 mb-4">Abonnements</p>
+
+        {assigned === null ? (
+          <p className="text-sm text-gray-400 text-center py-4">Chargement…</p>
+        ) : assigned.length === 0 ? (
+          <p className="text-sm text-gray-300 mb-4">Aucun abonnement.</p>
+        ) : (
+          <div className="space-y-2 mb-4">
+            {assigned.map(mp => (
+              <div key={mp.id} className={`rounded-xl border p-3 flex items-center justify-between gap-2 ${mp.status === 'active' ? 'border-gray-200' : 'border-gray-200 opacity-60'}`}>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-800 truncate">{mp.planName}
+                    {mp.status !== 'active' && <span className="text-[10px] font-bold text-gray-400"> ({mp.status})</span>}
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    {PLAN_KIND_LABEL[mp.planKind]}
+                    {mp.creditsRemaining != null ? ` · ${mp.creditsRemaining} crédits` : ''}
+                    {mp.endsOn ? ` · jusqu’au ${mp.endsOn}` : ''}
+                  </p>
+                </div>
+                {mp.status === 'active' && (
+                  <button onClick={() => cancel(mp)} className="text-gray-300 hover:text-red-500 text-xl px-1 flex-shrink-0">×</button>
+                )}
               </div>
             ))}
+          </div>
+        )}
+
+        {plans.length === 0 ? (
+          <p className="text-xs text-gray-400">Crée d’abord des plans dans « Abonnements ».</p>
+        ) : (
+          <div className="flex items-end gap-2">
+            <label className="flex-1 text-[11px] font-bold text-gray-500 uppercase tracking-wide">Attribuer un plan
+              <select className={`${fieldCls} mt-1.5`} value={planId} onChange={e => setPlanId(e.target.value)}>
+                {plans.map(p => <option key={p.id} value={p.id}>{p.name} — {formatPrice(p.priceCents, p.currency)}</option>)}
+              </select>
+            </label>
+            <button onClick={assign} disabled={busy}
+              className="py-2.5 px-4 rounded-xl text-white font-black text-sm disabled:opacity-50"
+              style={{ background: 'var(--theme-primary, #F97316)' }}>
+              {busy ? '…' : 'Attribuer'}
+            </button>
           </div>
         )}
       </div>

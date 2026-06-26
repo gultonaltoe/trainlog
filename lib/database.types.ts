@@ -383,6 +383,57 @@ export type Database = {
           },
         ]
       }
+      member_plans: {
+        Row: {
+          created_at: string
+          credits_remaining: number | null
+          ends_on: string | null
+          id: string
+          organization_id: string
+          plan_id: string
+          starts_on: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_remaining?: number | null
+          ends_on?: string | null
+          id?: string
+          organization_id: string
+          plan_id: string
+          starts_on?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_remaining?: number | null
+          ends_on?: string | null
+          id?: string
+          organization_id?: string
+          plan_id?: string
+          starts_on?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_plans_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_plans: {
         Row: {
           active: boolean

@@ -4,6 +4,8 @@ import { useBoxMemberGuard } from '@/components/useBoxGuard'
 import { getSchedules, occurrencesInRange, type ClassSchedule, type ClassOccurrence } from '@/lib/classes'
 import { getBookingsInRange, bookClass, cancelClass, claimWaitlistSpot, bookingKey, type OccBooking } from '@/lib/reservations'
 import { getOrganization, DEFAULT_BRAND, type OrgBrand } from '@/lib/orgs'
+import { getMyPlans, isUsable, type MemberPlan } from '@/lib/memberPlans'
+import { PLAN_KIND_LABEL } from '@/lib/plans'
 import { toast } from '@/lib/toast'
 
 const DAY_WK = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di']
@@ -59,6 +61,13 @@ export default function BookPage() {
   useEffect(() => {
     if (!orgId) return
     getOrganization(orgId).then(info => { setBrand(info.brand); setPolicy(info.cancellationPolicy) }).catch(() => {})
+  }, [orgId])
+
+  // The member's own plan(s) — show their active plan / remaining credits.
+  const [myPlans, setMyPlans] = useState<MemberPlan[]>([])
+  useEffect(() => {
+    if (!orgId) return
+    getMyPlans(orgId).then(setMyPlans).catch(() => setMyPlans([]))
   }, [orgId])
 
   const refreshBookings = useCallback(async () => {
@@ -130,6 +139,25 @@ export default function BookPage() {
             ))}
           </div>
         </div>
+
+        {/* Member's plan / credits */}
+        {(() => {
+          const usable = myPlans.find(p => isUsable(p, todayISO))
+          if (usable) return (
+            <div className="mb-3 rounded-xl bg-white border border-gray-200 p-3 flex items-center justify-between">
+              <p className="text-sm font-bold text-gray-800 truncate">{usable.planName}</p>
+              <p className="text-xs text-gray-500 flex-shrink-0">
+                {usable.creditsRemaining != null ? `${usable.creditsRemaining} crédits` : PLAN_KIND_LABEL[usable.planKind]}
+                {usable.endsOn ? ` · jusqu’au ${usable.endsOn}` : ''}
+              </p>
+            </div>
+          )
+          return (
+            <div className="mb-3 rounded-xl bg-amber-50 border border-amber-200 p-3">
+              <p className="text-xs font-semibold text-amber-700">Aucun abonnement actif — contacte ta box pour t’inscrire.</p>
+            </div>
+          )
+        })()}
 
         {policy.trim() && (
           <div className="mb-4">
