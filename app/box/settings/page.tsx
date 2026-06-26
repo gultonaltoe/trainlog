@@ -48,6 +48,8 @@ export default function BoxSettingsPage() {
       waitlistMode: resa.waitlistMode,
       waitlistCapacity: Math.max(0, resa.waitlistCapacity || 0),
       cancelCutoffMin: Math.max(0, resa.cancelCutoffMin || 0),
+      bookAheadDays: Math.max(0, resa.bookAheadDays || 0),
+      bookCutoffMin: Math.max(0, resa.bookCutoffMin || 0),
     }
     setSavingResa(true)
     try { await updateReservationSettings(orgId, clean); setResa(clean); toast.success('Réservations enregistrées') }
@@ -159,6 +161,22 @@ export default function BoxSettingsPage() {
                   onChange={e => updResa({ cancelCutoffMin: parseInt(e.target.value) || 0 })} />
                 <span className="block mt-1">0 = annulation possible jusqu’au début du cours.</span>
               </label>
+
+              <div className="pt-1 border-t border-gray-100">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2 mt-2">Fenêtre de réservation</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-[11px] text-gray-400 block">Ouverture (jours avant)
+                    <input type="number" min={0} className={fieldCls} value={resa.bookAheadDays} disabled={!canEdit}
+                      onChange={e => updResa({ bookAheadDays: parseInt(e.target.value) || 0 })} />
+                    <span className="block mt-1">0 = aucune limite.</span>
+                  </label>
+                  <label className="text-[11px] text-gray-400 block">Fermeture (min avant)
+                    <input type="number" min={0} step={15} className={fieldCls} value={resa.bookCutoffMin} disabled={!canEdit}
+                      onChange={e => updResa({ bookCutoffMin: parseInt(e.target.value) || 0 })} />
+                    <span className="block mt-1">0 = jusqu’au début.</span>
+                  </label>
+                </div>
+              </div>
             </div>
           )}
 

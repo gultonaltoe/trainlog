@@ -93,6 +93,8 @@ export type ReservationSettings = {
   waitlistMode: WaitlistMode    // auto-promote on a freed spot, or just notify
   waitlistCapacity: number      // default max waitlist size (per-class override on the schedule)
   cancelCutoffMin: number       // minutes before start within which booked spots can't be cancelled
+  bookAheadDays: number         // how far ahead members can book (0 = no limit)
+  bookCutoffMin: number         // minutes before start when booking closes (0 = until start)
 }
 
 export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
@@ -100,6 +102,8 @@ export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
   waitlistMode: 'auto_promote',
   waitlistCapacity: 5,
   cancelCutoffMin: 120,
+  bookAheadDays: 0,
+  bookCutoffMin: 0,
 }
 
 export type OrgProfile = {
