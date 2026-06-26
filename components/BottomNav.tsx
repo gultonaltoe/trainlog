@@ -79,14 +79,16 @@ const MEMBER_BOX_NAV: NavItem[] = [ATHLETE_NAV[0], COURS_ITEM, ...ATHLETE_NAV.sl
 
 export default function BottomNav() {
   const path = usePathname()
-  const { active } = useAppContext()
+  const { active, memberships } = useAppContext()
   if (path === '/welcome') return null
 
-  // Owner/coach get the box menu; members in a box get the athlete menu + Cours;
-  // everyone else the plain athlete menu.
+  // Owner/coach in a box get the management menu. The athlete menu gains a
+  // "Cours" booking tab whenever the user belongs to a box — whether they're a
+  // member in box context, or in their personal athlete view.
   const inBox = active.type === 'org' && active.role !== 'member'
-  const memberInBox = active.type === 'org' && active.role === 'member'
-  const NAV = inBox ? BOX_NAV : memberInBox ? MEMBER_BOX_NAV : ATHLETE_NAV
+  const hasBox = memberships.some(m => m.status === 'active')
+  const showCours = (active.type === 'org' && active.role === 'member') || (active.type === 'personal' && hasBox)
+  const NAV = inBox ? BOX_NAV : showCours ? MEMBER_BOX_NAV : ATHLETE_NAV
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200"

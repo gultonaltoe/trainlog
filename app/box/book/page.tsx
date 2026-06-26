@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useBoxMemberGuard } from '@/components/useBoxGuard'
+import { useRouter } from 'next/navigation'
+import { useAppContext } from '@/components/AppContext'
 import { getSchedules, occurrencesInRange, type ClassSchedule, type ClassOccurrence } from '@/lib/classes'
 import { getBookingsInRange, bookClass, cancelClass, claimWaitlistSpot, bookingKey, type OccBooking } from '@/lib/reservations'
 import { getOrganization, DEFAULT_BRAND, type OrgBrand } from '@/lib/orgs'
@@ -25,8 +26,25 @@ function monthCells(y: number, m: number): (number | null)[] {
 }
 
 export default function BookPage() {
-  const org = useBoxMemberGuard()
-  const orgId = org?.orgId
+  const { active, memberships, loading: ctxLoading } = useAppContext()
+  const router = useRouter()
+  // Which box to book in: the active org if we're in one; else (athlete view)
+  // a ?org= param, else the user's first active box membership. Lets owners/
+  // coaches and members book from their athlete view too.
+  const [paramOrg] = useState(() =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('org') : null)
+  const activeBoxes = memberships.filter(m => m.status === 'active')
+  const box = active.type === 'org'
+    ? { orgId: active.orgId, orgName: active.orgName, role: active.role }
+    : (() => {
+        const m = activeBoxes.find(x => x.organizationId === paramOrg) ?? activeBoxes[0]
+        return m ? { orgId: m.organizationId, orgName: m.organizationName, role: m.role } : null
+      })()
+  const orgId = box?.orgId
+  const orgName = box?.orgName ?? 'Box'
+  const role = box?.role ?? 'member'
+  useEffect(() => { if (!ctxLoading && !orgId) router.replace('/') }, [ctxLoading, orgId, router])
+
   const [view, setView] = useState<'week' | 'month'>('week')
   const [anchor, setAnchor] = useState(() => new Date())
   const [schedules, setSchedules] = useState<ClassSchedule[]>([])
@@ -104,7 +122,7 @@ export default function BookPage() {
     }
   }
 
-  if (!org) return null
+  if (!orgId) return null
 
   const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(range.monday); d.setDate(range.monday.getDate() + i); return d })
   const todayISO = iso(new Date())
@@ -130,7 +148,7 @@ export default function BookPage() {
             )}
             <div className="min-w-0">
               <h1 className="text-2xl font-black text-gray-900 tracking-tight">Réserver</h1>
-              <p className="text-sm text-gray-400 mt-0.5 truncate">{org.orgName}</p>
+              <p className="text-sm text-gray-400 mt-0.5 truncate">{orgName}</p>
             </div>
           </div>
           {tab === 'browse' && (
@@ -161,7 +179,7 @@ export default function BookPage() {
         <>{/* ── Réserver (browse + book) ── */}
 
         {/* Member's plan / credits (members only; owner/coach are exempt) */}
-        {org.role === 'member' && (() => {
+        {role === 'member' && (() => {
           const usable = myPlans.find(p => isUsable(p, todayISO))
           if (usable) return (
             <div className="mb-3 rounded-xl bg-white border border-gray-200 p-3 flex items-center justify-between">

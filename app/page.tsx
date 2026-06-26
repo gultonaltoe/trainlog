@@ -71,7 +71,7 @@ export default function Dashboard() {
   const [period, setPeriod]           = useState<Period>('30j')
   const [dashCalY, setDashCalY] = useState(new Date().getFullYear())
   const [dashCalM, setDashCalM] = useState(new Date().getMonth())
-  const { active } = useAppContext()
+  const { active, memberships } = useAppContext()
 
   const load = useCallback(async () => {
     let p = await getProfile()
@@ -178,10 +178,13 @@ export default function Dashboard() {
         </div>
 
 
-        {/* Réservations de cours — visible quand on est dans le contexte d'une box */}
-        {active.type === 'org' && (
-          <MemberBoxCard orgId={active.orgId} orgName={active.orgName} />
-        )}
+        {/* Réservations de cours — dans le contexte d'une box, ou dans l'espace
+            athlète pour chaque box dont on est membre (owner/coach/membre). */}
+        {active.type === 'org'
+          ? <MemberBoxCard orgId={active.orgId} orgName={active.orgName} />
+          : memberships.filter(m => m.status === 'active').map(m => (
+              <MemberBoxCard key={m.organizationId} orgId={m.organizationId} orgName={m.organizationName} />
+            ))}
 
         {/* Bannière données démo */}
         {!loading && sessions.some(s => s.is_demo) && (

@@ -31,7 +31,7 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Mes prochains cours</p>
           <p className="text-sm font-bold text-gray-800 truncate">{orgName}</p>
         </div>
-        <Link href="/box/book#mine" className="text-xs font-bold text-orange-600 flex-shrink-0">Voir tout</Link>
+        <Link href={`/box/book?org=${orgId}#mine`} className="text-xs font-bold text-orange-600 flex-shrink-0">Voir tout</Link>
       </div>
 
       {upcoming.length === 0 ? (
@@ -50,7 +50,7 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
         </div>
       )}
 
-      <Link href="/box/book"
+      <Link href={`/box/book?org=${orgId}`}
         className="block text-center py-3 rounded-2xl text-white font-black text-sm"
         style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)' }}>
         Réserver un cours
