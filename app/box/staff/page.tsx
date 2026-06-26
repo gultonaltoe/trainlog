@@ -6,11 +6,13 @@ import {
   type OrgMember, type Role, type EmploymentStatus,
 } from '@/lib/orgs'
 import { createInvite, getOrgInvites, revokeInvite, type Invite, type InviteRole } from '@/lib/invites'
+import { getSchedules, endTime, type ClassSchedule } from '@/lib/classes'
 import { toast } from '@/lib/toast'
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Propriétaire', coach: 'Coach', member: 'Membre' }
 const EMP_LABEL: Record<EmploymentStatus, string> = { active: 'Actif', on_leave: 'Congé', inactive: 'Inactif' }
 const COACH_ROLES: Role[] = ['owner', 'coach']
+const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
 const selCls = 'rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400'
 
@@ -20,14 +22,17 @@ export default function StaffPage() {
   const canManage = org?.role === 'owner'
   const [staff, setStaff] = useState<OrgMember[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
+  const [schedules, setSchedules] = useState<ClassSchedule[]>([])
+  const [detailFor, setDetailFor] = useState<OrgMember | null>(null)
   const [loading, setLoading] = useState(true)
   const [showInvite, setShowInvite] = useState(false)
 
   const load = useCallback(async () => {
     if (!orgId) return
-    const [all, inv] = await Promise.all([getOrgMembers(orgId), getOrgInvites(orgId)])
+    const [all, inv, sch] = await Promise.all([getOrgMembers(orgId), getOrgInvites(orgId), getSchedules(orgId)])
     setStaff(all.filter(m => m.status === 'active' && COACH_ROLES.includes(m.role)))
     setInvites(inv)
+    setSchedules(sch)
     setLoading(false)
   }, [orgId])
   useEffect(() => { void load() }, [load])
@@ -89,10 +94,10 @@ export default function StaffPage() {
               return (
                 <div key={m.membershipId} className="bg-white rounded-xl border border-gray-200 p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-3 min-w-0">
+                    <button onClick={() => setDetailFor(m)} className="flex items-center gap-3 min-w-0 text-left">
                       <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">🧑‍🏫</div>
                       <p className="text-sm font-bold text-gray-800 truncate">{m.firstName ?? ROLE_LABEL[m.role]}</p>
-                    </div>
+                    </button>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {canManage && !isOwner ? (
                         <>
@@ -127,6 +132,50 @@ export default function StaffPage() {
           onClose={() => setShowInvite(false)}
           onSaved={() => { setShowInvite(false); void load() }} />
       )}
+
+      {detailFor && (
+        <CoachDetailSheet coach={detailFor}
+          classes={schedules.filter(s => s.coachUserId === detailFor.userId)}
+          onClose={() => setDetailFor(null)} />
+      )}
+    </div>
+  )
+}
+
+function CoachDetailSheet({ coach, classes, onClose }: { coach: OrgMember; classes: ClassSchedule[]; onClose: () => void }) {
+  const byDay = [...classes].sort((a, b) => a.weekday - b.weekday || a.startTime.localeCompare(b.startTime))
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-2xl">🧑‍🏫</div>
+          <div>
+            <h2 className="text-lg font-black text-gray-900">{coach.firstName ?? ROLE_LABEL[coach.role]}</h2>
+            <p className="text-xs text-gray-400">
+              {ROLE_LABEL[coach.role]}
+              {coach.employmentStatus && coach.employmentStatus !== 'active' && ` · ${EMP_LABEL[coach.employmentStatus]}`}
+            </p>
+          </div>
+        </div>
+
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mt-5 mb-2">Cours encadrés ({byDay.length})</p>
+        {byDay.length === 0 ? (
+          <p className="text-sm text-gray-300">Aucun cours assigné à ce coach.</p>
+        ) : (
+          <div className="space-y-2">
+            {byDay.map(c => (
+              <div key={c.id} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-800 truncate">{c.title}</p>
+                  <p className="text-xs text-gray-400">{DAYS[c.weekday]} · {c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
+                </div>
+                <span className="text-xs text-gray-400 flex-shrink-0">{c.capacity} pl.</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
