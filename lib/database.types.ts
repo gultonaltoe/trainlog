@@ -383,6 +383,59 @@ export type Database = {
           },
         ]
       }
+      membership_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          credits: number | null
+          currency: string
+          duration_days: number | null
+          id: string
+          kind: string
+          name: string
+          organization_id: string
+          price_cents: number
+          recurring: boolean
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          credits?: number | null
+          currency?: string
+          duration_days?: number | null
+          id?: string
+          kind?: string
+          name: string
+          organization_id: string
+          price_cents?: number
+          recurring?: boolean
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          credits?: number | null
+          currency?: string
+          duration_days?: number | null
+          id?: string
+          kind?: string
+          name?: string
+          organization_id?: string
+          price_cents?: number
+          recurring?: boolean
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_plans_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           created_at: string
