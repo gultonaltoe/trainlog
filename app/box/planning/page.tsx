@@ -35,6 +35,7 @@ export default function PlanningPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  const [dayView, setDayView] = useState<'list' | 'timeline'>('list')
   const [bookings, setBookings] = useState<Map<string, OccBooking>>(new Map())
   const [attendeesFor, setAttendeesFor] = useState<ClassOccurrence | null>(null)
 
@@ -169,15 +170,52 @@ export default function PlanningPage() {
             )}
 
             {/* Selected day's classes */}
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-              {new Date(activeDay + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
-            {onDay(activeDay).length === 0
-              ? <p className="text-sm text-gray-300 py-2">Aucun cours ce jour.</p>
-              : <div className="space-y-2">{onDay(activeDay).map(c => (
-                  <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete}
-                    booking={bookings.get(bookingKey(c.id, c.date))} onOpen={() => setAttendeesFor(c)} />
-                ))}</div>}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                {new Date(activeDay + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+              <div className="flex rounded-lg overflow-hidden border border-gray-200 bg-white text-[11px] font-bold">
+                {(['list', 'timeline'] as const).map(v => (
+                  <button key={v} onClick={() => setDayView(v)} className="px-2.5 py-1"
+                    style={dayView === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+                    {v === 'list' ? 'Liste' : 'Horaires'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {onDay(activeDay).length === 0 ? (
+              <p className="text-sm text-gray-300 py-2">Aucun cours ce jour.</p>
+            ) : dayView === 'list' ? (
+              <div className="space-y-2">{onDay(activeDay).map(c => (
+                <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete}
+                  booking={bookings.get(bookingKey(c.id, c.date))} onOpen={() => setAttendeesFor(c)} />
+              ))}</div>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(onDay(activeDay).reduce<Record<string, ClassOccurrence[]>>((acc, c) => {
+                  (acc[c.startTime] ??= []).push(c); return acc
+                }, {})).sort(([a], [b]) => a.localeCompare(b)).map(([time, cs]) => (
+                  <div key={time} className="flex gap-2">
+                    <div className="w-11 flex-shrink-0 text-xs font-black text-gray-400 pt-2">{time}</div>
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      {cs.map(c => {
+                        const bk = bookings.get(bookingKey(c.id, c.date))
+                        const booked = bk?.bookedCount ?? 0
+                        const full = booked >= c.capacity
+                        return (
+                          <button key={c.id + c.date} onClick={() => setAttendeesFor(c)}
+                            className="rounded-xl border border-gray-200 bg-white p-2.5 text-left">
+                            <p className="text-xs font-bold text-gray-800 truncate">{c.title}</p>
+                            <p className="text-[10px] text-gray-400">{c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
+                            <p className={`text-[10px] font-bold ${full ? 'text-red-500' : 'text-gray-500'}`}>{booked}/{c.capacity}</p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
