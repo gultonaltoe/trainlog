@@ -39,6 +39,20 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
           <p className="text-sm text-gray-400 mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
         </Link>
 
+        {/* Réserver une séance — owners/coaches train at their box too */}
+        <Link href="/box/book"
+          className="flex items-center justify-between rounded-2xl p-4 mb-4 text-white"
+          style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📅</span>
+            <div>
+              <p className="text-sm font-black">Réserver une séance</p>
+              <p className="text-xs text-white/80">M’inscrire à un cours</p>
+            </div>
+          </div>
+          <span className="text-white/80">›</span>
+        </Link>
+
         <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4 flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Membres actifs</p>
