@@ -168,6 +168,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          member_plan_id: string | null
           notified_at: string | null
           occurrence_date: string
           organization_id: string
@@ -178,6 +179,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          member_plan_id?: string | null
           notified_at?: string | null
           occurrence_date: string
           organization_id: string
@@ -188,6 +190,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          member_plan_id?: string | null
           notified_at?: string | null
           occurrence_date?: string
           organization_id?: string
@@ -196,6 +199,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "class_reservations_member_plan_id_fkey"
+            columns: ["member_plan_id"]
+            isOneToOne: false
+            referencedRelation: "member_plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "class_reservations_organization_id_fkey"
             columns: ["organization_id"]
@@ -1349,6 +1359,13 @@ export type Database = {
       occurrence_start: {
         Args: { p_date: string; p_schedule_id: string }
         Returns: string
+      }
+      pick_member_plan: {
+        Args: { p_date: string; p_org: string; p_uid: string }
+        Returns: {
+          is_pack: boolean
+          mp_id: string
+        }[]
       }
       request_to_join_box: { Args: { p_code: string }; Returns: string }
       resa_setting: {

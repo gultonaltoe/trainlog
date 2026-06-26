@@ -65,6 +65,7 @@ export default function BoxSettingsPage() {
       cancelCutoffMin: Math.max(0, resa.cancelCutoffMin || 0),
       bookAheadDays: Math.max(0, resa.bookAheadDays || 0),
       bookCutoffMin: Math.max(0, resa.bookCutoffMin || 0),
+      requirePlan: resa.requirePlan,
     }
     setSavingResa(true)
     try { await updateReservationSettings(orgId, clean); setResa(clean); toast.success('Réservations enregistrées') }
@@ -175,6 +176,12 @@ export default function BoxSettingsPage() {
                 <input type="number" min={0} step={15} className={fieldCls} value={resa.cancelCutoffMin} disabled={!canEdit}
                   onChange={e => updResa({ cancelCutoffMin: parseInt(e.target.value) || 0 })} />
                 <span className="block mt-1">0 = annulation possible jusqu’au début du cours.</span>
+              </label>
+
+              <label className="flex items-center justify-between gap-3 pt-1 border-t border-gray-100 mt-1">
+                <span className="text-sm font-semibold text-gray-800 pt-2">Exiger un abonnement pour réserver</span>
+                <input type="checkbox" className="w-5 h-5 accent-orange-500 mt-2" checked={resa.requirePlan}
+                  disabled={!canEdit} onChange={e => updResa({ requirePlan: e.target.checked })} />
               </label>
 
               <div className="pt-1 border-t border-gray-100">
