@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import { getMyMemberships, type Membership, type Role } from '@/lib/orgs'
+import { acceptMyInvites } from '@/lib/invites'
 
 // The "active view" the user is currently in: their personal athlete space,
 // or one of their boxes (with the role they hold there). This is what makes
@@ -33,6 +34,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
+      // Claim any pending email invites for this user before reading memberships,
+      // so a freshly-invited coach/member shows up immediately.
+      await acceptMyInvites()
       const mine = await getMyMemberships()
       setMemberships(mine)
       // Restore the previously-selected view if it's still valid.

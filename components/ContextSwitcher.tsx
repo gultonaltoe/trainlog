@@ -5,7 +5,7 @@ import { useAppContext, type ActiveContext } from './AppContext'
 import type { Role } from '@/lib/orgs'
 
 const ROLE_LABEL: Record<Role, string> = {
-  owner: 'Propriétaire', coach: 'Coach', staff: 'Staff', member: 'Membre',
+  owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
 }
 // Label for the personal (athlete) context. Change here to rename everywhere.
 const PERSONAL_LABEL = 'Mon espace'

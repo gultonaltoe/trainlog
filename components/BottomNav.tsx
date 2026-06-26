@@ -34,7 +34,7 @@ const ATHLETE_NAV: NavItem[] = [
   )},
 ]
 
-// Box menu (owner / coach / staff inside a box).
+// Box menu (owner / coach inside a box).
 const BOX_NAV: NavItem[] = [
   { href: '/', label: 'Tableau', icon: a => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={a?2.5:1.8}>
@@ -46,7 +46,7 @@ const BOX_NAV: NavItem[] = [
       <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a3 3 0 10-2.5-4.6" />
     </svg>
   )},
-  { href: '/box/staff', label: 'Staff', icon: a => (
+  { href: '/box/staff', label: 'Coachs', icon: a => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={a?2.5:1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
     </svg>
@@ -69,7 +69,7 @@ export default function BottomNav() {
   const { active } = useAppContext()
   if (path === '/welcome') return null
 
-  // Owner/coach/staff in a box get the box menu; everyone else the athlete menu.
+  // Owner/coach in a box get the box menu; everyone else the athlete menu.
   const inBox = active.type === 'org' && active.role !== 'member'
   const NAV = inBox ? BOX_NAV : ATHLETE_NAV
 

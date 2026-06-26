@@ -5,11 +5,11 @@ import { supabase } from '@/lib/supabase'
 import type { Role } from '@/lib/orgs'
 
 const ROLE_LABEL: Record<Role, string> = {
-  owner: 'Propriétaire', coach: 'Coach', staff: 'Staff', member: 'Membre',
+  owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
 }
 
 // The box-side dashboard, shown when the active view is a box and the user is
-// owner / coach / staff. (Members in a box still see the athlete dashboard.)
+// owner / coach. (Members in a box still see the athlete dashboard.)
 export default function CoachDashboard({ orgId, orgName, role }: { orgId: string; orgName: string; role: Role }) {
   const [memberCount, setMemberCount] = useState<number | null>(null)
 
@@ -22,7 +22,7 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
 
   const sections = [
     { href: '/box/members',  icon: '👥', title: 'Membres',       desc: 'Gérer les adhérents de la box' },
-    { href: '/box/staff',    icon: '🧑‍🏫', title: 'Staff',         desc: 'Coachs et équipe' },
+    { href: '/box/staff',    icon: '🧑‍🏫', title: 'Coachs',        desc: 'Coachs de la box' },
     { href: '/box/planning', icon: '📅', title: 'Planning',      desc: 'Cours et réservations' },
     { href: '/box/profile',  icon: 'ℹ️', title: 'Infos de la box', desc: 'Nom, adresse, contact' },
     { href: '/box/settings', icon: '⚙️', title: 'Réglages',       desc: 'Types de séances, préférences' },

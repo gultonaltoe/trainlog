@@ -6,7 +6,7 @@ import type { Json } from './database.types'
 // "Athlete" is not a role — every user owns their training data regardless.
 // These functions only concern the org/role layer.
 
-export type Role = 'owner' | 'coach' | 'staff' | 'member'
+export type Role = 'owner' | 'coach' | 'member'
 export type MembershipStatus = 'active' | 'invited' | 'pending' | 'inactive'
 
 export type Membership = {
@@ -86,6 +86,22 @@ export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
 // A box-defined class type with default duration/capacity (pre-fills the builder).
 export type SessionType = { name: string; defaultDurationMin: number; defaultCapacity: number }
 
+// Box-configurable reservation behaviour. Stored under settings.reservations.
+export type WaitlistMode = 'auto_promote' | 'notify'
+export type ReservationSettings = {
+  waitlistEnabled: boolean
+  waitlistMode: WaitlistMode    // auto-promote on a freed spot, or just notify
+  waitlistCapacity: number      // default max waitlist size (per-class override on the schedule)
+  cancelCutoffMin: number       // minutes before start within which booked spots can't be cancelled
+}
+
+export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
+  waitlistEnabled: true,
+  waitlistMode: 'auto_promote',
+  waitlistCapacity: 5,
+  cancelCutoffMin: 120,
+}
+
 export type OrgProfile = {
   id: string
   name: string
@@ -95,6 +111,7 @@ export type OrgProfile = {
   website: string
   joinCode: string | null
   sessionTypes: SessionType[]
+  reservations: ReservationSettings
 }
 
 export const DEFAULT_DURATION_MIN = 60
@@ -116,6 +133,7 @@ export async function getOrganization(orgId: string): Promise<OrgProfile> {
     .from('organizations').select('id, name, settings, join_code').eq('id', orgId).single()
   if (error) throw new Error(`getOrganization: ${error.message}`)
   const s = (data.settings ?? {}) as Record<string, unknown>
+  const r = (s.reservations ?? {}) as Partial<ReservationSettings>
   return {
     id:           data.id,
     name:         data.name,
@@ -125,6 +143,7 @@ export async function getOrganization(orgId: string): Promise<OrgProfile> {
     website:      (s.website as string) ?? '',
     joinCode:     data.join_code,
     sessionTypes: Array.isArray(s.sessionTypes) ? (s.sessionTypes as SessionType[]) : [],
+    reservations: { ...DEFAULT_RESERVATION_SETTINGS, ...r },
   }
 }
 
@@ -152,6 +171,14 @@ export async function updateOrgSessionTypes(orgId: string, sessionTypes: Session
   const settings = { ...s, sessionTypes } as unknown as Json
   const { error } = await supabase.from('organizations').update({ settings }).eq('id', orgId)
   if (error) throw new Error(`updateOrgSessionTypes: ${error.message}`)
+}
+
+/** Owner manages the box's reservation rules (waitlist + cancel cutoff). Merges into settings. */
+export async function updateReservationSettings(orgId: string, reservations: ReservationSettings): Promise<void> {
+  const s = await readSettings(orgId)
+  const settings = { ...s, reservations } as unknown as Json
+  const { error } = await supabase.from('organizations').update({ settings }).eq('id', orgId)
+  if (error) throw new Error(`updateReservationSettings: ${error.message}`)
 }
 
 /** The box's shareable join code (members enter it to request to join). */
