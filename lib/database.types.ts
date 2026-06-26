@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -169,6 +164,54 @@ export type Database = {
         }
         Relationships: []
       }
+      class_reservations: {
+        Row: {
+          created_at: string
+          id: string
+          notified_at: string | null
+          occurrence_date: string
+          organization_id: string
+          schedule_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notified_at?: string | null
+          occurrence_date: string
+          organization_id: string
+          schedule_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notified_at?: string | null
+          occurrence_date?: string
+          organization_id?: string
+          schedule_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_reservations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_reservations_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "class_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_schedules: {
         Row: {
           active: boolean
@@ -225,54 +268,6 @@ export type Database = {
           },
         ]
       }
-      class_reservations: {
-        Row: {
-          created_at: string
-          id: string
-          notified_at: string | null
-          occurrence_date: string
-          organization_id: string
-          schedule_id: string
-          status: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          notified_at?: string | null
-          occurrence_date: string
-          organization_id: string
-          schedule_id: string
-          status?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          notified_at?: string | null
-          occurrence_date?: string
-          organization_id?: string
-          schedule_id?: string
-          status?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "class_reservations_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_reservations_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "class_schedules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       classes: {
         Row: {
           capacity: number | null
@@ -317,6 +312,36 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          page: string | null
+          rating: number | null
+          type: string | null
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          page?: string | null
+          rating?: number | null
+          type?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          page?: string | null
+          rating?: number | null
+          type?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -357,36 +382,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      feedback: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-          page: string | null
-          rating: number | null
-          type: string | null
-          user_name: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-          page?: string | null
-          rating?: number | null
-          type?: string | null
-          user_name?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-          page?: string | null
-          rating?: number | null
-          type?: string | null
-          user_name?: string | null
-        }
-        Relationships: []
       }
       memberships: {
         Row: {
@@ -1186,9 +1181,48 @@ export type Database = {
       }
     }
     Functions: {
+      accept_my_invites: { Args: never; Returns: number }
+      book_class: {
+        Args: { p_date: string; p_schedule_id: string }
+        Returns: string
+      }
       can_view_member_data: {
         Args: { target_user_id: string }
         Returns: boolean
+      }
+      cancel_class: {
+        Args: { p_date: string; p_schedule_id: string }
+        Returns: string
+      }
+      claim_waitlist_spot: {
+        Args: { p_date: string; p_schedule_id: string }
+        Returns: string
+      }
+      create_invite: {
+        Args: { p_email: string; p_org_id: string; p_role?: string }
+        Returns: string
+      }
+      get_bookings_in_range: {
+        Args: { p_from: string; p_org_id: string; p_to: string }
+        Returns: {
+          booked_count: number
+          my_notified: boolean
+          my_position: number
+          my_status: string
+          occurrence_date: string
+          schedule_id: string
+          waitlist_count: number
+        }[]
+      }
+      get_occurrence_attendees: {
+        Args: { p_date: string; p_schedule_id: string }
+        Returns: {
+          first_name: string
+          notified: boolean
+          status: string
+          user_id: string
+          wl_position: number
+        }[]
       }
       get_org_member_directory: {
         Args: { p_org_id: string }
@@ -1206,47 +1240,17 @@ export type Database = {
         Args: { allowed_roles: string[]; org_id: string }
         Returns: boolean
       }
-      book_class: {
-        Args: { p_schedule_id: string; p_date: string }
-        Returns: string
-      }
-      cancel_class: {
-        Args: { p_schedule_id: string; p_date: string }
-        Returns: string
-      }
-      claim_waitlist_spot: {
-        Args: { p_schedule_id: string; p_date: string }
-        Returns: string
-      }
-      get_bookings_in_range: {
-        Args: { p_org_id: string; p_from: string; p_to: string }
-        Returns: {
-          schedule_id: string
-          occurrence_date: string
-          booked_count: number
-          waitlist_count: number
-          my_status: string
-          my_position: number
-          my_notified: boolean
-        }[]
-      }
-      get_occurrence_attendees: {
-        Args: { p_schedule_id: string; p_date: string }
-        Returns: {
-          user_id: string
-          first_name: string
-          status: string
-          wl_position: number
-          notified: boolean
-        }[]
-      }
-      accept_my_invites: { Args: Record<string, never>; Returns: number }
-      create_invite: {
-        Args: { p_org_id: string; p_email: string; p_role?: string }
-        Returns: string
-      }
       migrate_user_data: { Args: { old_uid: string }; Returns: undefined }
+      normalize_email: { Args: { p_email: string }; Returns: string }
+      occurrence_start: {
+        Args: { p_date: string; p_schedule_id: string }
+        Returns: string
+      }
       request_to_join_box: { Args: { p_code: string }; Returns: string }
+      resa_setting: {
+        Args: { p_default: Json; p_key: string; p_org_id: string }
+        Returns: Json
+      }
       set_data_sharing: {
         Args: { org_id: string; share: boolean }
         Returns: undefined
@@ -1386,3 +1390,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
