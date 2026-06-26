@@ -317,6 +317,47 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          organization_id: string
+          role: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          organization_id: string
+          role?: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          organization_id?: string
+          role?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           created_at: string | null
@@ -1198,6 +1239,11 @@ export type Database = {
           wl_position: number
           notified: boolean
         }[]
+      }
+      accept_my_invites: { Args: Record<string, never>; Returns: number }
+      create_invite: {
+        Args: { p_org_id: string; p_email: string; p_role?: string }
+        Returns: string
       }
       migrate_user_data: { Args: { old_uid: string }; Returns: undefined }
       request_to_join_box: { Args: { p_code: string }; Returns: string }
