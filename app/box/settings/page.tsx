@@ -147,10 +147,10 @@ export default function BoxSettingsPage() {
                 <>
                   <div>
                     <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Quand une place se libère</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {([['auto_promote', 'Promotion auto'], ['notify', 'Notifier']] as [WaitlistMode, string][]).map(([mode, label]) => (
+                    <div className="grid grid-cols-3 gap-2">
+                      {([['auto_promote', 'Promotion auto'], ['notify', 'Notifier 1er'], ['notify_all', 'Notifier tous']] as [WaitlistMode, string][]).map(([mode, label]) => (
                         <button key={mode} type="button" disabled={!canEdit} onClick={() => updResa({ waitlistMode: mode })}
-                          className="py-2 rounded-lg text-xs font-bold border transition disabled:opacity-60"
+                          className="py-2 rounded-lg text-[11px] font-bold border transition disabled:opacity-60"
                           style={resa.waitlistMode === mode
                             ? { background: 'var(--theme-primary, #F97316)', color: '#fff', borderColor: 'transparent' }
                             : { background: '#F9FAFB', color: '#6B7280', borderColor: '#E5E7EB' }}>
@@ -161,6 +161,8 @@ export default function BoxSettingsPage() {
                     <p className="text-[11px] text-gray-400 mt-1.5">
                       {resa.waitlistMode === 'auto_promote'
                         ? 'Le premier en attente est automatiquement inscrit.'
+                        : resa.waitlistMode === 'notify_all'
+                        ? 'Tout le monde en attente est prévenu — premier arrivé, premier servi.'
                         : 'Le premier en attente est prévenu et doit confirmer sa place.'}
                     </p>
                   </div>

@@ -87,7 +87,7 @@ export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
 export type SessionType = { name: string; defaultDurationMin: number; defaultCapacity: number }
 
 // Box-configurable reservation behaviour. Stored under settings.reservations.
-export type WaitlistMode = 'auto_promote' | 'notify'
+export type WaitlistMode = 'auto_promote' | 'notify' | 'notify_all'
 export type ReservationSettings = {
   waitlistEnabled: boolean
   waitlistMode: WaitlistMode    // auto-promote on a freed spot, or just notify
