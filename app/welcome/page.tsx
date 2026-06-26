@@ -159,6 +159,13 @@ export default function WelcomePage() {
           Commencer →
         </button>
         <p className="text-xs text-gray-400 mt-3 text-center">Accès bêta gratuit · 2 min pour démarrer</p>
+        {/* Escape hatch: a logged-in account with no profile lands here. Let them
+            sign out and reconnect with the right account instead of being stuck. */}
+        <button
+          onClick={async () => { await supabase.auth.signOut(); router.replace('/auth') }}
+          className="w-full mt-4 text-xs font-semibold text-gray-400 underline">
+          Ce n’est pas toi ? Se déconnecter et changer de compte
+        </button>
       </div>
     </div>
   )
