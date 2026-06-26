@@ -160,8 +160,8 @@ export default function BookPage() {
         ) : (
         <>{/* ── Réserver (browse + book) ── */}
 
-        {/* Member's plan / credits */}
-        {(() => {
+        {/* Member's plan / credits (members only; owner/coach are exempt) */}
+        {org.role === 'member' && (() => {
           const usable = myPlans.find(p => isUsable(p, todayISO))
           if (usable) return (
             <div className="mb-3 rounded-xl bg-white border border-gray-200 p-3 flex items-center justify-between">
