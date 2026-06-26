@@ -2,6 +2,7 @@
 import { usePathname } from 'next/navigation'
 import { useAppContext } from './AppContext'
 import ContextSwitcher from './ContextSwitcher'
+import NotificationBell from './NotificationBell'
 
 // Renders the context switcher at the top of every app page (in normal flow,
 // so it never overlaps page content). Only shown to users who belong to at
@@ -17,8 +18,9 @@ export default function GlobalContextBar() {
 
   return (
     <div style={{ background: '#F9FAFB' }}>
-      <div className="max-w-lg mx-auto px-4 pt-4">
-        <ContextSwitcher />
+      <div className="max-w-lg mx-auto px-4 pt-4 flex items-start gap-2">
+        <div className="flex-1 min-w-0"><ContextSwitcher /></div>
+        <div className="pt-0"><NotificationBell /></div>
       </div>
     </div>
   )
