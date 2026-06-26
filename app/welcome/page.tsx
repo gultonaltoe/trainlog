@@ -29,25 +29,6 @@ const GOALS = [
 export default function WelcomePage() {
   const router = useRouter()
   const [step, setStep]       = useState(0)
-  // TEMP DIAGNOSTIC (remove once the mobile /welcome bug is understood): shows
-  // why this page rendered instead of bouncing to "/". Read it off the phone.
-  const [diag, setDiag] = useState('diagnostic…')
-  useEffect(() => {
-    void (async () => {
-      const standalone = window.matchMedia('(display-mode: standalone)').matches
-        || (window.navigator as unknown as { standalone?: boolean }).standalone === true
-      const { data: { session } } = await supabase.auth.getSession()
-      const { data: { user } } = await supabase.auth.getUser()
-      let prof = 'n/a'
-      if (user) {
-        const { data, error } = await supabase
-          .from('user_profile').select('id').eq('user_id', user.id).limit(1).maybeSingle()
-        prof = error ? `ERR ${error.code ?? ''} ${error.message}` : (data ? 'TROUVÉ' : 'VIDE(0)')
-      }
-      setDiag(`standalone=${standalone} · session=${!!session} · token=${session?.access_token ? 'oui' : 'non'} · user=${user ? user.id.slice(0, 8) : 'null'} · profil=${prof}`)
-    })()
-  }, [])
-
   const [name, setName]       = useState('')
   const [sports, setSports]   = useState<string[]>([])
   const [level, setLevel]     = useState('')
@@ -104,17 +85,9 @@ export default function WelcomePage() {
     }
   }
 
-  // TEMP: diagnostic bar shown on every step until the mobile bug is solved.
-  const DiagBar = () => (
-    <div className="fixed bottom-0 inset-x-0 z-50 bg-black/85 text-[10px] text-lime-300 font-mono px-3 py-2 leading-tight break-all">
-      {diag}
-    </div>
-  )
-
   // ── Step 0: Welcome ──────────────────────────────────────
   if (step === 0) return (
     <div className="bg-white flex flex-col" style={{ minHeight: '100dvh' }}>
-      <DiagBar />
       <div className="flex-1 flex flex-col px-6 pt-16 pb-8 max-w-sm mx-auto w-full">
 
         <div className="text-center mb-10">
