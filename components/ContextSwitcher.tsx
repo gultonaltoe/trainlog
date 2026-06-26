@@ -29,7 +29,7 @@ export default function ContextSwitcher() {
   return (
     <div className="relative mb-4">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-2.5">
+        className="w-full flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-2.5 cursor-pointer hover:border-gray-300 transition-colors">
         <span className="flex items-center gap-2 min-w-0">
           <span className="text-base">{active.type === 'personal' ? '🏋️' : '🏢'}</span>
           <span className="min-w-0 text-left">
@@ -45,14 +45,14 @@ export default function ContextSwitcher() {
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden">
           <button onClick={() => choose({ type: 'personal' })}
-            className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2">
+            className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 cursor-pointer">
             <span>🏋️</span>
             <span className="text-sm font-semibold text-gray-800">{PERSONAL_LABEL}</span>
           </button>
           {switchable.map(m => (
             <button key={m.organizationId}
               onClick={() => choose({ type: 'org', orgId: m.organizationId, orgName: m.organizationName, role: m.role })}
-              className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between gap-2">
+              className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between gap-2 cursor-pointer">
               <span className="flex items-center gap-2 min-w-0">
                 <span>🏢</span>
                 <span className="text-sm font-semibold text-gray-800 truncate">{m.organizationName}</span>

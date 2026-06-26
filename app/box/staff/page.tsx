@@ -93,23 +93,24 @@ export default function StaffPage() {
                       <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">🧑‍🏫</div>
                       <p className="text-sm font-bold text-gray-800 truncate">{m.firstName ?? ROLE_LABEL[m.role]}</p>
                     </div>
-                    {canManage && !isOwner ? (
-                      <button onClick={() => remove(m)} className="text-gray-300 hover:text-red-500 text-xl px-1 flex-shrink-0">×</button>
-                    ) : (
-                      <span className="text-[11px] font-bold text-gray-400 flex-shrink-0">{ROLE_LABEL[m.role]}</span>
-                    )}
-                  </div>
-
-                  {canManage && !isOwner && (
-                    <div className="flex items-center gap-2 mt-2 pl-12">
-                      <select className={selCls} value={m.employmentStatus ?? 'active'} onChange={e => changeEmp(m, e.target.value as EmploymentStatus)}>
-                        {(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => <option key={k} value={k}>{EMP_LABEL[k]}</option>)}
-                      </select>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {canManage && !isOwner ? (
+                        <>
+                          <select className={selCls} value={m.employmentStatus ?? 'active'} onChange={e => changeEmp(m, e.target.value as EmploymentStatus)}>
+                            {(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => <option key={k} value={k}>{EMP_LABEL[k]}</option>)}
+                          </select>
+                          <button onClick={() => remove(m)} className="text-gray-300 hover:text-red-500 text-xl px-1">×</button>
+                        </>
+                      ) : (
+                        <>
+                          {m.employmentStatus && m.employmentStatus !== 'active' && (
+                            <span className="text-[11px] text-amber-600 font-bold">{EMP_LABEL[m.employmentStatus]}</span>
+                          )}
+                          <span className="text-[11px] font-bold text-gray-400">{ROLE_LABEL[m.role]}</span>
+                        </>
+                      )}
                     </div>
-                  )}
-                  {(!canManage || isOwner) && m.employmentStatus && m.employmentStatus !== 'active' && (
-                    <p className="text-[11px] text-amber-600 font-bold mt-1 pl-12">{EMP_LABEL[m.employmentStatus]}</p>
-                  )}
+                  </div>
                 </div>
               )
             })}

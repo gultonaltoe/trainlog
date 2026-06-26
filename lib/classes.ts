@@ -33,6 +33,13 @@ function toSchedule(r: SchedRow): ClassSchedule {
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
+/** End time "HH:MM" given a start "HH:MM" + duration in minutes. */
+export function endTime(start: string, durationMin: number): string {
+  const [h, m] = start.split(':').map(Number)
+  const total = (h * 60 + m + durationMin) % 1440
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
 /** Active recurring schedules of a box. */
 export async function getSchedules(orgId: string): Promise<ClassSchedule[]> {
   const { data, error } = await supabase.from('class_schedules')

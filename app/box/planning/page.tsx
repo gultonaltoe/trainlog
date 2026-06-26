@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, getOrganization, DEFAULT_SESSION_TYPES, DEFAULT_CAPACITY, DEFAULT_DURATION_MIN, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
-import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
+import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, endTime, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
 import { getBookingsInRange, getOccurrenceAttendees, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
 import { toast } from '@/lib/toast'
 
@@ -206,7 +206,7 @@ function OccRow({ c, coachName, onDelete, booking, onOpen }: {
       <button onClick={onOpen} className="min-w-0 text-left flex-1">
         <p className="text-sm font-bold text-gray-800 truncate">{c.title}</p>
         <p className="text-xs text-gray-400">
-          {c.startTime} · {c.durationMin} min
+          {c.startTime}–{endTime(c.startTime, c.durationMin)} · {c.durationMin} min
           {coachName(c.coachUserId) && ` · ${coachName(c.coachUserId)}`}
         </p>
         <p className="text-xs mt-0.5">
@@ -378,6 +378,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="time" className={`${fieldCls} flex-1`} value={s.time} onChange={e => updSlot(i, { time: e.target.value })} />
+                    <span className="text-xs text-gray-400 whitespace-nowrap">→ {endTime(s.time, duration)}</span>
                     {slots.length > 1 && (
                       <button onClick={() => setSlots(arr => arr.filter((_, j) => j !== i))} className="text-gray-300 hover:text-red-500 text-xl px-2">×</button>
                     )}
