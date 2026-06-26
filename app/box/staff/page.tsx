@@ -136,14 +136,30 @@ export default function StaffPage() {
       {detailFor && (
         <CoachDetailSheet coach={detailFor}
           classes={schedules.filter(s => s.coachUserId === detailFor.userId)}
+          canManage={!!canManage && detailFor.role !== 'owner'}
+          onChanged={() => { void load(); setDetailFor(null) }}
           onClose={() => setDetailFor(null)} />
       )}
     </div>
   )
 }
 
-function CoachDetailSheet({ coach, classes, onClose }: { coach: OrgMember; classes: ClassSchedule[]; onClose: () => void }) {
+function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
+  coach: OrgMember; classes: ClassSchedule[]; canManage: boolean; onChanged: () => void; onClose: () => void
+}) {
   const byDay = [...classes].sort((a, b) => a.weekday - b.weekday || a.startTime.localeCompare(b.startTime))
+  const [emp, setEmp] = useState<EmploymentStatus>(coach.employmentStatus ?? 'active')
+  const [start, setStart] = useState(coach.leaveStart ?? '')
+  const [end, setEnd] = useState(coach.leaveEnd ?? '')
+  const [saving, setSaving] = useState(false)
+  const inputCls = 'rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400'
+
+  const save = async () => {
+    setSaving(true)
+    try { await setEmploymentStatus(coach.membershipId, emp, start || null, end || null); toast.success('Enregistré'); onChanged() }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur'); setSaving(false) }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
       <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -155,9 +171,30 @@ function CoachDetailSheet({ coach, classes, onClose }: { coach: OrgMember; class
             <p className="text-xs text-gray-400">
               {ROLE_LABEL[coach.role]}
               {coach.employmentStatus && coach.employmentStatus !== 'active' && ` · ${EMP_LABEL[coach.employmentStatus]}`}
+              {coach.employmentStatus === 'on_leave' && coach.leaveStart && ` (${coach.leaveStart} → ${coach.leaveEnd ?? '…'})`}
             </p>
           </div>
         </div>
+
+        {canManage && (
+          <div className="mt-4 bg-gray-50 rounded-xl p-3 space-y-2">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Statut</p>
+            <select className={`${inputCls} w-full`} value={emp} onChange={e => setEmp(e.target.value as EmploymentStatus)}>
+              {(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => <option key={k} value={k}>{EMP_LABEL[k]}</option>)}
+            </select>
+            {emp === 'on_leave' && (
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-[11px] text-gray-400">Début<input type="date" className={`${inputCls} w-full`} value={start} onChange={e => setStart(e.target.value)} /></label>
+                <label className="text-[11px] text-gray-400">Fin<input type="date" className={`${inputCls} w-full`} value={end} onChange={e => setEnd(e.target.value)} /></label>
+              </div>
+            )}
+            <button onClick={save} disabled={saving}
+              className="w-full py-2 rounded-lg text-white font-bold text-xs disabled:opacity-50"
+              style={{ background: 'var(--theme-primary, #F97316)' }}>
+              {saving ? '…' : 'Enregistrer le statut'}
+            </button>
+          </div>
+        )}
 
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mt-5 mb-2">Cours encadrés ({byDay.length})</p>
         {byDay.length === 0 ? (

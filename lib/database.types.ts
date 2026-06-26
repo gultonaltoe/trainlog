@@ -503,6 +503,8 @@ export type Database = {
           data_sharing: boolean
           employment_status: string | null
           id: string
+          leave_end: string | null
+          leave_start: string | null
           organization_id: string
           role: string
           status: string
@@ -513,6 +515,8 @@ export type Database = {
           data_sharing?: boolean
           employment_status?: string | null
           id?: string
+          leave_end?: string | null
+          leave_start?: string | null
           organization_id: string
           role: string
           status?: string
@@ -523,6 +527,8 @@ export type Database = {
           data_sharing?: boolean
           employment_status?: string | null
           id?: string
+          leave_end?: string | null
+          leave_start?: string | null
           organization_id?: string
           role?: string
           status?: string
@@ -1388,6 +1394,8 @@ export type Database = {
           data_sharing: boolean
           employment_status: string
           first_name: string
+          leave_end: string
+          leave_start: string
           membership_id: string
           role: string
           status: string

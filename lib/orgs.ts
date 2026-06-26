@@ -63,6 +63,8 @@ export type OrgMember = {
   status: MembershipStatus
   dataSharing: boolean
   employmentStatus: EmploymentStatus | null
+  leaveStart: string | null     // YYYY-MM-DD when employmentStatus = on_leave
+  leaveEnd: string | null
 }
 
 /**
@@ -80,6 +82,8 @@ export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
     status:           m.status as MembershipStatus,
     dataSharing:      m.data_sharing,
     employmentStatus: (m.employment_status as EmploymentStatus | null) ?? null,
+    leaveStart:       (m.leave_start as string | null) ?? null,
+    leaveEnd:         (m.leave_end as string | null) ?? null,
   }))
 }
 
@@ -231,9 +235,15 @@ export async function updateMembershipRole(membershipId: string, role: Role): Pr
   if (error) throw new Error(`updateMembershipRole: ${error.message}`)
 }
 
-/** Set a staff member's employment status (active / on leave / inactive). */
-export async function setEmploymentStatus(membershipId: string, employment: EmploymentStatus): Promise<void> {
-  const { error } = await supabase.from('memberships').update({ employment_status: employment }).eq('id', membershipId)
+/** Set a coach's employment status (+ leave window when 'on_leave'; cleared otherwise). */
+export async function setEmploymentStatus(
+  membershipId: string, employment: EmploymentStatus,
+  leaveStart: string | null = null, leaveEnd: string | null = null,
+): Promise<void> {
+  const onLeave = employment === 'on_leave'
+  const { error } = await supabase.from('memberships')
+    .update({ employment_status: employment, leave_start: onLeave ? leaveStart : null, leave_end: onLeave ? leaveEnd : null })
+    .eq('id', membershipId)
   if (error) throw new Error(`setEmploymentStatus: ${error.message}`)
 }
 

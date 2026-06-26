@@ -75,6 +75,15 @@ export default function PlanningPage() {
 
   const coachName = (id: string | null) => id ? (coaches.find(c => c.userId === id)?.firstName ?? 'Coach') : null
   const onDay = (ds: string) => occurrences.filter(c => c.date === ds)
+  // Is the assigned coach on leave for an occurrence on this date?
+  const coachOnLeave = (coachUserId: string | null, dateISO: string) => {
+    if (!coachUserId) return false
+    const c = coaches.find(x => x.userId === coachUserId)
+    if (!c || c.employmentStatus !== 'on_leave') return false
+    if (c.leaveStart && dateISO < c.leaveStart) return false
+    if (c.leaveEnd && dateISO > c.leaveEnd) return false
+    return true
+  }
 
   const onDelete = async (c: ClassOccurrence) => {
     if (!window.confirm(`Supprimer "${c.title}" du ${DAY_LABELS[c.weekday]} ? Tous les cours de cette série seront retirés.`)) return
@@ -188,7 +197,8 @@ export default function PlanningPage() {
             ) : dayView === 'list' ? (
               <div className="space-y-2">{onDay(activeDay).map(c => (
                 <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete}
-                  booking={bookings.get(bookingKey(c.id, c.date))} onOpen={() => setAttendeesFor(c)} />
+                  booking={bookings.get(bookingKey(c.id, c.date))} onOpen={() => setAttendeesFor(c)}
+                  onLeave={coachOnLeave(c.coachUserId, c.date)} />
               ))}</div>
             ) : (
               <div className="space-y-3">
@@ -232,9 +242,9 @@ export default function PlanningPage() {
   )
 }
 
-function OccRow({ c, coachName, onDelete, booking, onOpen }: {
+function OccRow({ c, coachName, onDelete, booking, onOpen, onLeave }: {
   c: ClassOccurrence; coachName: (id: string | null) => string | null
-  onDelete: (c: ClassOccurrence) => void; booking?: OccBooking; onOpen: () => void
+  onDelete: (c: ClassOccurrence) => void; booking?: OccBooking; onOpen: () => void; onLeave?: boolean
 }) {
   const booked = booking?.bookedCount ?? 0
   const waiting = booking?.waitlistCount ?? 0
@@ -242,7 +252,10 @@ function OccRow({ c, coachName, onDelete, booking, onOpen }: {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between gap-2">
       <button onClick={onOpen} className="min-w-0 text-left flex-1">
-        <p className="text-sm font-bold text-gray-800 truncate">{c.title}</p>
+        <p className="text-sm font-bold text-gray-800 truncate">
+          {c.title}
+          {onLeave && <span className="ml-1.5 text-[10px] font-bold text-amber-600">⚠️ coach en congé</span>}
+        </p>
         <p className="text-xs text-gray-400">
           {c.startTime}–{endTime(c.startTime, c.durationMin)} · {c.durationMin} min
           {coachName(c.coachUserId) && ` · ${coachName(c.coachUserId)}`}
