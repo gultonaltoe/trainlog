@@ -3,21 +3,52 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Role } from '@/lib/orgs'
+import { getSchedules, occurrencesInRange } from '@/lib/classes'
+import { getBookingsInRange, bookingKey } from '@/lib/reservations'
 
 const ROLE_LABEL: Record<Role, string> = {
   owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
 }
 
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
 // The box-side dashboard, shown when the active view is a box and the user is
 // owner / coach. (Members in a box still see the athlete dashboard.)
 export default function CoachDashboard({ orgId, orgName, role }: { orgId: string; orgName: string; role: Role }) {
   const [memberCount, setMemberCount] = useState<number | null>(null)
+  // This-week occupancy: booked seats vs capacity across the week's classes.
+  const [week, setWeek] = useState<{ occupancy: number; avgRate: number; classes: number } | null>(null)
 
   useEffect(() => {
     supabase.from('memberships')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', orgId).eq('status', 'active')
       .then(({ count }) => setMemberCount(count ?? 0))
+  }, [orgId])
+
+  useEffect(() => {
+    let alive = true
+    const mon = new Date(); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7)); mon.setHours(0, 0, 0, 0)
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+    const fromISO = iso(mon), toISO = iso(sun)
+    Promise.all([getSchedules(orgId), getBookingsInRange(orgId, fromISO, toISO)])
+      .then(([sch, bk]) => {
+        if (!alive) return
+        const occ = occurrencesInRange(sch, fromISO, toISO)
+        let booked = 0, cap = 0; const rates: number[] = []
+        for (const o of occ) {
+          const b = bk.get(bookingKey(o.id, o.date))?.bookedCount ?? 0
+          booked += b; cap += o.capacity
+          if (o.capacity > 0) rates.push(b / o.capacity)
+        }
+        setWeek({
+          occupancy: cap > 0 ? Math.round((booked / cap) * 100) : 0,
+          avgRate: rates.length ? Math.round((rates.reduce((a, c) => a + c, 0) / rates.length) * 100) : 0,
+          classes: occ.length,
+        })
+      })
+      .catch(() => { if (alive) setWeek({ occupancy: 0, avgRate: 0, classes: 0 }) })
+    return () => { alive = false }
   }, [orgId])
 
   const sections = [
@@ -53,13 +84,21 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
           <span className="text-white/80">›</span>
         </Link>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Membres actifs</p>
-            <p className="text-3xl font-black text-gray-900">{memberCount ?? '—'}</p>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
+            <p className="text-2xl font-black text-gray-900">{memberCount ?? '—'}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Membres</p>
           </div>
-          <span className="text-3xl">👥</span>
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
+            <p className="text-2xl font-black text-gray-900">{week ? `${week.occupancy}%` : '—'}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Occupation</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
+            <p className="text-2xl font-black text-gray-900">{week ? `${week.avgRate}%` : '—'}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Résa moy.</p>
+          </div>
         </div>
+        {week && <p className="text-[11px] text-gray-400 -mt-2 mb-4 text-center">Cette semaine · {week.classes} cours</p>}
 
         <div className="space-y-3">
           {sections.map(s => (
