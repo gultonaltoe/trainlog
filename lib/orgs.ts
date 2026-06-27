@@ -100,6 +100,7 @@ export type ReservationSettings = {
   bookAheadDays: number         // how far ahead members can book (0 = no limit)
   bookCutoffMin: number         // minutes before start when booking closes (0 = until start)
   requirePlan: boolean          // members need a usable plan/credits to book (owner/coach exempt)
+  maxActiveBookings: number     // max upcoming reservations per member (0 = unlimited)
 }
 
 export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
@@ -110,6 +111,7 @@ export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
   bookAheadDays: 0,
   bookCutoffMin: 0,
   requirePlan: false,
+  maxActiveBookings: 0,
 }
 
 // Box branding shown to members in box context.

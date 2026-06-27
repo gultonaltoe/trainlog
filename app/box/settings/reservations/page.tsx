@@ -33,6 +33,7 @@ export default function ReservationSettingsPage() {
       bookAheadDays: Math.max(0, resa.bookAheadDays || 0),
       bookCutoffMin: Math.max(0, resa.bookCutoffMin || 0),
       requirePlan: resa.requirePlan,
+      maxActiveBookings: Math.max(0, resa.maxActiveBookings || 0),
     }
     setSaving(true)
     try { await updateReservationSettings(orgId, clean); setResa(clean); toast.success('Réservations enregistrées') }
@@ -90,6 +91,10 @@ export default function ReservationSettingsPage() {
                 hint={resa.requirePlan
                   ? 'Un membre doit avoir un abonnement actif (ou des crédits) pour réserver. Coachs/propriétaire exemptés.'
                   : 'N’importe quel membre peut réserver, abonnement ou non.'} />
+              <Field label="Réservations actives max par membre" hint="0 = illimité. Compte les cours à venir réservés ou en liste d’attente.">
+                <input type="number" min={0} className={ui.field} value={resa.maxActiveBookings} disabled={!canEdit}
+                  onChange={e => upd({ maxActiveBookings: parseInt(e.target.value) || 0 })} />
+              </Field>
             </Card>
 
             <Card className="p-4 space-y-4">

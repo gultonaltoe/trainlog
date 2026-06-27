@@ -1,8 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getSessionUserId } from '@/lib/auth'
+import { toast } from '@/lib/toast'
+import { DatePicker } from '@/components/ui'
 
 type PR = {
   id: string; value: number; unit: string; date: string
@@ -44,40 +46,62 @@ export default function MovementPRPage() {
   const [prs,     setPrs]     = useState<PR[]>([])
   const [sets,    setSets]    = useState<SetData[]>([])
   const [loading, setLoading] = useState(true)
+  // ST-13: edit / delete individual PR entries.
+  const [editId,   setEditId]   = useState<string | null>(null)
+  const [editVal,  setEditVal]  = useState('')
+  const [editDate, setEditDate] = useState('')
+  const [busy,     setBusy]     = useState(false)
 
-  useEffect(() => {
-    const run = async () => {
-      const uid = await getSessionUserId()
-      if (!uid) { setLoading(false); return }
-      const [prRes, setsRes] = await Promise.all([
-        supabase.from('personal_records')
-          .select('id, value, unit, date, session_id, movement_name')
-          .eq('movement_id', movementId)
-          .eq('user_id', uid)
-          .order('date', { ascending: true }),
-        supabase.from('block_sets')
-          .select('weight_kg, reps, session_blocks!inner(sessions!inner(id, date, user_id))')
-          .eq('movement_id', movementId)
-          .not('weight_kg', 'is', null)
-          .order('session_blocks(sessions(date))', { ascending: true }),
-      ])
-      setPrs((prRes.data ?? []) as PR[])
-      const rawSets = (setsRes.data ?? []) as unknown as {
-        weight_kg: number; reps: number | null
-        session_blocks: { sessions: { id: string; date: string; user_id: string } }
-      }[]
-      setSets(rawSets
-        .filter(s => s.session_blocks.sessions.user_id === uid)
-        .map(s => ({
-          weight_kg:  s.weight_kg,
-          reps:       s.reps,
-          date:       s.session_blocks.sessions.date,
-          session_id: s.session_blocks.sessions.id,
-        })))
-      setLoading(false)
-    }
-    void run()
+  const load = useCallback(async () => {
+    const uid = await getSessionUserId()
+    if (!uid) { setLoading(false); return }
+    const [prRes, setsRes] = await Promise.all([
+      supabase.from('personal_records')
+        .select('id, value, unit, date, session_id, movement_name')
+        .eq('movement_id', movementId)
+        .eq('user_id', uid)
+        .order('date', { ascending: true }),
+      supabase.from('block_sets')
+        .select('weight_kg, reps, session_blocks!inner(sessions!inner(id, date, user_id))')
+        .eq('movement_id', movementId)
+        .not('weight_kg', 'is', null)
+        .order('session_blocks(sessions(date))', { ascending: true }),
+    ])
+    setPrs((prRes.data ?? []) as PR[])
+    const rawSets = (setsRes.data ?? []) as unknown as {
+      weight_kg: number; reps: number | null
+      session_blocks: { sessions: { id: string; date: string; user_id: string } }
+    }[]
+    setSets(rawSets
+      .filter(s => s.session_blocks.sessions.user_id === uid)
+      .map(s => ({
+        weight_kg:  s.weight_kg,
+        reps:       s.reps,
+        date:       s.session_blocks.sessions.date,
+        session_id: s.session_blocks.sessions.id,
+      })))
+    setLoading(false)
   }, [movementId])
+  useEffect(() => { void load() }, [load])
+
+  const startEdit = (p: PR) => { setEditId(p.id); setEditVal(String(p.value)); setEditDate(p.date) }
+  const saveEdit = async () => {
+    if (!editId) return
+    const v = parseFloat(editVal)
+    if (isNaN(v) || v <= 0) { toast.error('Valeur invalide'); return }
+    setBusy(true)
+    const { error } = await supabase.from('personal_records').update({ value: v, date: editDate }).eq('id', editId)
+    if (error) toast.error(error.message)
+    else { toast.success('PR modifié'); setEditId(null); await load() }
+    setBusy(false)
+  }
+  const deletePR = async (id: string) => {
+    setBusy(true)
+    const { error } = await supabase.from('personal_records').delete().eq('id', id)
+    if (error) toast.error(error.message)
+    else { toast.success('PR supprimé'); setEditId(null); await load() }
+    setBusy(false)
+  }
 
   if (loading) return (
     <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
@@ -357,6 +381,29 @@ export default function MovementPRPage() {
                 ? sessDate.reduce((max, s) => s.weight_kg > max.weight_kg ? s : max, sessDate[0])
                 : null
               const e1rm = bestSet?.reps && bestSet.reps <= 12 ? brzycki(bestSet.weight_kg, bestSet.reps) : null
+
+              if (editId === p.id) {
+                return (
+                  <div key={p.id} className="p-3 rounded-xl bg-[var(--bg)] border border-[color:var(--border-strong)] space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <input type="number" value={editVal} onChange={e => setEditVal(e.target.value)}
+                        className="ds-field w-24 flex-shrink-0" />
+                      <span className="text-xs text-[var(--muted)] flex-shrink-0">{p.unit}</span>
+                      <div className="flex-1 min-w-0"><DatePicker value={editDate} onChange={setEditDate} /></div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={saveEdit} disabled={busy}
+                        className="flex-1 py-2 rounded-lg text-white font-bold text-xs disabled:opacity-50 cursor-pointer"
+                        style={{ background: 'var(--theme-primary, #F97316)' }}>{busy ? '…' : 'Enregistrer'}</button>
+                      <button onClick={() => deletePR(p.id)} disabled={busy}
+                        className="py-2 px-3 rounded-lg border border-red-200 text-red-500 font-bold text-xs cursor-pointer">Supprimer</button>
+                      <button onClick={() => setEditId(null)}
+                        className="py-2 px-3 text-[var(--muted)] font-bold text-xs cursor-pointer">Annuler</button>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
                 <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl ${isPR ? 'bg-[var(--accent-soft)] border border-[color:var(--accent-soft)]' : 'bg-[var(--bg)]'}`}>
                   <div className="flex items-center gap-3">
@@ -373,9 +420,13 @@ export default function MovementPRPage() {
                       </div>
                     </div>
                   </div>
-                  <p className={`text-lg font-black ${isPR ? 'text-[var(--accent-text)]' : 'text-[var(--ink)]'}`}>
-                    {p.value} <span className="text-sm font-normal text-[var(--muted)]">{p.unit}</span>
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className={`text-lg font-black ${isPR ? 'text-[var(--accent-text)]' : 'text-[var(--ink)]'}`}>
+                      {p.value} <span className="text-sm font-normal text-[var(--muted)]">{p.unit}</span>
+                    </p>
+                    <button onClick={() => startEdit(p)} aria-label="Modifier"
+                      className="ds-hover w-7 h-7 rounded-full text-[var(--muted)] flex items-center justify-center flex-shrink-0 text-sm">✏️</button>
+                  </div>
                 </div>
               )
             })}
