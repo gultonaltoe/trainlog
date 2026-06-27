@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 // ── Trainlog design system (ST-28) ──────────────────────────
 // Reusable presentational primitives + tokens. Prefer these over ad-hoc
@@ -116,4 +116,106 @@ export function Segmented<T extends string>({ options, value, onChange }: {
       ))}
     </div>
   )
+}
+
+// ── Custom Select (branded dropdown — replaces native <select>) ──────────────
+export type Option<T extends string> = { value: T; label: string }
+
+export function Select<T extends string>({ value, onChange, options, placeholder = 'Choisir…', disabled }: {
+  value: T | ''; onChange: (v: T) => void; options: Option<T>[]; placeholder?: string; disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const current = options.find(o => o.value === value)
+  return (
+    <div className="relative">
+      <button type="button" disabled={disabled} onClick={() => setOpen(o => !o)}
+        className={`${ui.field} flex items-center justify-between gap-2 cursor-pointer ${!current ? 'text-gray-400' : ''}`}>
+        <span className="truncate">{current?.label ?? placeholder}</span>
+        <span className="text-gray-400 text-xs flex-shrink-0">▾</span>
+      </button>
+      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto py-1">
+          {options.map(o => (
+            <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false) }}
+              className="w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 flex items-center justify-between cursor-pointer">
+              <span className={o.value === value ? 'font-bold text-gray-900' : 'text-gray-700'}>{o.label}</span>
+              {o.value === value && <span style={{ color: ui.primary }}>✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Date / Time pickers ──────────────────────────────────────────────────────
+const DOW = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+const isoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+function monthCells(y: number, m: number): (number | null)[] {
+  const offset = (new Date(y, m, 1).getDay() + 6) % 7
+  const n = new Date(y, m + 1, 0).getDate()
+  const cells: (number | null)[] = Array(offset).fill(null)
+  for (let d = 1; d <= n; d++) cells.push(d)
+  while (cells.length % 7) cells.push(null)
+  return cells
+}
+
+/** Branded date picker. value/onChange use "YYYY-MM-DD". */
+export function DatePicker({ value, onChange, placeholder = 'Choisir une date', disabled }: {
+  value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const sel = value ? new Date(value + 'T00:00:00') : null
+  const init = sel ?? new Date()
+  const [ym, setYm] = useState({ y: init.getFullYear(), m: init.getMonth() })
+  const label = sel ? sel.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : placeholder
+  const shift = (d: number) => setYm(s => { const x = new Date(s.y, s.m + d, 1); return { y: x.getFullYear(), m: x.getMonth() } })
+
+  return (
+    <div className="relative">
+      <button type="button" disabled={disabled} onClick={() => setOpen(o => !o)}
+        className={`${ui.field} flex items-center justify-between gap-2 cursor-pointer ${!sel ? 'text-gray-400' : ''}`}>
+        <span className="truncate">📅 {label}</span>
+        <span className="text-gray-400 text-xs flex-shrink-0">▾</span>
+      </button>
+      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
+      {open && (
+        <div className="absolute z-50 mt-1 w-72 max-w-[90vw] rounded-2xl border border-gray-200 bg-white shadow-lg p-3">
+          <div className="flex items-center justify-between mb-2">
+            <button type="button" onClick={() => shift(-1)} className="w-7 h-7 rounded-full hover:bg-gray-100 text-gray-500 cursor-pointer">‹</button>
+            <span className="text-sm font-bold text-gray-800">{MONTHS[ym.m]} {ym.y}</span>
+            <button type="button" onClick={() => shift(1)} className="w-7 h-7 rounded-full hover:bg-gray-100 text-gray-500 cursor-pointer">›</button>
+          </div>
+          <div className="grid grid-cols-7 mb-1">{DOW.map((d, i) => <span key={i} className="text-center text-[10px] font-bold text-gray-400">{d}</span>)}</div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {monthCells(ym.y, ym.m).map((day, i) => {
+              if (!day) return <div key={i} />
+              const ds = isoDate(new Date(ym.y, ym.m, day))
+              const isSel = ds === value
+              return (
+                <button key={i} type="button" onClick={() => { onChange(ds); setOpen(false) }}
+                  className="h-9 rounded-lg text-sm font-semibold cursor-pointer transition"
+                  style={isSel ? { background: ui.primary, color: '#fff' } : { color: '#374151' }}>
+                  {day}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Branded time picker (dropdown of HH:MM at `step` minutes). value "HH:MM". */
+export function TimePicker({ value, onChange, step = 15, from = 5, to = 23, disabled }: {
+  value: string; onChange: (v: string) => void; step?: number; from?: number; to?: number; disabled?: boolean
+}) {
+  const opts: Option<string>[] = []
+  for (let h = from; h <= to; h++)
+    for (let m = 0; m < 60; m += step)
+      opts.push({ value: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, label: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` })
+  return <Select value={value} onChange={onChange} options={opts} placeholder="Heure" disabled={disabled} />
 }
