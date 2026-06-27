@@ -172,6 +172,7 @@ export default function LogPage() {
   const [showClearAIDialog, setShowClearAIDialog] = useState(false)
   const [wodMoveSearch, setWodMoveSearch]       = useState('')
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const photoCaptureRef = useRef<HTMLInputElement>(null)   // capture=camera (mobile)
 
   const clearAIContent = () => {
     setWarmupNotes(''); setPrepItems([mkBlock(1)]); setHBlocks([mkHBlock(1)])
@@ -180,6 +181,7 @@ export default function LogPage() {
   const deletePhoto = () => {
     setPhotoPreview(null)
     if (photoInputRef.current) photoInputRef.current.value = ''
+    if (photoCaptureRef.current) photoCaptureRef.current.value = ''
     setShowClearAIDialog(true)
   }
 
@@ -318,6 +320,7 @@ export default function LogPage() {
     } finally {
       setAnalyzingPhoto(false)
       if (photoInputRef.current) photoInputRef.current.value = ''
+    if (photoCaptureRef.current) photoCaptureRef.current.value = ''
     }
   }
 
@@ -719,6 +722,7 @@ export default function LogPage() {
 
             {/* Photo */}
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            <input ref={photoCaptureRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
             {photoPreview ? (
               <div className="relative rounded-xl overflow-hidden border border-gray-200">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -735,15 +739,19 @@ export default function LogPage() {
                 )}
               </div>
             ) : (
-              <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
-                className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
-                style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
-                <span className="text-2xl">📷</span>
-                <div className="text-left">
-                  <p className="text-sm font-black">Analyser le tableau</p>
-                  <p className="text-xs font-normal opacity-80">Pré-remplit la séance automatiquement</p>
-                </div>
-              </button>
+              <div>
+                <button onClick={() => photoCaptureRef.current?.click()} disabled={analyzingPhoto}
+                  className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
+                  style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
+                  <span className="text-2xl">📷</span>
+                  <div className="text-left">
+                    <p className="text-sm font-black">Analyser le tableau</p>
+                    <p className="text-xs font-normal opacity-80">Pré-remplit la séance automatiquement</p>
+                  </div>
+                </button>
+                <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
+                  className="w-full mt-2 text-xs font-bold text-gray-400 cursor-pointer">ou importer depuis la galerie</button>
+              </div>
             )}
 
             {/* Échauffement */}
@@ -950,6 +958,7 @@ export default function LogPage() {
 
             {/* Photo */}
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            <input ref={photoCaptureRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
             {photoPreview ? (
               <div className="relative rounded-xl overflow-hidden border border-gray-200">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -966,15 +975,19 @@ export default function LogPage() {
                 )}
               </div>
             ) : (
-              <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
-                className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
-                style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
-                <span className="text-2xl">📷</span>
-                <div className="text-left">
-                  <p className="text-sm font-black">Analyser le tableau</p>
-                  <p className="text-xs font-normal opacity-80">Pré-remplit warm-up, skill et WOD automatiquement</p>
-                </div>
-              </button>
+              <div>
+                <button onClick={() => photoCaptureRef.current?.click()} disabled={analyzingPhoto}
+                  className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
+                  style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
+                  <span className="text-2xl">📷</span>
+                  <div className="text-left">
+                    <p className="text-sm font-black">Analyser le tableau</p>
+                    <p className="text-xs font-normal opacity-80">Pré-remplit warm-up, skill et WOD automatiquement</p>
+                  </div>
+                </button>
+                <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
+                  className="w-full mt-2 text-xs font-bold text-gray-400 cursor-pointer">ou importer depuis la galerie</button>
+              </div>
             )}
 
             {/* Échauffement */}

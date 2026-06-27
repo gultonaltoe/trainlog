@@ -180,11 +180,18 @@ export default function BoxSettingsPage() {
                 <span className="block mt-1">0 = annulation possible jusqu’au début du cours.</span>
               </label>
 
-              <label className="flex items-center justify-between gap-3 pt-1 border-t border-gray-100 mt-1">
-                <span className="text-sm font-semibold text-gray-800 pt-2">Exiger un abonnement pour réserver</span>
-                <input type="checkbox" className="w-5 h-5 accent-orange-500 mt-2" checked={resa.requirePlan}
-                  disabled={!canEdit} onChange={e => updResa({ requirePlan: e.target.checked })} />
-              </label>
+              <div className="pt-2 border-t border-gray-100 mt-1">
+                <label className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-gray-800">Exiger un abonnement pour réserver</span>
+                  <input type="checkbox" className="w-5 h-5 accent-orange-500 flex-shrink-0" checked={resa.requirePlan}
+                    disabled={!canEdit} onChange={e => updResa({ requirePlan: e.target.checked })} />
+                </label>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  {resa.requirePlan
+                    ? 'Activé : un membre doit avoir un abonnement actif (ou des crédits) pour réserver. Les coachs/propriétaire sont exemptés.'
+                    : 'Désactivé : n’importe quel membre peut réserver, abonnement ou non.'}
+                </p>
+              </div>
 
               <div className="pt-1 border-t border-gray-100">
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2 mt-2">Fenêtre de réservation</p>

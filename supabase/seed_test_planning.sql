@@ -23,6 +23,10 @@ begin
     order by created_at limit 1;
   if v_org is null then raise exception 'Aucune box possédée trouvée'; end if;
 
+  -- Clean slate so re-running yields exactly 2 classes in parallel (no duplicates).
+  -- (Cascades to class_reservations — fine for the test box.)
+  delete from public.class_schedules where organization_id = v_org;
+
   for v_day in 0..4 loop                         -- 0 = Lundi … 4 = Vendredi
     for v_slot in 0..5 loop                       -- créneaux 07:00 → 12:00 (fin 13:00)
       v_hour := 7 + v_slot;
