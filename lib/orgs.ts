@@ -262,6 +262,14 @@ export async function removeMembership(membershipId: string): Promise<void> {
   if (error) throw new Error(`removeMembership: ${error.message}`)
 }
 
+/** Owner/coach sets a photo for a member (persists via SECURITY DEFINER RPC). */
+export async function setMemberAvatar(userId: string, url: string): Promise<void> {
+  // RPC not yet in generated types — cast the call.
+  const { error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)(
+    'set_member_avatar', { p_user_id: userId, p_url: url })
+  if (error) throw new Error(`setMemberAvatar: ${error.message}`)
+}
+
 /** Member toggles whether this box's coaches can see their training data. */
 export async function setDataSharing(orgId: string, share: boolean): Promise<void> {
   const { error } = await supabase.rpc('set_data_sharing', { org_id: orgId, share })

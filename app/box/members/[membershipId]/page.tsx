@@ -1,10 +1,11 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import { getOrgMembers, removeMembership, type OrgMember, type Role } from '@/lib/orgs'
+import { getOrgMembers, removeMembership, setMemberAvatar, type OrgMember, type Role } from '@/lib/orgs'
 import { getPlans, formatPrice, PLAN_KIND_LABEL, type MembershipPlan } from '@/lib/plans'
 import { getMemberPlans, assignPlan, cancelMemberPlan, type MemberPlan } from '@/lib/memberPlans'
+import { uploadAvatar } from '@/lib/storage'
 import { PageHeader, Card, SectionTitle, Field, Select, Button, Badge } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
@@ -25,6 +26,8 @@ export default function MemberDetailPage() {
   const [busy, setBusy] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const photoRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     if (!orgId) return
@@ -49,6 +52,18 @@ export default function MemberDetailPage() {
     try { await cancelMemberPlan(mp.id); toast.success('Plan annulé'); await load() }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
   }
+  const onPickPhoto = async (file: File | undefined) => {
+    if (!file || !member) return
+    setPhotoBusy(true)
+    try {
+      const url = await uploadAvatar(member.userId, file)   // coach writes to avatars/{memberId}/
+      await setMemberAvatar(member.userId, url)             // persist via SECURITY DEFINER RPC
+      toast.success('Photo du membre mise à jour')
+      await load()
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setPhotoBusy(false)
+  }
+
   const removeMember = async () => {
     if (!member) return
     setBusy(true)
@@ -75,9 +90,9 @@ export default function MemberDetailPage() {
                 ? /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={member.avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                 : <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl flex-shrink-0">👤</div>}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-base font-black text-[var(--ink)] truncate">{member.firstName ?? 'Membre'}</p>
-                <div className="flex items-center gap-1.5 mt-1">
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <Badge>{ROLE_LABEL[member.role]}</Badge>
                   {member.status !== 'active' && <Badge tone="amber">{member.status}</Badge>}
                   <Badge tone={member.dataSharing ? 'green' : 'gray'}>
@@ -85,6 +100,15 @@ export default function MemberDetailPage() {
                   </Badge>
                 </div>
               </div>
+              {canEdit && (
+                <>
+                  <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={e => onPickPhoto(e.target.files?.[0])} />
+                  <button onClick={() => photoRef.current?.click()} disabled={photoBusy}
+                    className="ds-hover text-[11px] font-bold text-[var(--accent-text)] px-2 py-1 rounded-lg flex-shrink-0">
+                    {photoBusy ? '…' : member.avatarUrl ? 'Changer photo' : 'Ajouter photo'}
+                  </button>
+                </>
+              )}
             </Card>
 
             {/* Plans */}
