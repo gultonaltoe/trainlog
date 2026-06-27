@@ -12,6 +12,7 @@ const fmtDay = (iso: string) =>
 export default function MyReservations({ orgId }: { orgId: string }) {
   const [items, setItems] = useState<MyReservation[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  const [confirmKey, setConfirmKey] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try { setItems(await getMyReservations(orgId)) } catch { setItems([]) }
@@ -24,8 +25,8 @@ export default function MyReservations({ orgId }: { orgId: string }) {
   const past = (items ?? []).filter(r => !isUpcoming(r)).reverse()
 
   const cancel = async (r: MyReservation) => {
-    if (!window.confirm(`Annuler ta réservation « ${r.title} » du ${fmtDay(r.date)} ?`)) return
     const key = `${r.scheduleId}|${r.date}`
+    setConfirmKey(null)
     setBusy(key)
     try { await cancelClass(r.scheduleId, r.date); toast.success('Annulé'); await load() }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
@@ -50,10 +51,20 @@ export default function MyReservations({ orgId }: { orgId: string }) {
                   <p className="text-xs text-[var(--muted)] capitalize">{fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}</p>
                   {r.status === 'waitlisted' && <p className="text-[11px] font-bold text-amber-600">Liste d’attente</p>}
                 </div>
-                <button onClick={() => cancel(r)} disabled={busy === key}
-                  className="text-xs font-bold text-red-500 border border-red-200 rounded-lg px-3 py-2 disabled:opacity-50 flex-shrink-0">
-                  {busy === key ? '…' : 'Annuler'}
-                </button>
+                {confirmKey === key ? (
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button onClick={() => cancel(r)} disabled={busy === key}
+                      className="text-xs font-black text-white bg-red-500 rounded-lg px-3 py-2 disabled:opacity-50 cursor-pointer whitespace-nowrap">
+                      {busy === key ? '…' : 'Confirmer'}
+                    </button>
+                    <button onClick={() => setConfirmKey(null)} className="text-[11px] font-bold text-[var(--muted)] px-1 cursor-pointer">Non</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmKey(key)}
+                    className="text-xs font-bold text-red-500 border border-red-200 rounded-lg px-3 py-2 cursor-pointer flex-shrink-0">
+                    Annuler
+                  </button>
+                )}
               </div>
             )
           })}

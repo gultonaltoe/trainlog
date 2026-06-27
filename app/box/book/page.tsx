@@ -154,7 +154,7 @@ export default function BookPage() {
           {tab === 'browse' && (
             <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-xs font-bold flex-shrink-0">
               {(['week', 'month'] as const).map(v => (
-                <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2"
+                <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2 cursor-pointer"
                   style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
                   {v === 'week' ? 'Semaine' : 'Mois'}
                 </button>
@@ -166,7 +166,7 @@ export default function BookPage() {
         {/* Hub toggle: browse & book vs my reservations */}
         <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-sm font-bold mb-4">
           {([['browse', 'Réserver'], ['mine', 'Mes réservations']] as const).map(([t, label]) => (
-            <button key={t} onClick={() => setTab(t)} className="flex-1 py-2.5"
+            <button key={t} onClick={() => setTab(t)} className="flex-1 py-2.5 cursor-pointer"
               style={tab === t ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
               {label}
             </button>
@@ -199,7 +199,7 @@ export default function BookPage() {
 
         {policy.trim() && (
           <div className="mb-4">
-            <button onClick={() => setShowPolicy(s => !s)} className="text-xs font-bold text-[var(--sub)] flex items-center gap-1">
+            <button onClick={() => setShowPolicy(s => !s)} className="text-xs font-bold text-[var(--sub)] flex items-center gap-1 cursor-pointer">
               ⓘ Politique d’annulation <span className="text-[var(--border-strong)]">{showPolicy ? '▴' : '▾'}</span>
             </button>
             {showPolicy && (
@@ -209,13 +209,13 @@ export default function BookPage() {
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => shift(-1)} className="w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">‹</button>
+          <button onClick={() => shift(-1)} className="ds-hover w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">‹</button>
           <p className="text-sm font-bold text-[var(--ink-soft)] text-center">
             {view === 'week'
               ? `${range.monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${weekDays[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
               : `${MONTHS[anchor.getMonth()]} ${anchor.getFullYear()}`}
           </p>
-          <button onClick={() => shift(1)} className="w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">›</button>
+          <button onClick={() => shift(1)} className="ds-hover w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">›</button>
         </div>
 
         {loading ? (
@@ -229,7 +229,7 @@ export default function BookPage() {
                     const ds = iso(d); const count = onDay(ds).length; const sel = activeDay === ds
                     return (
                       <button key={i} onClick={() => setSelectedDay(ds)}
-                        className="min-h-16 rounded-lg flex flex-col items-center justify-center gap-0.5"
+                        className="min-h-16 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer"
                         style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
                         <span className={`text-[10px] font-bold ${sel ? 'text-white' : 'text-[var(--muted)]'}`}>{DAY_WK[i]}</span>
                         <span className={`text-sm font-black ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{d.getDate()}</span>
@@ -250,7 +250,7 @@ export default function BookPage() {
                     const ds = iso(new Date(anchor.getFullYear(), anchor.getMonth(), day))
                     const count = onDay(ds).length; const sel = activeDay === ds
                     return (
-                      <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center"
+                      <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center cursor-pointer"
                         style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
                         <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{day}</span>
                         {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
@@ -283,7 +283,9 @@ function BookRow({ c, booking, busy, onAct }: {
   c: ClassOccurrence; booking?: OccBooking; busy: boolean
   onAct: (c: ClassOccurrence, action: 'book' | 'cancel' | 'claim') => void
 }) {
+  const [confirmCancel, setConfirmCancel] = useState(false)
   const booked = booking?.bookedCount ?? 0
+  const waiting = booking?.waitlistCount ?? 0
   const my = booking?.myStatus ?? null
   const full = booked >= c.capacity
   const past = new Date(`${c.date}T${c.startTime}:00`) < new Date()
@@ -301,32 +303,41 @@ function BookRow({ c, booking, busy, onAct }: {
     action = (
       <div className="flex flex-col gap-1.5">
         <button onClick={() => onAct(c, 'claim')} disabled={busy}
-          className="text-xs font-black text-white rounded-lg px-4 py-2 disabled:opacity-50"
+          className="text-xs font-black text-white rounded-lg px-4 py-2 disabled:opacity-50 cursor-pointer"
           style={{ background: 'var(--theme-primary, #F97316)' }}>
           {busy ? '…' : 'Confirmer'}
         </button>
         <button onClick={() => onAct(c, 'cancel')} disabled={busy}
-          className="text-[11px] font-bold text-[var(--muted)]">Annuler</button>
+          className="text-[11px] font-bold text-[var(--muted)] cursor-pointer">Annuler</button>
       </div>
     )
   } else if (my) {
-    action = (
-      <button onClick={() => onAct(c, 'cancel')} disabled={busy}
-        className="text-xs font-bold text-red-500 border border-red-200 rounded-lg px-3 py-2 disabled:opacity-50">
-        {busy ? '…' : 'Annuler'}
+    // Cancel = 2-step confirm (ST-45).
+    action = confirmCancel ? (
+      <div className="flex items-center gap-1.5">
+        <button onClick={() => onAct(c, 'cancel')} disabled={busy}
+          className="text-xs font-black text-white bg-red-500 rounded-lg px-3 py-2 disabled:opacity-50 cursor-pointer whitespace-nowrap">
+          {busy ? '…' : 'Confirmer'}
+        </button>
+        <button onClick={() => setConfirmCancel(false)} className="text-[11px] font-bold text-[var(--muted)] px-1 cursor-pointer">Non</button>
+      </div>
+    ) : (
+      <button onClick={() => setConfirmCancel(true)}
+        className="text-xs font-bold text-red-500 border border-red-200 rounded-lg px-3 py-2 cursor-pointer">
+        Annuler
       </button>
     )
   } else if (full) {
     action = (
       <button onClick={() => onAct(c, 'book')} disabled={busy}
-        className="text-xs font-bold text-amber-700 bg-amber-100 rounded-lg px-3 py-2 disabled:opacity-50 whitespace-nowrap">
+        className="text-xs font-bold text-amber-700 bg-amber-100 rounded-lg px-3 py-2 disabled:opacity-50 whitespace-nowrap cursor-pointer">
         {busy ? '…' : 'Liste d’attente'}
       </button>
     )
   } else {
     action = (
       <button onClick={() => onAct(c, 'book')} disabled={busy}
-        className="text-xs font-black text-white rounded-lg px-4 py-2 disabled:opacity-50"
+        className="text-xs font-black text-white rounded-lg px-4 py-2 disabled:opacity-50 cursor-pointer"
         style={{ background: 'var(--theme-primary, #F97316)' }}>
         {busy ? '…' : 'Réserver'}
       </button>
@@ -341,6 +352,7 @@ function BookRow({ c, booking, busy, onAct }: {
         <p className="text-xs mt-0.5">
           <span className={`font-bold ${full ? 'text-red-500' : 'text-[var(--ink-soft)]'}`}>{booked}/{c.capacity}</span>
           <span className="text-[var(--muted)]"> places</span>
+          {waiting > 0 && <span className="text-amber-600 font-semibold"> · {waiting} en attente</span>}
           {badge && <> · {badge}</>}
         </p>
         {booking?.myNotified && my === 'waitlisted' && (

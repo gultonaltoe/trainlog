@@ -37,9 +37,9 @@ export default function NotificationBell() {
   return (
     <div className="relative">
       <button onClick={() => { setOpen(o => !o); if (!open) void load() }}
-        className="relative w-10 h-10 rounded-2xl border border-[color:var(--border)] bg-[var(--card)] flex items-center justify-center cursor-pointer"
+        className="ds-hover relative w-10 h-10 rounded-2xl border border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)] flex items-center justify-center"
         aria-label="Notifications">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#4B5563" strokeWidth={1.8}>
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unread > 0 && (

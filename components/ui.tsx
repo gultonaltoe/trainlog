@@ -102,6 +102,18 @@ export function Button({ children, onClick, disabled, variant = 'primary', type 
     style={{ background: ui.primary }}>{children}</button>
 }
 
+/** Sticky bottom action bar — keeps the primary save button in view above the
+ *  bottom nav while scrolling a long form (ST-43). Place as the last child of
+ *  the page's max-w column. */
+export function StickyBar({ children }: { children: ReactNode }) {
+  return (
+    <div className="sticky z-30 -mx-4 mt-4 px-4 pt-3 pb-3 border-t border-[color:var(--border)] bg-[var(--bg)]/95 backdrop-blur"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}>
+      {children}
+    </div>
+  )
+}
+
 /** Small status pill. */
 export function Badge({ children, tone = 'gray' }: { children: ReactNode; tone?: 'gray' | 'green' | 'amber' | 'red' }) {
   const tones = {

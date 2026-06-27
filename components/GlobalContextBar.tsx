@@ -18,9 +18,9 @@ export default function GlobalContextBar() {
 
   return (
     <div style={{ background: 'var(--bg)' }}>
-      <div className="max-w-lg mx-auto px-4 pt-4 flex items-start gap-2">
+      <div className="max-w-lg mx-auto px-4 pt-3 pb-1 flex items-center gap-2">
         <div className="flex-1 min-w-0"><ContextSwitcher /></div>
-        <div className="pt-0"><NotificationBell /></div>
+        <NotificationBell />
       </div>
     </div>
   )

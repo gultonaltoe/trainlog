@@ -7,6 +7,8 @@ import { toast } from '@/lib/toast'
 import { getSessionUserId } from '@/lib/auth'
 import { useAppContext } from '@/components/AppContext'
 import ThemeToggle from '@/components/ThemeToggle'
+import { StickyBar } from '@/components/ui'
+import { useUnsavedGuard } from '@/components/useUnsavedGuard'
 
 const ROLE_LABEL: Record<string, string> = {
   owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
@@ -47,20 +49,26 @@ const section  = "bg-[var(--card)] rounded-2xl border border-[color:var(--border
 export default function ProfilePage() {
   const { memberships } = useAppContext()
   const [p, setP]     = useState<Profile>(EMPTY)
+  const [saved, setSaved] = useState<Profile>(EMPTY)   // last-persisted snapshot
   const [loading, setL] = useState(true)
   const [saving, setS]  = useState(false)
   const [pid, setPid]   = useState<string|null>(null)
+  const dirty = JSON.stringify(p) !== JSON.stringify(saved)
+  useUnsavedGuard(dirty)
 
   useEffect(() => {
     const run = async () => {
       const uid = await getSessionUserId()
       if (!uid) { setL(false); return }
+      // Prefill email from the auth session so a new profile isn't blank (ST-42).
+      const { data: auth } = await supabase.auth.getUser()
+      const authEmail = auth.user?.email ?? ''
       const { data } = await supabase.from('user_profile').select('*').eq('user_id', uid).limit(1).maybeSingle()
       if (data) {
         setPid(data.id)
-        setP({
+        const prof: Profile = {
           first_name:    data.first_name    ?? '',
-          email:         data.email         ?? '',
+          email:         data.email         ?? authEmail,
           birth_date:    data.birth_date    ?? '',
           weight_kg:     data.weight_kg     ? String(data.weight_kg)   : '',
           height_cm:     data.height_cm     ? String(data.height_cm)   : '',
@@ -71,10 +79,14 @@ export default function ProfilePage() {
           sports:        data.sports        ?? [],
           notes:         data.notes         ?? '',
           theme_color:   data.theme_color   ?? '#F97316',
-        })
+        }
+        setP(prof); setSaved(prof)
         if (data.theme_color) {
           document.documentElement.style.setProperty('--theme-primary', data.theme_color)
         }
+      } else {
+        const prof = { ...EMPTY, email: authEmail }
+        setP(prof); setSaved(prof)
       }
       setL(false)
     }
@@ -110,6 +122,7 @@ export default function ProfilePage() {
       if (data) setPid(data.id)
     }
     document.documentElement.style.setProperty('--theme-primary', p.theme_color)
+    setSaved(p)
     setS(false)
     localStorage.setItem('theme-color', p.theme_color)
     toast.success('Profil enregistré ✓')
@@ -331,11 +344,14 @@ export default function ProfilePage() {
           <p className="text-xs text-[var(--muted)] mt-2">Alimentera les recommandations IA.</p>
         </div>
 
-        <button onClick={save} disabled={saving}
-          className="w-full py-4 rounded-xl text-white font-bold text-sm transition mb-2 hover:opacity-90 disabled:opacity-50"
-          style={{ background: p.theme_color }}>
-          {saving ? 'Enregistrement...' : 'Enregistrer le profil'}
-        </button>
+        <StickyBar>
+          {dirty && <p className="text-[11px] text-[var(--muted)] mb-1.5 text-center">Modifications non enregistrées</p>}
+          <button onClick={save} disabled={saving || !dirty}
+            className="w-full py-4 rounded-xl text-white font-bold text-sm transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            style={{ background: p.theme_color }}>
+            {saving ? 'Enregistrement...' : dirty ? 'Enregistrer le profil' : 'Profil à jour ✓'}
+          </button>
+        </StickyBar>
 
       </div>
     </div>

@@ -27,17 +27,15 @@ export default function ContextSwitcher() {
   const choose = (ctx: ActiveContext) => { setActive(ctx); setOpen(false); router.push('/') }
 
   return (
-    <div className="relative mb-4">
+    <div className="relative">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between rounded-2xl border border-[color:var(--border)] bg-[var(--card)] px-4 py-2.5 cursor-pointer hover:border-[color:var(--border-strong)] transition-colors">
+        className="ds-hover w-full h-10 flex items-center justify-between rounded-2xl border border-[color:var(--border)] bg-[var(--card)] px-3">
         <span className="flex items-center gap-2 min-w-0">
-          <span className="text-base">{active.type === 'personal' ? '🏋️' : '🏢'}</span>
-          <span className="min-w-0 text-left">
-            <span className="block text-sm font-bold text-[var(--ink)] truncate">{label}</span>
-            <span className="block text-[11px] text-[var(--muted)]">{sub}</span>
-          </span>
+          <span className="text-base flex-shrink-0">{active.type === 'personal' ? '🏋️' : '🏢'}</span>
+          <span className="text-sm font-bold text-[var(--ink)] truncate">{label}</span>
+          <span className="text-[11px] text-[var(--muted)] flex-shrink-0">· {sub}</span>
         </span>
-        <span className="text-[var(--muted)] text-xs">▾</span>
+        <span className="text-[var(--muted)] text-xs flex-shrink-0 ml-2">▾</span>
       </button>
 
       {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}

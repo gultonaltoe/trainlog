@@ -7,6 +7,7 @@ import {
 } from '@/lib/orgs'
 import { createInvite, getOrgInvites, revokeInvite, type Invite } from '@/lib/invites'
 import { getSchedules, endTime, type ClassSchedule } from '@/lib/classes'
+import { Select, DatePicker, Field } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Propriétaire', coach: 'Coach', member: 'Membre' }
@@ -14,7 +15,6 @@ const EMP_LABEL: Record<EmploymentStatus, string> = { active: 'Actif', on_leave:
 const COACH_ROLES: Role[] = ['owner', 'coach']
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
-const selCls = 'rounded-lg border border-[color:var(--border-strong)] bg-[var(--card)] px-2 py-1 text-xs font-bold text-[var(--ink-soft)] focus:outline-none focus:ring-2 focus:ring-orange-400'
 
 export default function StaffPage() {
   const org = useBoxGuard()
@@ -37,7 +37,6 @@ export default function StaffPage() {
   }, [orgId])
   useEffect(() => { void load() }, [load])
 
-  const changeEmp = async (m: OrgMember, emp: EmploymentStatus) => { await setEmploymentStatus(m.membershipId, emp); void load() }
   const remove = async (m: OrgMember) => {
     if (!window.confirm(`Retirer ${m.firstName ?? 'ce coach'} des coachs ?`)) return
     await removeMembership(m.membershipId); toast.success('Retiré'); void load()
@@ -94,26 +93,19 @@ export default function StaffPage() {
               return (
                 <div key={m.membershipId} className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <button onClick={() => setDetailFor(m)} className="flex items-center gap-3 min-w-0 text-left">
+                    <button onClick={() => setDetailFor(m)} className="flex items-center gap-3 min-w-0 text-left cursor-pointer flex-1">
                       <div className="w-9 h-9 rounded-full bg-[var(--track)] flex items-center justify-center flex-shrink-0">🧑‍🏫</div>
                       <p className="text-sm font-bold text-[var(--ink)] truncate">{m.firstName ?? ROLE_LABEL[m.role]}</p>
                     </button>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {canManage && !isOwner ? (
-                        <>
-                          <select className={selCls} value={m.employmentStatus ?? 'active'} onChange={e => changeEmp(m, e.target.value as EmploymentStatus)}>
-                            {(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => <option key={k} value={k}>{EMP_LABEL[k]}</option>)}
-                          </select>
-                          <button onClick={() => remove(m)} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-1">×</button>
-                        </>
-                      ) : (
-                        <>
-                          {m.employmentStatus && m.employmentStatus !== 'active' && (
-                            <span className="text-[11px] text-amber-600 font-bold">{EMP_LABEL[m.employmentStatus]}</span>
-                          )}
-                          <span className="text-[11px] font-bold text-[var(--muted)]">{ROLE_LABEL[m.role]}</span>
-                        </>
+                      {m.employmentStatus && m.employmentStatus !== 'active' && (
+                        <span className="text-[11px] text-amber-600 font-bold">{EMP_LABEL[m.employmentStatus]}</span>
                       )}
+                      <span className="text-[11px] font-bold text-[var(--muted)]">{ROLE_LABEL[m.role]}</span>
+                      {canManage && !isOwner && (
+                        <button onClick={() => remove(m)} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-1 cursor-pointer">×</button>
+                      )}
+                      <button onClick={() => setDetailFor(m)} className="text-[var(--border-strong)] cursor-pointer">›</button>
                     </div>
                   </div>
                 </div>
@@ -152,9 +144,9 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
   const [start, setStart] = useState(coach.leaveStart ?? '')
   const [end, setEnd] = useState(coach.leaveEnd ?? '')
   const [saving, setSaving] = useState(false)
-  const inputCls = 'rounded-lg border border-[color:var(--border-strong)] bg-[var(--card)] px-2 py-1.5 text-xs text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400'
 
   const save = async () => {
+    if (emp === 'on_leave' && !start) { toast.error('Indique au moins la date de début du congé'); return }
     setSaving(true)
     try { await setEmploymentStatus(coach.membershipId, emp, start || null, end || null); toast.success('Enregistré'); onChanged() }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur'); setSaving(false) }
@@ -177,19 +169,19 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
         </div>
 
         {canManage && (
-          <div className="mt-4 bg-[var(--bg)] rounded-xl p-3 space-y-2">
-            <p className="text-[11px] font-bold text-[var(--muted)] uppercase tracking-wide">Statut</p>
-            <select className={`${inputCls} w-full`} value={emp} onChange={e => setEmp(e.target.value as EmploymentStatus)}>
-              {(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => <option key={k} value={k}>{EMP_LABEL[k]}</option>)}
-            </select>
+          <div className="mt-4 bg-[var(--bg)] rounded-xl p-3 space-y-3">
+            <Field label="Statut">
+              <Select<EmploymentStatus> value={emp} onChange={setEmp}
+                options={(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => ({ value: k, label: EMP_LABEL[k] }))} />
+            </Field>
             {emp === 'on_leave' && (
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-[11px] text-[var(--muted)]">Début<input type="date" className={`${inputCls} w-full`} value={start} onChange={e => setStart(e.target.value)} /></label>
-                <label className="text-[11px] text-[var(--muted)]">Fin<input type="date" className={`${inputCls} w-full`} value={end} onChange={e => setEnd(e.target.value)} /></label>
+                <Field label="Début"><DatePicker value={start} onChange={setStart} /></Field>
+                <Field label="Fin (option.)"><DatePicker value={end} onChange={setEnd} /></Field>
               </div>
             )}
             <button onClick={save} disabled={saving}
-              className="w-full py-2 rounded-lg text-white font-bold text-xs disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg text-white font-bold text-xs disabled:opacity-50 cursor-pointer"
               style={{ background: 'var(--theme-primary, #F97316)' }}>
               {saving ? '…' : 'Enregistrer le statut'}
             </button>
