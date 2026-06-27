@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* PWA Android */}
         <link rel="manifest" href="/manifest.json" />
         {/* Dark mode no-flash: apply saved theme before first paint (ST-39). */}
-        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme-mode')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem('theme-mode')||'system';if(m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}` }} />
       </head>
       <body>
         <AppProvider>

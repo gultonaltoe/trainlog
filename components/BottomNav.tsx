@@ -91,7 +91,7 @@ export default function BottomNav() {
   const NAV = inBox ? BOX_NAV : showCours ? MEMBER_BOX_NAV : ATHLETE_NAV
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200"
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--card)] border-t border-[color:var(--border)]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="max-w-lg mx-auto flex">
         {NAV.map(item => {
@@ -99,7 +99,7 @@ export default function BottomNav() {
           return (
             <Link key={item.href} href={item.href}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors ${
-                active ? 'text-orange-500' : 'text-gray-400'
+                active ? 'text-orange-500' : 'text-[var(--muted)]'
               }`}>
               {item.icon(active)}
               <span className={`text-[10px] ${active ? 'font-bold' : 'font-medium'}`}>

@@ -25,10 +25,10 @@ function CallbackHandler() {
 
 export default function AuthCallback() {
   return (
-    <div className="bg-white flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+    <div className="bg-[var(--card)] flex items-center justify-center" style={{ minHeight: '100dvh' }}>
       <div className="text-center">
         <div className="text-4xl mb-3">⏳</div>
-        <p className="text-sm text-gray-400">Connexion en cours...</p>
+        <p className="text-sm text-[var(--muted)]">Connexion en cours...</p>
       </div>
       <Suspense>
         <CallbackHandler />

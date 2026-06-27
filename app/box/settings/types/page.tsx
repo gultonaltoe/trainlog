@@ -38,12 +38,12 @@ export default function SessionTypesPage() {
   if (!org) return null
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[var(--bg)] min-h-screen">
       <div className="max-w-lg mx-auto px-4 pb-8">
         <PageHeader title="Types de séances" subtitle="Pré-remplissent le planning" backHref="/box/settings" />
 
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-10">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-10">Chargement…</p>
         ) : (
           <div className="space-y-3">
             {types.map((t, i) => (
@@ -53,7 +53,7 @@ export default function SessionTypesPage() {
                     value={t.name} disabled={!canEdit} onChange={e => updType(i, { name: e.target.value })} />
                   {canEdit && (
                     <button onClick={() => setTypes(arr => arr.filter((_, j) => j !== i))}
-                      className="text-gray-300 hover:text-red-500 text-xl px-1 cursor-pointer">×</button>
+                      className="text-[var(--border-strong)] hover:text-red-500 text-xl px-1 cursor-pointer">×</button>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -68,7 +68,7 @@ export default function SessionTypesPage() {
                 </div>
               </Card>
             ))}
-            {types.length === 0 && <p className="text-sm text-gray-400 text-center py-6">Aucun type pour l’instant.</p>}
+            {types.length === 0 && <p className="text-sm text-[var(--muted)] text-center py-6">Aucun type pour l’instant.</p>}
 
             {canEdit && (
               <>

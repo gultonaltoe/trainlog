@@ -201,14 +201,14 @@ export default function PRsPage() {
   const recentPRs = prs.filter(p => (Date.now() - new Date(p.date + 'T00:00:00').getTime()) / 86400000 <= 30)
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4">
 
         {/* Header */}
         <div className="pt-8 pb-5 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Personal Records</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{prs.length} performance{prs.length > 1 ? 's' : ''} trackée{prs.length > 1 ? 's' : ''}</p>
+            <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Personal Records</h1>
+            <p className="text-sm text-[var(--muted)] mt-0.5">{prs.length} performance{prs.length > 1 ? 's' : ''} trackée{prs.length > 1 ? 's' : ''}</p>
           </div>
           <button onClick={openForm}
             className="flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm"
@@ -219,17 +219,17 @@ export default function PRsPage() {
 
         {/* PRs récents */}
         {recentPRs.length > 0 && (
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-4">
-            <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-3">🏆 Ces 30 derniers jours</p>
+          <div className="bg-[var(--accent-soft)] border border-[color:var(--accent-soft)] rounded-2xl p-4 mb-4">
+            <p className="text-xs font-bold text-[var(--accent-text)] uppercase tracking-wider mb-3">🏆 Ces 30 derniers jours</p>
             <div className="space-y-2.5">
               {recentPRs.slice(0, 5).map(p => (
                 <Link key={p.key} href={`/prs/${encodeURIComponent(p.movement_id ?? p.movement_name)}`}
                   className="flex items-center justify-between hover:opacity-80">
-                  <span className="text-sm font-semibold text-gray-800 truncate pr-2">{prRowLabel(p)}</span>
+                  <span className="text-sm font-semibold text-[var(--ink)] truncate pr-2">{prRowLabel(p)}</span>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-base font-black text-orange-600">{formatValue(p.best, p.unit)}</span>
-                    <span className="text-xs text-gray-400">{unitLabel(p.unit)}</span>
-                    <span className="text-xs text-gray-300">{daysAgo(p.date)}</span>
+                    <span className="text-base font-black text-[var(--accent-text)]">{formatValue(p.best, p.unit)}</span>
+                    <span className="text-xs text-[var(--muted)]">{unitLabel(p.unit)}</span>
+                    <span className="text-xs text-[var(--border-strong)]">{daysAgo(p.date)}</span>
                   </div>
                 </Link>
               ))}
@@ -240,7 +240,7 @@ export default function PRsPage() {
         {/* Recherche */}
         <input type="text" placeholder="Rechercher un mouvement..." value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 mb-4" />
+          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400 mb-4" />
 
         {/* Liste */}
         {loading ? (
@@ -248,8 +248,8 @@ export default function PRsPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-3">🏋️</p>
-            <p className="text-sm font-semibold text-gray-700 mb-1">{search ? 'Aucun mouvement trouvé' : 'Aucun PR enregistré'}</p>
-            <p className="text-xs text-gray-400 mb-4">
+            <p className="text-sm font-semibold text-[var(--ink-soft)] mb-1">{search ? 'Aucun mouvement trouvé' : 'Aucun PR enregistré'}</p>
+            <p className="text-xs text-[var(--muted)] mb-4">
               {!search && 'Ajoute ton premier PR ou log une séance avec des charges.'}
             </p>
             {!search && (
@@ -264,19 +264,19 @@ export default function PRsPage() {
           <div className="space-y-2">
             {filtered.map(p => (
               <Link key={p.key} href={`/prs/${encodeURIComponent(p.movement_id ?? p.movement_name)}`}
-                className="flex items-center gap-3 bg-white rounded-2xl border border-gray-200 p-4 hover:border-gray-300 hover:shadow-sm transition">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0 text-lg">
+                className="flex items-center gap-3 bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 hover:border-[color:var(--border-strong)] hover:shadow-sm transition">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center flex-shrink-0 text-lg">
                   {p.unit === 'sec' ? '⏱️' : p.unit === 'reps' ? '🔢' : '🏋️'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-800 truncate">{prRowLabel(p)}</p>
-                  <p className="text-xs text-gray-400">{p.count} entrée{p.count > 1 ? 's' : ''} · {daysAgo(p.date)}</p>
+                  <p className="text-sm font-bold text-[var(--ink)] truncate">{prRowLabel(p)}</p>
+                  <p className="text-xs text-[var(--muted)]">{p.count} entrée{p.count > 1 ? 's' : ''} · {daysAgo(p.date)}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xl font-black text-gray-900">{formatValue(p.best, p.unit)}</p>
-                  <p className="text-xs text-gray-400">{unitLabel(p.unit)}</p>
+                  <p className="text-xl font-black text-[var(--ink)]">{formatValue(p.best, p.unit)}</p>
+                  <p className="text-xs text-[var(--muted)]">{unitLabel(p.unit)}</p>
                 </div>
-                <span className="text-gray-300 ml-1">›</span>
+                <span className="text-[var(--border-strong)] ml-1">›</span>
               </Link>
             ))}
           </div>
@@ -289,19 +289,19 @@ export default function PRsPage() {
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={closeForm} />
 
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl px-5 pt-4"
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--card)] rounded-t-3xl px-5 pt-4"
             style={{ maxHeight: '92dvh', overflowY: 'auto', paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}>
 
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+            <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
 
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-black text-gray-900">Ajouter un PR</h2>
-              <button onClick={closeForm} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+              <h2 className="text-lg font-black text-[var(--ink)]">Ajouter un PR</h2>
+              <button onClick={closeForm} className="text-[var(--muted)] hover:text-[var(--ink-soft)] text-2xl leading-none">×</button>
             </div>
 
             {/* ① Type */}
             <div className="mb-5">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Type</p>
+              <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-2">Type</p>
               <div className="grid grid-cols-3 gap-2">
                 {([
                   { v: 'charge', icon: '🏋️', label: 'Charge' },
@@ -310,10 +310,10 @@ export default function PRsPage() {
                 ] as { v: PRType; icon: string; label: string }[]).map(t => (
                   <button key={t.v} onClick={() => setPrType(t.v)}
                     className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition ${
-                      prType === t.v ? 'border-orange-400 bg-orange-50' : 'border-gray-200 bg-white'
+                      prType === t.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'
                     }`}>
                     <span className="text-xl">{t.icon}</span>
-                    <span className={`text-[11px] font-bold ${prType === t.v ? 'text-orange-600' : 'text-gray-500'}`}>{t.label}</span>
+                    <span className={`text-[11px] font-bold ${prType === t.v ? 'text-[var(--accent-text)]' : 'text-[var(--sub)]'}`}>{t.label}</span>
                   </button>
                 ))}
               </div>
@@ -321,7 +321,7 @@ export default function PRsPage() {
 
             {/* ② Mouvement — grille */}
             <div className="mb-5">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Mouvement</p>
+              <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-2">Mouvement</p>
 
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {PRESET_MOVEMENTS.map(m => {
@@ -330,8 +330,8 @@ export default function PRsPage() {
                     <button key={m.label} onClick={() => selectPreset(m.label)}
                       className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition text-center leading-tight ${
                         sel
-                          ? 'border-orange-400 bg-orange-50 text-orange-700'
-                          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                          ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                          : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)] hover:border-[color:var(--border-strong)]'
                       }`}>
                       <span className="block text-base mb-0.5">{m.icon}</span>
                       {m.label}
@@ -343,8 +343,8 @@ export default function PRsPage() {
                 <button onClick={() => { setIsCustom(true); setMovName('') }}
                   className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition text-center leading-tight ${
                     isCustom
-                      ? 'border-orange-400 bg-orange-50 text-orange-700'
-                      : 'border-dashed border-gray-300 bg-white text-gray-400'
+                      ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                      : 'border-dashed border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--muted)]'
                   }`}>
                   <span className="block text-base mb-0.5">✏️</span>
                   Autre
@@ -373,12 +373,12 @@ export default function PRsPage() {
             {/* ③ Schéma (charge uniquement) */}
             {prType === 'charge' && (
               <div className="mb-5">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Schéma</p>
+                <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-2">Schéma</p>
                 <div className="flex gap-2">
                   {SCHEMES.map(s => (
                     <button key={s} onClick={() => setScheme(s)}
                       className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition ${
-                        scheme === s ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 text-gray-500'
+                        scheme === s ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] text-[var(--sub)]'
                       }`}>
                       {s}
                     </button>
@@ -389,7 +389,7 @@ export default function PRsPage() {
 
             {/* ④ Performance */}
             <div className="mb-5">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-2">
                 {prType === 'charge' ? `Poids — ${scheme}` : prType === 'reps' ? 'Répétitions' : 'Temps'}
               </p>
               {prType === 'temps' ? (
@@ -397,30 +397,30 @@ export default function PRsPage() {
                   <div className="flex-1 relative">
                     <input type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
                       placeholder="00" min="0"
-                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-3 text-3xl font-black text-center text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                    <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-gray-400 font-medium">min</span>
+                      className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-3 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-[var(--muted)] font-medium">min</span>
                   </div>
-                  <span className="text-2xl font-black text-gray-400 pb-4">:</span>
+                  <span className="text-2xl font-black text-[var(--muted)] pb-4">:</span>
                   <div className="flex-1 relative">
                     <input type="number" value={seconds} onChange={e => setSeconds(e.target.value)}
                       placeholder="00" min="0" max="59"
-                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-3 text-3xl font-black text-center text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                    <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-gray-400 font-medium">sec</span>
+                      className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-3 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-[var(--muted)] font-medium">sec</span>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <input type="number" value={value} onChange={e => setValue(e.target.value)}
                     placeholder="0" min="0" step={prType === 'charge' ? '0.5' : '1'}
-                    className="flex-1 rounded-xl border border-gray-300 bg-white px-3 py-4 text-3xl font-black text-center text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                  <span className="text-lg font-bold text-gray-400 w-10">{prType === 'charge' ? 'kg' : 'reps'}</span>
+                    className="flex-1 rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-4 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <span className="text-lg font-bold text-[var(--muted)] w-10">{prType === 'charge' ? 'kg' : 'reps'}</span>
                 </div>
               )}
             </div>
 
             {/* ⑤ Date — chips */}
             <div className="mb-6">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Date</p>
+              <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-2">Date</p>
               <div className="flex gap-2 mb-2">
                 {DATE_OPTIONS.map(opt => {
                   const active = !showDatePicker && dateOffset === opt.offset
@@ -428,7 +428,7 @@ export default function PRsPage() {
                     <button key={opt.offset}
                       onClick={() => { setDateOffset(opt.offset); setShowDatePicker(false); setCustomDate('') }}
                       className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition ${
-                        active ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-500'
+                        active ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
                       }`}>
                       {opt.label}
                     </button>
@@ -437,7 +437,7 @@ export default function PRsPage() {
                 <button
                   onClick={() => setShowDatePicker(v => !v)}
                   className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition ${
-                    showDatePicker ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-500'
+                    showDatePicker ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
                   }`}>
                   Autre
                 </button>
@@ -445,9 +445,9 @@ export default function PRsPage() {
               {showDatePicker && (
                 <input type="date" value={customDate || offsetStr(dateOffset)} max={todayStr()}
                   onChange={e => setCustomDate(e.target.value)}
-                  className="w-full rounded-xl border border-orange-300 bg-orange-50 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="w-full rounded-xl border border-orange-300 bg-[var(--accent-soft)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
               )}
-              <p className="text-xs text-gray-400 mt-1.5">
+              <p className="text-xs text-[var(--muted)] mt-1.5">
                 {showDatePicker && customDate
                   ? new Date(customDate + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
                   : new Date(prDate + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })

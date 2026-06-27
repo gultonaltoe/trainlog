@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from '@/lib/toast'
 import { getSessionUserId } from '@/lib/auth'
 import { useAppContext } from '@/components/AppContext'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const ROLE_LABEL: Record<string, string> = {
   owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
@@ -39,9 +40,9 @@ const THEMES = [
   {name:'Teal',hex:'#14B8A6'},{name:'Indigo',hex:'#6366F1'},
 ]
 
-const inputCls = "w-full rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
-const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"
-const section  = "bg-white rounded-2xl border border-gray-200 p-5 mb-4"
+const inputCls = "w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400"
+const labelCls = "block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2"
+const section  = "bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4"
 
 export default function ProfilePage() {
   const { memberships } = useAppContext()
@@ -121,17 +122,17 @@ export default function ProfilePage() {
 
   if (loading) return (
     <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
-      <p className="text-gray-400 text-sm">Chargement...</p>
+      <p className="text-[var(--muted)] text-sm">Chargement...</p>
     </div>
   )
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
         <div className="pt-8 pb-5">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Mon profil</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Infos personnelles et préférences</p>
+          <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Mon profil</h1>
+          <p className="text-sm text-[var(--muted)] mt-0.5">Infos personnelles et préférences</p>
         </div>
 
         {/* Mes box — active memberships are tappable, pending show their state */}
@@ -141,20 +142,20 @@ export default function ProfilePage() {
               const pending = m.status === 'pending'
               const card = (
                 <div className={`flex items-center justify-between rounded-2xl border p-4 ${
-                  pending ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 hover:shadow-sm transition'
+                  pending ? 'bg-amber-50 border-amber-200' : 'bg-[var(--card)] border-[color:var(--border)] hover:shadow-sm transition'
                 }`}>
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="text-2xl">{pending ? '⏳' : '🏢'}</span>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-gray-800 truncate">
+                      <p className="text-sm font-bold text-[var(--ink)] truncate">
                         {pending ? 'Demande en attente' : m.organizationName}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-[var(--muted)]">
                         {pending ? 'En attente de validation par la box' : ROLE_LABEL[m.role]}
                       </p>
                     </div>
                   </div>
-                  {!pending && <span className="text-gray-300">›</span>}
+                  {!pending && <span className="text-[var(--border-strong)]">›</span>}
                 </div>
               )
               return pending
@@ -165,20 +166,20 @@ export default function ProfilePage() {
         )}
 
         <Link href="/box/join"
-          className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 p-4 mb-4 hover:shadow-sm transition">
+          className="flex items-center justify-between bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 mb-4 hover:shadow-sm transition">
           <div className="flex items-center gap-3">
             <span className="text-2xl">➕</span>
             <div>
-              <p className="text-sm font-bold text-gray-800">Rejoindre une box</p>
-              <p className="text-xs text-gray-400">Entre le code de ta salle</p>
+              <p className="text-sm font-bold text-[var(--ink)]">Rejoindre une box</p>
+              <p className="text-xs text-[var(--muted)]">Entre le code de ta salle</p>
             </div>
           </div>
-          <span className="text-gray-300">›</span>
+          <span className="text-[var(--border-strong)]">›</span>
         </Link>
 
         {/* Identité */}
         <div className={section}>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Identité</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-4">Identité</p>
           <div className="space-y-4">
             <div>
               <label className={labelCls}>Prénom</label>
@@ -195,8 +196,8 @@ export default function ProfilePage() {
                 <label className={labelCls}>Date de naissance</label>
                 <input type="date" value={p.birth_date}
                   onChange={e => upd('birth_date', e.target.value)}
-                  className="w-full rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                {age && <p className="text-xs text-gray-400 mt-1">{age} ans</p>}
+                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                {age && <p className="text-xs text-[var(--muted)] mt-1">{age} ans</p>}
               </div>
               <div>
                 <label className={labelCls}>Box / Club</label>
@@ -209,7 +210,7 @@ export default function ProfilePage() {
 
         {/* Morphologie */}
         <div className={section}>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Morphologie</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-4">Morphologie</p>
           <div className="grid grid-cols-2 gap-4 mb-3">
             <div>
               <label className={labelCls}>Poids (kg)</label>
@@ -223,10 +224,10 @@ export default function ProfilePage() {
             </div>
           </div>
           {bmi && (
-            <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
-              <span className="text-xs text-gray-500">IMC</span>
-              <span className="text-sm font-bold text-gray-800">
-                {bmi} <span className="text-xs font-normal text-gray-500">
+            <div className="bg-[var(--bg)] rounded-xl px-4 py-3 flex items-center justify-between">
+              <span className="text-xs text-[var(--sub)]">IMC</span>
+              <span className="text-sm font-bold text-[var(--ink)]">
+                {bmi} <span className="text-xs font-normal text-[var(--sub)]">
                   {bmi < 18.5 ? 'Insuffisant' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Surpoids' : 'Obésité'}
                 </span>
               </span>
@@ -236,7 +237,7 @@ export default function ProfilePage() {
 
         {/* Profil sportif */}
         <div className={section}>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Profil sportif</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-4">Profil sportif</p>
 
           <div className="mb-5">
             <label className={labelCls}>Niveau</label>
@@ -244,10 +245,10 @@ export default function ProfilePage() {
               {LEVELS.map(l => (
                 <button key={l.v} onClick={() => upd('level', l.v)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition ${
-                    p.level === l.v ? 'border-orange-400 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                    p.level === l.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
                   }`}>
-                  <span className={`text-sm font-semibold ${p.level === l.v ? 'text-orange-600' : 'text-gray-700'}`}>{l.l}</span>
-                  <span className="text-xs text-gray-400">{l.d}</span>
+                  <span className={`text-sm font-semibold ${p.level === l.v ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{l.l}</span>
+                  <span className="text-xs text-[var(--muted)]">{l.d}</span>
                 </button>
               ))}
             </div>
@@ -259,10 +260,10 @@ export default function ProfilePage() {
               {GOALS.map(g => (
                 <button key={g.v} onClick={() => upd('goal', g.v)}
                   className={`p-3 rounded-xl border text-left transition ${
-                    p.goal === g.v ? 'border-orange-400 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                    p.goal === g.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
                   }`}>
-                  <p className={`text-sm font-semibold ${p.goal === g.v ? 'text-orange-600' : 'text-gray-700'}`}>{g.l}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{g.d}</p>
+                  <p className={`text-sm font-semibold ${p.goal === g.v ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{g.l}</p>
+                  <p className="text-xs text-[var(--muted)] mt-0.5">{g.d}</p>
                 </button>
               ))}
             </div>
@@ -275,8 +276,8 @@ export default function ProfilePage() {
                 <button key={n} onClick={() => upd('weekly_target', String(n))}
                   className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition ${
                     p.weekly_target === String(n)
-                      ? 'border-orange-400 bg-orange-50 text-orange-600'
-                      : 'border-gray-200 bg-white text-gray-600'
+                      ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                      : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'
                   }`}>{n}×</button>
               ))}
             </div>
@@ -289,8 +290,8 @@ export default function ProfilePage() {
                 <button key={s} onClick={() => toggleSport(s)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                     p.sports.includes(s)
-                      ? 'border-orange-400 bg-orange-50 text-orange-600'
-                      : 'border-gray-200 bg-white text-gray-500'
+                      ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                      : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
                   }`}>{s}</button>
               ))}
             </div>
@@ -299,28 +300,35 @@ export default function ProfilePage() {
 
         {/* Thème */}
         <div className={section}>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Couleur du thème</p>
-          <p className="text-xs text-gray-400 mb-4">Personnalise la couleur principale de l'app</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-1">Couleur du thème</p>
+          <p className="text-xs text-[var(--muted)] mb-4">Personnalise la couleur principale de l'app</p>
           <div className="flex flex-wrap gap-4">
             {THEMES.map(c => (
               <button key={c.hex} onClick={() => upd('theme_color', c.hex)}
                 className="flex flex-col items-center gap-1.5">
                 <div className={`w-9 h-9 rounded-full border-2 transition ${
-                  p.theme_color === c.hex ? 'scale-110 border-gray-700' : 'border-transparent'
+                  p.theme_color === c.hex ? 'scale-110 border-[color:var(--ink)]' : 'border-transparent'
                 }`} style={{ background: c.hex }} />
-                <span className="text-xs text-gray-500">{c.name}</span>
+                <span className="text-xs text-[var(--sub)]">{c.name}</span>
               </button>
             ))}
           </div>
         </div>
 
+        {/* Apparence (clair / sombre / auto) */}
+        <div className={section}>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-1">Apparence</p>
+          <p className="text-xs text-[var(--muted)] mb-4">Mode clair, sombre, ou selon ton appareil</p>
+          <ThemeToggle />
+        </div>
+
         {/* Notes */}
         <div className={section}>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Notes</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-4">Notes</p>
           <textarea rows={3} value={p.notes} onChange={e => upd('notes', e.target.value)}
             placeholder="Contexte, contraintes, historique blessures..."
             className={inputCls + ' resize-none'} />
-          <p className="text-xs text-gray-400 mt-2">Alimentera les recommandations IA.</p>
+          <p className="text-xs text-[var(--muted)] mt-2">Alimentera les recommandations IA.</p>
         </div>
 
         <button onClick={save} disabled={saving}

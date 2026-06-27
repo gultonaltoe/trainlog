@@ -30,15 +30,15 @@ function AuthForm() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center max-w-sm mx-auto w-full">
         <div className="text-6xl mb-5">📧</div>
-        <h1 className="text-2xl font-black text-gray-900 mb-3">Vérifie tes emails</h1>
-        <p className="text-sm text-gray-500 leading-relaxed">
-          On a envoyé un lien à <strong className="text-gray-800">{email}</strong>.<br />
+        <h1 className="text-2xl font-black text-[var(--ink)] mb-3">Vérifie tes emails</h1>
+        <p className="text-sm text-[var(--sub)] leading-relaxed">
+          On a envoyé un lien à <strong className="text-[var(--ink)]">{email}</strong>.<br />
           Clique dessus pour accéder à Trainlog.
         </p>
-        <p className="text-xs text-gray-400 mt-4">Le lien expire dans 1 heure · Vérifie tes spams</p>
+        <p className="text-xs text-[var(--muted)] mt-4">Le lien expire dans 1 heure · Vérifie tes spams</p>
         <button
           onClick={() => { setSent(false); setEmail(''); setError('') }}
-          className="mt-8 text-sm text-gray-400 underline underline-offset-2"
+          className="mt-8 text-sm text-[var(--muted)] underline underline-offset-2"
         >
           Utiliser un autre email
         </button>
@@ -50,8 +50,8 @@ function AuthForm() {
     <div className="flex-1 flex flex-col px-6 pt-16 pb-8 max-w-sm mx-auto w-full">
       <div className="text-center mb-10">
         <div className="text-7xl mb-4">🏋️</div>
-        <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-3">Trainlog</h1>
-        <p className="text-base text-gray-500 leading-relaxed">Entre ton email pour accéder à ton compte.</p>
+        <h1 className="text-4xl font-black text-[var(--ink)] tracking-tight mb-3">Trainlog</h1>
+        <p className="text-base text-[var(--sub)] leading-relaxed">Entre ton email pour accéder à ton compte.</p>
       </div>
 
       <div className="space-y-3">
@@ -61,7 +61,7 @@ function AuthForm() {
           value={email}
           onChange={e => { setEmail(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400"
           autoFocus
           autoComplete="email"
         />
@@ -81,7 +81,7 @@ function AuthForm() {
         </button>
       </div>
 
-      <p className="text-xs text-gray-400 mt-5 text-center leading-relaxed">
+      <p className="text-xs text-[var(--muted)] mt-5 text-center leading-relaxed">
         Pas de mot de passe — un lien de connexion est envoyé à chaque fois.
       </p>
     </div>
@@ -90,7 +90,7 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <div className="bg-white flex flex-col" style={{ minHeight: '100dvh' }}>
+    <div className="bg-[var(--card)] flex flex-col" style={{ minHeight: '100dvh' }}>
       <Suspense>
         <AuthForm />
       </Suspense>

@@ -61,13 +61,13 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
   ]
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <Link href="/box/profile" className="block pt-8 pb-4 hover:opacity-80 transition">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-1.5">
-            {orgName} <span className="text-gray-300 text-lg">›</span>
+          <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight flex items-center gap-1.5">
+            {orgName} <span className="text-[var(--border-strong)] text-lg">›</span>
           </h1>
-          <p className="text-sm text-gray-400 mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
+          <p className="text-sm text-[var(--muted)] mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
         </Link>
 
         {/* Réserver une séance — owners/coaches train at their box too */}
@@ -85,31 +85,31 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
         </Link>
 
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-            <p className="text-2xl font-black text-gray-900">{memberCount ?? '—'}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Membres</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 text-center">
+            <p className="text-2xl font-black text-[var(--ink)]">{memberCount ?? '—'}</p>
+            <p className="text-[11px] text-[var(--muted)] mt-0.5">Membres</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-            <p className="text-2xl font-black text-gray-900">{week ? `${week.occupancy}%` : '—'}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Occupation</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 text-center">
+            <p className="text-2xl font-black text-[var(--ink)]">{week ? `${week.occupancy}%` : '—'}</p>
+            <p className="text-[11px] text-[var(--muted)] mt-0.5">Occupation</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-            <p className="text-2xl font-black text-gray-900">{week ? `${week.avgRate}%` : '—'}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Résa moy.</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 text-center">
+            <p className="text-2xl font-black text-[var(--ink)]">{week ? `${week.avgRate}%` : '—'}</p>
+            <p className="text-[11px] text-[var(--muted)] mt-0.5">Résa moy.</p>
           </div>
         </div>
-        {week && <p className="text-[11px] text-gray-400 -mt-2 mb-4 text-center">Cette semaine · {week.classes} cours</p>}
+        {week && <p className="text-[11px] text-[var(--muted)] -mt-2 mb-4 text-center">Cette semaine · {week.classes} cours</p>}
 
         <div className="space-y-3">
           {sections.map(s => (
             <Link key={s.href} href={s.href}
-              className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center gap-3 hover:shadow-sm transition">
+              className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 flex items-center gap-3 hover:shadow-sm transition">
               <span className="text-2xl flex-shrink-0">{s.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-800">{s.title}</p>
-                <p className="text-xs text-gray-400">{s.desc}</p>
+                <p className="text-sm font-bold text-[var(--ink)]">{s.title}</p>
+                <p className="text-xs text-[var(--muted)]">{s.desc}</p>
               </div>
-              <span className="text-gray-300">›</span>
+              <span className="text-[var(--border-strong)]">›</span>
             </Link>
           ))}
         </div>

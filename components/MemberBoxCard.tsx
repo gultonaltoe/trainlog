@@ -25,23 +25,23 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
   }, [orgId])
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-4">
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[var(--card)] p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <div className="min-w-0">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Mes prochains cours</p>
-          <p className="text-sm font-bold text-gray-800 truncate">{orgName}</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">Mes prochains cours</p>
+          <p className="text-sm font-bold text-[var(--ink)] truncate">{orgName}</p>
         </div>
-        <Link href={`/box/book?org=${orgId}#mine`} className="text-xs font-bold text-orange-600 flex-shrink-0">Voir tout</Link>
+        <Link href={`/box/book?org=${orgId}#mine`} className="text-xs font-bold text-[var(--accent-text)] flex-shrink-0">Voir tout</Link>
       </div>
 
       {upcoming.length === 0 ? (
-        <p className="text-sm text-gray-300 mb-3">Aucune réservation à venir.</p>
+        <p className="text-sm text-[var(--border-strong)] mb-3">Aucune réservation à venir.</p>
       ) : (
         <div className="space-y-1.5 mb-3">
           {upcoming.map(r => (
             <div key={`${r.scheduleId}|${r.date}`} className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-gray-800 truncate">{r.title}</span>
-              <span className="text-xs text-gray-500 flex-shrink-0 capitalize">
+              <span className="text-sm font-semibold text-[var(--ink)] truncate">{r.title}</span>
+              <span className="text-xs text-[var(--sub)] flex-shrink-0 capitalize">
                 {fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}
                 {r.status === 'waitlisted' && <span className="text-amber-600 font-bold"> · attente</span>}
               </span>

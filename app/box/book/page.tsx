@@ -138,24 +138,24 @@ export default function BookPage() {
   const brandStyle = brand.brandColor ? ({ ['--theme-primary' as string]: brand.brandColor } as React.CSSProperties) : undefined
 
   return (
-    <div className="bg-gray-50" style={brandStyle}>
+    <div className="bg-[var(--bg)]" style={brandStyle}>
       <div className="max-w-lg mx-auto px-4 pb-4">
         <div className="pt-8 pb-4 flex items-end justify-between">
           <div className="flex items-center gap-3 min-w-0">
             {brand.logoUrl && (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={brand.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover border border-gray-200 flex-shrink-0" />
+              <img src={brand.logoUrl} alt="" className="h-10 w-10 rounded-xl object-cover border border-[color:var(--border)] flex-shrink-0" />
             )}
             <div className="min-w-0">
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Réserver</h1>
-              <p className="text-sm text-gray-400 mt-0.5 truncate">{orgName}</p>
+              <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Réserver</h1>
+              <p className="text-sm text-[var(--muted)] mt-0.5 truncate">{orgName}</p>
             </div>
           </div>
           {tab === 'browse' && (
-            <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-xs font-bold flex-shrink-0">
+            <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-xs font-bold flex-shrink-0">
               {(['week', 'month'] as const).map(v => (
                 <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2"
-                  style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+                  style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
                   {v === 'week' ? 'Semaine' : 'Mois'}
                 </button>
               ))}
@@ -164,10 +164,10 @@ export default function BookPage() {
         </div>
 
         {/* Hub toggle: browse & book vs my reservations */}
-        <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-sm font-bold mb-4">
+        <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-sm font-bold mb-4">
           {([['browse', 'Réserver'], ['mine', 'Mes réservations']] as const).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)} className="flex-1 py-2.5"
-              style={tab === t ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+              style={tab === t ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
               {label}
             </button>
           ))}
@@ -182,9 +182,9 @@ export default function BookPage() {
         {role === 'member' && (() => {
           const usable = myPlans.find(p => isUsable(p, todayISO))
           if (usable) return (
-            <div className="mb-3 rounded-xl bg-white border border-gray-200 p-3 flex items-center justify-between">
-              <p className="text-sm font-bold text-gray-800 truncate">{usable.planName}</p>
-              <p className="text-xs text-gray-500 flex-shrink-0">
+            <div className="mb-3 rounded-xl bg-[var(--card)] border border-[color:var(--border)] p-3 flex items-center justify-between">
+              <p className="text-sm font-bold text-[var(--ink)] truncate">{usable.planName}</p>
+              <p className="text-xs text-[var(--sub)] flex-shrink-0">
                 {usable.creditsRemaining != null ? `${usable.creditsRemaining} crédits` : PLAN_KIND_LABEL[usable.planKind]}
                 {usable.endsOn ? ` · jusqu’au ${usable.endsOn}` : ''}
               </p>
@@ -199,40 +199,40 @@ export default function BookPage() {
 
         {policy.trim() && (
           <div className="mb-4">
-            <button onClick={() => setShowPolicy(s => !s)} className="text-xs font-bold text-gray-500 flex items-center gap-1">
-              ⓘ Politique d’annulation <span className="text-gray-300">{showPolicy ? '▴' : '▾'}</span>
+            <button onClick={() => setShowPolicy(s => !s)} className="text-xs font-bold text-[var(--sub)] flex items-center gap-1">
+              ⓘ Politique d’annulation <span className="text-[var(--border-strong)]">{showPolicy ? '▴' : '▾'}</span>
             </button>
             {showPolicy && (
-              <p className="text-xs text-gray-500 mt-1.5 whitespace-pre-line bg-white border border-gray-200 rounded-xl p-3">{policy}</p>
+              <p className="text-xs text-[var(--sub)] mt-1.5 whitespace-pre-line bg-[var(--card)] border border-[color:var(--border)] rounded-xl p-3">{policy}</p>
             )}
           </div>
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => shift(-1)} className="w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-600 text-lg leading-none">‹</button>
-          <p className="text-sm font-bold text-gray-700 text-center">
+          <button onClick={() => shift(-1)} className="w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">‹</button>
+          <p className="text-sm font-bold text-[var(--ink-soft)] text-center">
             {view === 'week'
               ? `${range.monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${weekDays[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
               : `${MONTHS[anchor.getMonth()]} ${anchor.getFullYear()}`}
           </p>
-          <button onClick={() => shift(1)} className="w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-600 text-lg leading-none">›</button>
+          <button onClick={() => shift(1)} className="w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">›</button>
         </div>
 
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>
         ) : (
           <>
             {view === 'week' ? (
-              <div className="bg-white rounded-2xl border border-gray-200 p-3 mb-4">
+              <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-3 mb-4">
                 <div className="grid grid-cols-7 gap-1">
                   {weekDays.map((d, i) => {
                     const ds = iso(d); const count = onDay(ds).length; const sel = activeDay === ds
                     return (
                       <button key={i} onClick={() => setSelectedDay(ds)}
                         className="min-h-16 rounded-lg flex flex-col items-center justify-center gap-0.5"
-                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? '#FFF7ED' : '#F9FAFB' }}>
-                        <span className={`text-[10px] font-bold ${sel ? 'text-white' : 'text-gray-400'}`}>{DAY_WK[i]}</span>
-                        <span className={`text-sm font-black ${sel ? 'text-white' : 'text-gray-700'}`}>{d.getDate()}</span>
+                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
+                        <span className={`text-[10px] font-bold ${sel ? 'text-white' : 'text-[var(--muted)]'}`}>{DAY_WK[i]}</span>
+                        <span className={`text-sm font-black ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{d.getDate()}</span>
                         {count > 0 && <span className={`text-[8px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
                       </button>
                     )
@@ -240,9 +240,9 @@ export default function BookPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-200 p-3 mb-4">
+              <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-3 mb-4">
                 <div className="grid grid-cols-7 mb-1">
-                  {DAY_HDR.map((d, i) => <p key={i} className="text-center text-[10px] font-bold text-gray-400">{d}</p>)}
+                  {DAY_HDR.map((d, i) => <p key={i} className="text-center text-[10px] font-bold text-[var(--muted)]">{d}</p>)}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
                   {monthCells(anchor.getFullYear(), anchor.getMonth()).map((day, i) => {
@@ -251,8 +251,8 @@ export default function BookPage() {
                     const count = onDay(ds).length; const sel = activeDay === ds
                     return (
                       <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center"
-                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? '#FFF7ED' : '#F9FAFB' }}>
-                        <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-gray-700'}`}>{day}</span>
+                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
+                        <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{day}</span>
                         {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
                       </button>
                     )
@@ -261,11 +261,11 @@ export default function BookPage() {
               </div>
             )}
 
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-2">
               {new Date(activeDay + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
             {onDay(activeDay).length === 0
-              ? <p className="text-sm text-gray-300 py-2">Aucun cours ce jour.</p>
+              ? <p className="text-sm text-[var(--border-strong)] py-2">Aucun cours ce jour.</p>
               : <div className="space-y-2">{onDay(activeDay).map(c => (
                   <BookRow key={c.id + c.date} c={c} booking={bookings.get(bookingKey(c.id, c.date))}
                     busy={busy === bookingKey(c.id, c.date)} onAct={act} />
@@ -296,7 +296,7 @@ function BookRow({ c, booking, busy, onAct }: {
   let action: React.ReactNode
   const canClaim = my === 'waitlisted' && booking?.myNotified && !full
   if (past) {
-    action = <span className="text-[11px] text-gray-300 px-2">Passé</span>
+    action = <span className="text-[11px] text-[var(--border-strong)] px-2">Passé</span>
   } else if (canClaim) {
     action = (
       <div className="flex flex-col gap-1.5">
@@ -306,7 +306,7 @@ function BookRow({ c, booking, busy, onAct }: {
           {busy ? '…' : 'Confirmer'}
         </button>
         <button onClick={() => onAct(c, 'cancel')} disabled={busy}
-          className="text-[11px] font-bold text-gray-400">Annuler</button>
+          className="text-[11px] font-bold text-[var(--muted)]">Annuler</button>
       </div>
     )
   } else if (my) {
@@ -334,13 +334,13 @@ function BookRow({ c, booking, busy, onAct }: {
   }
 
   return (
-    <div className={`bg-white rounded-xl border p-3 flex items-center justify-between gap-2 ${booking?.myNotified ? 'border-amber-300' : 'border-gray-200'}`}>
+    <div className={`bg-[var(--card)] rounded-xl border p-3 flex items-center justify-between gap-2 ${booking?.myNotified ? 'border-amber-300' : 'border-[color:var(--border)]'}`}>
       <div className="min-w-0">
-        <p className="text-sm font-bold text-gray-800 truncate">{c.title}</p>
-        <p className="text-xs text-gray-400">{c.startTime} · {c.durationMin} min</p>
+        <p className="text-sm font-bold text-[var(--ink)] truncate">{c.title}</p>
+        <p className="text-xs text-[var(--muted)]">{c.startTime} · {c.durationMin} min</p>
         <p className="text-xs mt-0.5">
-          <span className={`font-bold ${full ? 'text-red-500' : 'text-gray-600'}`}>{booked}/{c.capacity}</span>
-          <span className="text-gray-400"> places</span>
+          <span className={`font-bold ${full ? 'text-red-500' : 'text-[var(--ink-soft)]'}`}>{booked}/{c.capacity}</span>
+          <span className="text-[var(--muted)]"> places</span>
           {badge && <> · {badge}</>}
         </p>
         {booking?.myNotified && my === 'waitlisted' && (

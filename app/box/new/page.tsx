@@ -27,25 +27,25 @@ export default function NewBoxPage() {
   }
 
   return (
-    <div className="bg-white flex flex-col" style={{ minHeight: '100dvh' }}>
+    <div className="bg-[var(--card)] flex flex-col" style={{ minHeight: '100dvh' }}>
       <div className="flex-1 flex flex-col px-6 pt-16 pb-8 max-w-sm mx-auto w-full">
         <button onClick={() => router.back()}
-          className="self-start mb-8 text-sm font-semibold text-gray-400 hover:text-gray-600">← Retour</button>
+          className="self-start mb-8 text-sm font-semibold text-[var(--muted)] hover:text-[var(--ink-soft)]">← Retour</button>
 
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🏢</div>
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Créer ta box</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">
+          <h1 className="text-2xl font-black text-[var(--ink)] mb-2">Créer ta box</h1>
+          <p className="text-sm text-[var(--sub)] leading-relaxed">
             Tu en seras le propriétaire. Tu pourras ensuite inviter des coachs et des membres.
           </p>
         </div>
 
-        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Nom de la box</label>
+        <label className="block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2">Nom de la box</label>
         <input type="text" value={name} autoFocus
           placeholder="CrossFit Lyon"
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
-          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
 
         <button onClick={submit} disabled={saving || !name.trim()}
           className="mt-6 w-full py-4 rounded-2xl text-white font-black text-base transition"

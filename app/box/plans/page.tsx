@@ -30,11 +30,11 @@ export default function PlansPage() {
   if (!org) return null
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <div className="pt-8 pb-4">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Abonnements</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
+          <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Abonnements</h1>
+          <p className="text-sm text-[var(--muted)] mt-0.5">{org.orgName}</p>
         </div>
 
         {canEdit && (
@@ -46,19 +46,19 @@ export default function PlansPage() {
         )}
 
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>
         ) : plans.length === 0 ? (
-          <p className="text-sm text-gray-300 text-center py-8">Aucun plan pour l’instant.</p>
+          <p className="text-sm text-[var(--border-strong)] text-center py-8">Aucun plan pour l’instant.</p>
         ) : (
           <div className="space-y-2">
             {plans.map(p => (
-              <div key={p.id} className={`bg-white rounded-xl border p-3 ${p.active ? 'border-gray-200' : 'border-gray-200 opacity-60'}`}>
+              <div key={p.id} className={`bg-[var(--card)] rounded-xl border p-3 ${p.active ? 'border-[color:var(--border)]' : 'border-[color:var(--border)] opacity-60'}`}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-800 truncate">
-                      {p.name} {!p.active && <span className="text-[10px] font-bold text-gray-400">(inactif)</span>}
+                    <p className="text-sm font-bold text-[var(--ink)] truncate">
+                      {p.name} {!p.active && <span className="text-[10px] font-bold text-[var(--muted)]">(inactif)</span>}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-[var(--muted)]">
                       {PLAN_KIND_LABEL[p.kind]}
                       {p.kind === 'pack' && p.credits ? ` · ${p.credits} séances` : ''}
                       {p.durationDays ? ` · ${p.durationDays} j` : ''}
@@ -66,11 +66,11 @@ export default function PlansPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-sm font-black text-gray-900">{formatPrice(p.priceCents, p.currency)}</span>
+                    <span className="text-sm font-black text-[var(--ink)]">{formatPrice(p.priceCents, p.currency)}</span>
                     {canEdit && (
                       <>
-                        <button onClick={() => setEditing(p)} className="text-gray-400 hover:text-gray-700 text-sm font-bold px-1">✎</button>
-                        <button onClick={() => remove(p)} className="text-gray-300 hover:text-red-500 text-xl px-1">×</button>
+                        <button onClick={() => setEditing(p)} className="text-[var(--muted)] hover:text-[var(--ink-soft)] text-sm font-bold px-1">✎</button>
+                        <button onClick={() => remove(p)} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-1">×</button>
                       </>
                     )}
                   </div>
@@ -96,8 +96,8 @@ function PlanForm({ orgId, initial, onClose, onSaved }: {
   const [priceEuros, setPriceEuros] = useState(((initial?.priceCents ?? 0) / 100).toString())
   const [saving, setSaving] = useState(false)
 
-  const fieldCls = 'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
-  const labelCls = 'block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5'
+  const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
+  const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-1.5'
   const upd = (patch: Partial<NewPlan>) => setP(v => ({ ...v, ...patch }))
 
   const submit = async () => {
@@ -114,9 +114,9 @@ function PlanForm({ orgId, initial, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
-        <h2 className="text-lg font-black text-gray-900 mb-4">{initial ? 'Modifier le plan' : 'Nouveau plan'}</h2>
+      <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
+        <h2 className="text-lg font-black text-[var(--ink)] mb-4">{initial ? 'Modifier le plan' : 'Nouveau plan'}</h2>
 
         <div className="space-y-3">
           <div>
@@ -153,13 +153,13 @@ function PlanForm({ orgId, initial, onClose, onSaved }: {
             <label className="flex items-end gap-2 pb-2.5">
               <input type="checkbox" className="w-5 h-5 accent-orange-500" checked={p.recurring}
                 onChange={e => upd({ recurring: e.target.checked })} />
-              <span className="text-sm font-semibold text-gray-700">Récurrent</span>
+              <span className="text-sm font-semibold text-[var(--ink-soft)]">Récurrent</span>
             </label>
           </div>
           <label className="flex items-center gap-2">
             <input type="checkbox" className="w-5 h-5 accent-orange-500" checked={p.active}
               onChange={e => upd({ active: e.target.checked })} />
-            <span className="text-sm font-semibold text-gray-700">Actif (visible par les membres)</span>
+            <span className="text-sm font-semibold text-[var(--ink-soft)]">Actif (visible par les membres)</span>
           </label>
         </div>
 

@@ -103,17 +103,17 @@ export default function PlanningPage() {
   const activeDay = selectedDay ?? defaultDay
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <div className="pt-8 pb-4 flex items-end justify-between">
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Planning</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
+            <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Planning</h1>
+            <p className="text-sm text-[var(--muted)] mt-0.5">{org.orgName}</p>
           </div>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white text-xs font-bold">
+          <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-xs font-bold">
             {(['week', 'month'] as const).map(v => (
               <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2"
-                style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+                style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
                 {v === 'week' ? 'Semaine' : 'Mois'}
               </button>
             ))}
@@ -121,13 +121,13 @@ export default function PlanningPage() {
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => shift(-1)} className="w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-600 text-lg leading-none">‹</button>
-          <p className="text-sm font-bold text-gray-700 text-center">
+          <button onClick={() => shift(-1)} className="w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">‹</button>
+          <p className="text-sm font-bold text-[var(--ink-soft)] text-center">
             {view === 'week'
               ? `${range.monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${weekDays[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
               : `${MONTHS[anchor.getMonth()]} ${anchor.getFullYear()}`}
           </p>
-          <button onClick={() => shift(1)} className="w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-600 text-lg leading-none">›</button>
+          <button onClick={() => shift(1)} className="w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">›</button>
         </div>
 
         <button onClick={() => setShowForm(true)}
@@ -136,20 +136,20 @@ export default function PlanningPage() {
         </button>
 
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>
         ) : (
           <>
             {view === 'week' ? (
-              <div className="bg-white rounded-2xl border border-gray-200 p-3 mb-4">
+              <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-3 mb-4">
                 <div className="grid grid-cols-7 gap-1">
                   {weekDays.map((d, i) => {
                     const ds = iso(d); const count = onDay(ds).length; const sel = activeDay === ds
                     return (
                       <button key={i} onClick={() => setSelectedDay(ds)}
                         className="min-h-16 rounded-lg flex flex-col items-center justify-center gap-0.5"
-                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? '#FFF7ED' : '#F9FAFB' }}>
-                        <span className={`text-[10px] font-bold ${sel ? 'text-white' : 'text-gray-400'}`}>{DAY_WK[i]}</span>
-                        <span className={`text-sm font-black ${sel ? 'text-white' : 'text-gray-700'}`}>{d.getDate()}</span>
+                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
+                        <span className={`text-[10px] font-bold ${sel ? 'text-white' : 'text-[var(--muted)]'}`}>{DAY_WK[i]}</span>
+                        <span className={`text-sm font-black ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{d.getDate()}</span>
                         {count > 0 && <span className={`text-[8px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
                       </button>
                     )
@@ -157,9 +157,9 @@ export default function PlanningPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-200 p-3 mb-4">
+              <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-3 mb-4">
                 <div className="grid grid-cols-7 mb-1">
-                  {DAY_HDR.map((d, i) => <p key={i} className="text-center text-[10px] font-bold text-gray-400">{d}</p>)}
+                  {DAY_HDR.map((d, i) => <p key={i} className="text-center text-[10px] font-bold text-[var(--muted)]">{d}</p>)}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
                   {monthCells(anchor.getFullYear(), anchor.getMonth()).map((day, i) => {
@@ -168,8 +168,8 @@ export default function PlanningPage() {
                     const count = onDay(ds).length; const sel = activeDay === ds
                     return (
                       <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center"
-                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? '#FFF7ED' : '#F9FAFB' }}>
-                        <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-gray-700'}`}>{day}</span>
+                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
+                        <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{day}</span>
                         {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
                       </button>
                     )
@@ -180,20 +180,20 @@ export default function PlanningPage() {
 
             {/* Selected day's classes */}
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">
                 {new Date(activeDay + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
-              <div className="flex rounded-lg overflow-hidden border border-gray-200 bg-white text-[11px] font-bold">
+              <div className="flex rounded-lg overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-[11px] font-bold">
                 {(['list', 'timeline'] as const).map(v => (
                   <button key={v} onClick={() => setDayView(v)} className="px-2.5 py-1"
-                    style={dayView === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+                    style={dayView === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
                     {v === 'list' ? 'Liste' : 'Horaires'}
                   </button>
                 ))}
               </div>
             </div>
             {onDay(activeDay).length === 0 ? (
-              <p className="text-sm text-gray-300 py-2">Aucun cours ce jour.</p>
+              <p className="text-sm text-[var(--border-strong)] py-2">Aucun cours ce jour.</p>
             ) : dayView === 'list' ? (
               <div className="space-y-2">{onDay(activeDay).map(c => (
                 <OccRow key={c.id + c.date} c={c} coachName={coachName} onDelete={onDelete}
@@ -206,7 +206,7 @@ export default function PlanningPage() {
                   (acc[c.startTime] ??= []).push(c); return acc
                 }, {})).sort(([a], [b]) => a.localeCompare(b)).map(([time, cs]) => (
                   <div key={time} className="flex gap-2">
-                    <div className="w-11 flex-shrink-0 text-xs font-black text-gray-400 pt-2">{time}</div>
+                    <div className="w-11 flex-shrink-0 text-xs font-black text-[var(--muted)] pt-2">{time}</div>
                     <div className="flex-1 grid grid-cols-2 gap-2">
                       {cs.map(c => {
                         const bk = bookings.get(bookingKey(c.id, c.date))
@@ -214,10 +214,10 @@ export default function PlanningPage() {
                         const full = booked >= c.capacity
                         return (
                           <button key={c.id + c.date} onClick={() => setAttendeesFor(c)}
-                            className="rounded-xl border border-gray-200 bg-white p-2.5 text-left">
-                            <p className="text-xs font-bold text-gray-800 truncate">{c.title}</p>
-                            <p className="text-[10px] text-gray-400">{c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
-                            <p className={`text-[10px] font-bold ${full ? 'text-red-500' : 'text-gray-500'}`}>{booked}/{c.capacity}</p>
+                            className="rounded-xl border border-[color:var(--border)] bg-[var(--card)] p-2.5 text-left">
+                            <p className="text-xs font-bold text-[var(--ink)] truncate">{c.title}</p>
+                            <p className="text-[10px] text-[var(--muted)]">{c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
+                            <p className={`text-[10px] font-bold ${full ? 'text-red-500' : 'text-[var(--sub)]'}`}>{booked}/{c.capacity}</p>
                           </button>
                         )
                       })}
@@ -250,23 +250,23 @@ function OccRow({ c, coachName, onDelete, booking, onOpen, onLeave }: {
   const waiting = booking?.waitlistCount ?? 0
   const full = booked >= c.capacity
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between gap-2">
+    <div className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 flex items-center justify-between gap-2">
       <button onClick={onOpen} className="min-w-0 text-left flex-1">
-        <p className="text-sm font-bold text-gray-800 truncate">
+        <p className="text-sm font-bold text-[var(--ink)] truncate">
           {c.title}
           {onLeave && <span className="ml-1.5 text-[10px] font-bold text-amber-600">⚠️ coach en congé</span>}
         </p>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-[var(--muted)]">
           {c.startTime}–{endTime(c.startTime, c.durationMin)} · {c.durationMin} min
           {coachName(c.coachUserId) && ` · ${coachName(c.coachUserId)}`}
         </p>
         <p className="text-xs mt-0.5">
-          <span className={`font-bold ${full ? 'text-red-500' : 'text-gray-600'}`}>{booked}/{c.capacity}</span>
-          <span className="text-gray-400"> réservés</span>
+          <span className={`font-bold ${full ? 'text-red-500' : 'text-[var(--ink-soft)]'}`}>{booked}/{c.capacity}</span>
+          <span className="text-[var(--muted)]"> réservés</span>
           {waiting > 0 && <span className="text-amber-600 font-semibold"> · {waiting} en attente</span>}
         </p>
       </button>
-      <button onClick={() => onDelete(c)} className="text-gray-300 hover:text-red-500 text-xl px-2 flex-shrink-0">×</button>
+      <button onClick={() => onDelete(c)} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-2 flex-shrink-0">×</button>
     </div>
   )
 }
@@ -287,21 +287,21 @@ function AttendeesSheet({ occ, onClose }: { occ: ClassOccurrence; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
-        <h2 className="text-lg font-black text-gray-900">{occ.title}</h2>
-        <p className="text-xs text-gray-400 mb-4">{dateLabel} · {occ.startTime}</p>
+      <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
+        <h2 className="text-lg font-black text-[var(--ink)]">{occ.title}</h2>
+        <p className="text-xs text-[var(--muted)] mb-4">{dateLabel} · {occ.startTime}</p>
 
         {att === null ? (
-          <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-6">Chargement…</p>
         ) : (
           <>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Inscrits ({booked.length}/{occ.capacity})</p>
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2">Inscrits ({booked.length}/{occ.capacity})</p>
             {booked.length === 0
-              ? <p className="text-sm text-gray-300 mb-3">Personne d’inscrit.</p>
+              ? <p className="text-sm text-[var(--border-strong)] mb-3">Personne d’inscrit.</p>
               : <div className="space-y-1.5 mb-4">{booked.map(a => (
-                  <div key={a.userId} className="flex items-center gap-2 text-sm text-gray-800">
-                    <span className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 text-xs font-bold flex items-center justify-center">
+                  <div key={a.userId} className="flex items-center gap-2 text-sm text-[var(--ink)]">
+                    <span className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] text-xs font-bold flex items-center justify-center">
                       {(a.firstName ?? '?').charAt(0).toUpperCase()}
                     </span>
                     {a.firstName ?? 'Membre'}
@@ -310,10 +310,10 @@ function AttendeesSheet({ occ, onClose }: { occ: ClassOccurrence; onClose: () =>
 
             {waiting.length > 0 && (
               <>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Liste d’attente ({waiting.length})</p>
+                <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2">Liste d’attente ({waiting.length})</p>
                 <div className="space-y-1.5">{waiting.map(a => (
-                  <div key={a.userId} className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center">{a.position}</span>
+                  <div key={a.userId} className="flex items-center gap-2 text-sm text-[var(--ink-soft)]">
+                    <span className="w-6 h-6 rounded-full bg-[var(--track)] text-[var(--sub)] text-xs font-bold flex items-center justify-center">{a.position}</span>
                     {a.firstName ?? 'Membre'}
                     {a.notified && <span className="text-[11px] text-amber-600 font-semibold">· prévenu</span>}
                   </div>
@@ -340,8 +340,8 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
   const [slots, setSlots] = useState<WeeklySlot[]>([{ weekday: 0, time: '18:00' }])
   const [saving, setSaving] = useState(false)
 
-  const fieldCls = 'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
-  const labelCls = 'block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5'
+  const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
+  const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-1.5'
 
   const types = sessionTypes.length > 0 ? sessionTypes : DEFAULT_SESSION_TYPES
   const pickType = (name: string) => {
@@ -372,10 +372,10 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
-        <h2 className="text-lg font-black text-gray-900 mb-1">Cours récurrent</h2>
-        <p className="text-xs text-gray-400 mb-4">Se répète chaque semaine, jusqu’à ce que tu le supprimes.</p>
+      <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
+        <h2 className="text-lg font-black text-[var(--ink)] mb-1">Cours récurrent</h2>
+        <p className="text-xs text-[var(--muted)] mb-4">Se répète chaque semaine, jusqu’à ce que tu le supprimes.</p>
 
         <div className="space-y-3">
           <div>
@@ -403,7 +403,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
             <label className={labelCls}>Liste d’attente</label>
             <input type="number" min={0} className={fieldCls} value={waitlist} placeholder="Défaut de la box"
               onChange={e => setWaitlist(e.target.value)} />
-            <p className="text-[11px] text-gray-400 mt-1">Laisse vide pour utiliser le réglage de la box.</p>
+            <p className="text-[11px] text-[var(--muted)] mt-1">Laisse vide pour utiliser le réglage de la box.</p>
           </div>
           <div>
             <label className={labelCls}>Coach</label>
@@ -417,27 +417,27 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
             <label className={labelCls}>Jours &amp; horaires</label>
             <div className="space-y-2">
               {slots.map((s, i) => (
-                <div key={i} className="rounded-xl border border-gray-200 p-2.5">
+                <div key={i} className="rounded-xl border border-[color:var(--border)] p-2.5">
                   <div className="flex gap-1 mb-2">
                     {DAY_ABBR.map((d, idx) => (
                       <button key={idx} onClick={() => updSlot(i, { weekday: idx })}
                         className="flex-1 h-8 rounded-lg text-[11px] font-bold transition"
-                        style={s.weekday === idx ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { background: '#F3F4F6', color: '#6B7280' }}>
+                        style={s.weekday === idx ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { background: 'var(--track)', color: 'var(--sub)' }}>
                         {d}
                       </button>
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="time" className={`${fieldCls} flex-1`} value={s.time} onChange={e => updSlot(i, { time: e.target.value })} />
-                    <span className="text-xs text-gray-400 whitespace-nowrap">→ {endTime(s.time, duration)}</span>
+                    <span className="text-xs text-[var(--muted)] whitespace-nowrap">→ {endTime(s.time, duration)}</span>
                     {slots.length > 1 && (
-                      <button onClick={() => setSlots(arr => arr.filter((_, j) => j !== i))} className="text-gray-300 hover:text-red-500 text-xl px-2">×</button>
+                      <button onClick={() => setSlots(arr => arr.filter((_, j) => j !== i))} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-2">×</button>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-            <button onClick={() => setSlots(s => [...s, { weekday: 0, time: '18:00' }])} className="mt-2 text-sm font-bold text-orange-600">+ Ajouter un créneau</button>
+            <button onClick={() => setSlots(s => [...s, { weekday: 0, time: '18:00' }])} className="mt-2 text-sm font-bold text-[var(--accent-text)]">+ Ajouter un créneau</button>
           </div>
         </div>
 

@@ -102,13 +102,13 @@ export default function SessionsPage() {
   ).slice(0, 4)
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4">
 
         {/* Back button */}
         <div className="pt-5">
           <button onClick={() => router.push('/')}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-gray-600 transition">
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)] hover:text-[var(--ink-soft)] transition">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -119,18 +119,18 @@ export default function SessionsPage() {
         {/* Header */}
         <div className="pt-2 pb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-gray-900">Historique</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{sessions.length} séance{sessions.length !== 1 ? 's' : ''}</p>
+            <h1 className="text-2xl font-black text-[var(--ink)]">Historique</h1>
+            <p className="text-sm text-[var(--muted)] mt-0.5">{sessions.length} séance{sessions.length !== 1 ? 's' : ''}</p>
           </div>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
+          <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)]">
             <button onClick={() => setView('cal')}
               className="px-3 py-2 text-sm font-semibold transition cursor-pointer"
-              style={view === 'cal' ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+              style={view === 'cal' ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
               📅
             </button>
             <button onClick={() => setView('list')}
               className="px-3 py-2 text-sm font-semibold transition cursor-pointer"
-              style={view === 'list' ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: '#6B7280' }}>
+              style={view === 'list' ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
               ☰
             </button>
           </div>
@@ -141,18 +141,18 @@ export default function SessionsPage() {
         ) : view === 'cal' ? (
 
           /* ── Vue calendrier ──────────────────────────────── */
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 mb-4">
 
             {/* Navigation mois */}
             <div className="flex items-center justify-between mb-3">
               <button onClick={prevM}
-                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 text-xl leading-none">
+                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--hover)] text-[var(--ink-soft)] text-xl leading-none">
                 ‹
               </button>
-              <h2 className="text-sm font-bold text-gray-800">{MONTHS_FR[calM]} {calY}</h2>
+              <h2 className="text-sm font-bold text-[var(--ink)]">{MONTHS_FR[calM]} {calY}</h2>
               <button onClick={nextM} disabled={isNow}
                 className={`w-9 h-9 flex items-center justify-center rounded-full text-xl leading-none transition ${
-                  isNow ? 'text-gray-200 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-600'
+                  isNow ? 'text-[var(--border)] cursor-not-allowed' : 'hover:bg-[var(--hover)] text-[var(--ink-soft)]'
                 }`}>
                 ›
               </button>
@@ -161,7 +161,7 @@ export default function SessionsPage() {
             {/* Entêtes jours */}
             <div className="grid grid-cols-7 mb-1">
               {DAYS_HDR.map((d, i) => (
-                <p key={i} className="text-center text-[11px] font-semibold text-gray-400 py-1">{d}</p>
+                <p key={i} className="text-center text-[11px] font-semibold text-[var(--muted)] py-1">{d}</p>
               ))}
             </div>
 
@@ -186,7 +186,7 @@ export default function SessionsPage() {
                       border: first?.is_demo ? '1.5px dashed #D1D5DB' : undefined,
                     }}>
                     <span className={`text-xs font-bold leading-none mb-0.5 ${
-                      isToday ? 'text-orange-500' : items.length > 0 ? 'text-gray-700' : 'text-gray-300'
+                      isToday ? 'text-orange-500' : items.length > 0 ? 'text-[var(--ink-soft)]' : 'text-[var(--border-strong)]'
                     }`}>
                       {day}
                     </span>
@@ -194,7 +194,7 @@ export default function SessionsPage() {
                       <span className="text-base leading-none">{first.session_types.emoji}</span>
                     )}
                     {items.length > 1 && (
-                      <span className="text-[10px] font-bold text-gray-400 leading-none mt-0.5">+{items.length - 1}</span>
+                      <span className="text-[10px] font-bold text-[var(--muted)] leading-none mt-0.5">+{items.length - 1}</span>
                     )}
                   </button>
                 )
@@ -202,20 +202,20 @@ export default function SessionsPage() {
             </div>
 
             {/* Résumé du mois */}
-            <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="mt-3 pt-3 border-t border-[color:var(--track)]">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold text-gray-700 whitespace-nowrap">
+                <p className="text-xs font-bold text-[var(--ink-soft)] whitespace-nowrap">
                   {monthSessions.length} séance{monthSessions.length !== 1 ? 's' : ''}
                 </p>
                 <div className="flex items-center gap-2 overflow-x-auto">
                   {monthTypes.map(([name, type]) => (
-                    <span key={name} className="text-[11px] text-gray-400 whitespace-nowrap flex items-center gap-0.5">
+                    <span key={name} className="text-[11px] text-[var(--muted)] whitespace-nowrap flex items-center gap-0.5">
                       <span>{type.emoji}</span>
                       <span>{name}</span>
                     </span>
                   ))}
                   {Array.from(new Map(monthSessions.map(s => [s.session_types.name, s.session_types])).entries()).length > 4 && (
-                    <span className="text-[11px] text-gray-300 whitespace-nowrap">…</span>
+                    <span className="text-[11px] text-[var(--border-strong)] whitespace-nowrap">…</span>
                   )}
                 </div>
               </div>
@@ -232,7 +232,7 @@ export default function SessionsPage() {
                   className="px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap flex-shrink-0 transition cursor-pointer"
                   style={filter === t
                     ? { background: 'var(--theme-primary, #F97316)', borderColor: 'var(--theme-primary, #F97316)', color: '#fff' }
-                    : { background: '#fff', borderColor: '#E5E7EB', color: '#6B7280' }}>
+                    : { background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--sub)' }}>
                   {t}
                 </button>
               ))}
@@ -241,7 +241,7 @@ export default function SessionsPage() {
             {filtered.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-3xl mb-3">📋</p>
-                <p className="text-sm font-semibold text-gray-700 mb-1">Aucune séance trouvée</p>
+                <p className="text-sm font-semibold text-[var(--ink-soft)] mb-1">Aucune séance trouvée</p>
                 <Link href="/log"
                   className="inline-block text-white text-sm font-bold px-5 py-2.5 rounded-xl mt-2"
                   style={{ background: 'var(--theme-primary, #F97316)' }}>
@@ -251,25 +251,25 @@ export default function SessionsPage() {
             ) : (
               Object.entries(groups).map(([month, items]) => (
                 <div key={month} className="mb-6">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{month}</p>
+                  <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-2">{month}</p>
                   <div className="space-y-1.5">
                     {items.map(s => (
                       <Link key={s.id} href={`/sessions/${s.id}?from=sessions`}
-                        className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:shadow-sm transition">
+                        className="flex items-center gap-3 bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 hover:shadow-sm transition">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                           style={{ background: s.session_types.color + '15', border: `1.5px solid ${s.session_types.color}30` }}>
                           {s.session_types.emoji}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-bold text-gray-800">{s.session_types.name}</p>
+                            <p className="text-sm font-bold text-[var(--ink)]">{s.session_types.name}</p>
                             {s.is_demo && (
-                              <span className="text-[10px] font-bold text-gray-400 border border-dashed border-gray-300 px-1.5 py-0.5 rounded-full leading-none">
+                              <span className="text-[10px] font-bold text-[var(--muted)] border border-dashed border-[color:var(--border-strong)] px-1.5 py-0.5 rounded-full leading-none">
                                 DÉMO
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-[var(--muted)]">
                             {relDate(s.date)}{s.duration_min ? ` · ${s.duration_min} min` : ''}
                           </p>
                         </div>
@@ -281,7 +281,7 @@ export default function SessionsPage() {
                               {s.rpe}
                             </span>
                           )}
-                          <span className="text-gray-300 text-sm">›</span>
+                          <span className="text-[var(--border-strong)] text-sm">›</span>
                         </div>
                       </Link>
                     ))}

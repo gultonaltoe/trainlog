@@ -5,8 +5,8 @@ import { useAppContext } from '@/components/AppContext'
 import { getOrganization, updateOrgInfo, type OrgProfile } from '@/lib/orgs'
 import { toast } from '@/lib/toast'
 
-const inputCls = 'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400'
-const labelCls = 'block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2'
+const inputCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3 text-[var(--ink)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400'
+const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2'
 
 function BoxProfile() {
   const { active, memberships } = useAppContext()
@@ -45,7 +45,7 @@ function BoxProfile() {
     setSaving(false)
   }
 
-  if (!p) return <div className="text-center text-gray-400 text-sm pt-20">Chargement…</div>
+  if (!p) return <div className="text-center text-[var(--muted)] text-sm pt-20">Chargement…</div>
 
   const rows: { key: keyof OrgProfile; label: string; placeholder: string }[] = [
     { key: 'description', label: 'Description', placeholder: 'Box CrossFit au cœur de Lyon…' },
@@ -55,17 +55,17 @@ function BoxProfile() {
   ]
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <div className="pt-8 pb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Infos de la box</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{canEdit ? 'Modifiable' : 'Lecture seule'}</p>
+            <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Infos de la box</h1>
+            <p className="text-sm text-[var(--muted)] mt-0.5">{canEdit ? 'Modifiable' : 'Lecture seule'}</p>
           </div>
-          <button onClick={() => router.back()} className="text-sm font-semibold text-gray-400">Retour</button>
+          <button onClick={() => router.back()} className="text-sm font-semibold text-[var(--muted)]">Retour</button>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+        <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 space-y-4">
           <div>
             <label className={labelCls}>Nom</label>
             <input className={inputCls} value={p.name} disabled={!canEdit}

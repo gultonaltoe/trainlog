@@ -14,7 +14,7 @@ const EMP_LABEL: Record<EmploymentStatus, string> = { active: 'Actif', on_leave:
 const COACH_ROLES: Role[] = ['owner', 'coach']
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
-const selCls = 'rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400'
+const selCls = 'rounded-lg border border-[color:var(--border-strong)] bg-[var(--card)] px-2 py-1 text-xs font-bold text-[var(--ink-soft)] focus:outline-none focus:ring-2 focus:ring-orange-400'
 
 export default function StaffPage() {
   const org = useBoxGuard()
@@ -50,11 +50,11 @@ export default function StaffPage() {
   if (!org) return null
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <div className="pt-8 pb-4">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Coachs</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{org.orgName}</p>
+          <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Coachs</h1>
+          <p className="text-sm text-[var(--muted)] mt-0.5">{org.orgName}</p>
         </div>
 
         {canManage && (
@@ -68,12 +68,12 @@ export default function StaffPage() {
         {/* Pending invites */}
         {!loading && invites.length > 0 && (
           <div className="mb-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Invitations en attente</p>
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-2">Invitations en attente</p>
             <div className="space-y-2">
               {invites.map(i => (
                 <div key={i.id} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-800 truncate">{i.email}</p>
+                    <p className="text-sm font-bold text-[var(--ink)] truncate">{i.email}</p>
                     <p className="text-[11px] text-amber-700">{ROLE_LABEL[i.role]} · en attente de 1ʳᵉ connexion</p>
                   </div>
                   {canManage && (
@@ -86,17 +86,17 @@ export default function StaffPage() {
         )}
 
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>
         ) : (
           <div className="space-y-2">
             {staff.map(m => {
               const isOwner = m.role === 'owner'
               return (
-                <div key={m.membershipId} className="bg-white rounded-xl border border-gray-200 p-3">
+                <div key={m.membershipId} className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <button onClick={() => setDetailFor(m)} className="flex items-center gap-3 min-w-0 text-left">
-                      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">🧑‍🏫</div>
-                      <p className="text-sm font-bold text-gray-800 truncate">{m.firstName ?? ROLE_LABEL[m.role]}</p>
+                      <div className="w-9 h-9 rounded-full bg-[var(--track)] flex items-center justify-center flex-shrink-0">🧑‍🏫</div>
+                      <p className="text-sm font-bold text-[var(--ink)] truncate">{m.firstName ?? ROLE_LABEL[m.role]}</p>
                     </button>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {canManage && !isOwner ? (
@@ -104,14 +104,14 @@ export default function StaffPage() {
                           <select className={selCls} value={m.employmentStatus ?? 'active'} onChange={e => changeEmp(m, e.target.value as EmploymentStatus)}>
                             {(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => <option key={k} value={k}>{EMP_LABEL[k]}</option>)}
                           </select>
-                          <button onClick={() => remove(m)} className="text-gray-300 hover:text-red-500 text-xl px-1">×</button>
+                          <button onClick={() => remove(m)} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-1">×</button>
                         </>
                       ) : (
                         <>
                           {m.employmentStatus && m.employmentStatus !== 'active' && (
                             <span className="text-[11px] text-amber-600 font-bold">{EMP_LABEL[m.employmentStatus]}</span>
                           )}
-                          <span className="text-[11px] font-bold text-gray-400">{ROLE_LABEL[m.role]}</span>
+                          <span className="text-[11px] font-bold text-[var(--muted)]">{ROLE_LABEL[m.role]}</span>
                         </>
                       )}
                     </div>
@@ -122,7 +122,7 @@ export default function StaffPage() {
           </div>
         )}
 
-        <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
+        <p className="text-xs text-[var(--muted)] text-center mt-4 leading-relaxed">
           Le coach est ajouté automatiquement à sa première connexion avec l’email invité.
         </p>
       </div>
@@ -152,7 +152,7 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
   const [start, setStart] = useState(coach.leaveStart ?? '')
   const [end, setEnd] = useState(coach.leaveEnd ?? '')
   const [saving, setSaving] = useState(false)
-  const inputCls = 'rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400'
+  const inputCls = 'rounded-lg border border-[color:var(--border-strong)] bg-[var(--card)] px-2 py-1.5 text-xs text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400'
 
   const save = async () => {
     setSaving(true)
@@ -162,13 +162,13 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+      <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-2xl">🧑‍🏫</div>
+          <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl">🧑‍🏫</div>
           <div>
-            <h2 className="text-lg font-black text-gray-900">{coach.firstName ?? ROLE_LABEL[coach.role]}</h2>
-            <p className="text-xs text-gray-400">
+            <h2 className="text-lg font-black text-[var(--ink)]">{coach.firstName ?? ROLE_LABEL[coach.role]}</h2>
+            <p className="text-xs text-[var(--muted)]">
               {ROLE_LABEL[coach.role]}
               {coach.employmentStatus && coach.employmentStatus !== 'active' && ` · ${EMP_LABEL[coach.employmentStatus]}`}
               {coach.employmentStatus === 'on_leave' && coach.leaveStart && ` (${coach.leaveStart} → ${coach.leaveEnd ?? '…'})`}
@@ -177,15 +177,15 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
         </div>
 
         {canManage && (
-          <div className="mt-4 bg-gray-50 rounded-xl p-3 space-y-2">
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Statut</p>
+          <div className="mt-4 bg-[var(--bg)] rounded-xl p-3 space-y-2">
+            <p className="text-[11px] font-bold text-[var(--muted)] uppercase tracking-wide">Statut</p>
             <select className={`${inputCls} w-full`} value={emp} onChange={e => setEmp(e.target.value as EmploymentStatus)}>
               {(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => <option key={k} value={k}>{EMP_LABEL[k]}</option>)}
             </select>
             {emp === 'on_leave' && (
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-[11px] text-gray-400">Début<input type="date" className={`${inputCls} w-full`} value={start} onChange={e => setStart(e.target.value)} /></label>
-                <label className="text-[11px] text-gray-400">Fin<input type="date" className={`${inputCls} w-full`} value={end} onChange={e => setEnd(e.target.value)} /></label>
+                <label className="text-[11px] text-[var(--muted)]">Début<input type="date" className={`${inputCls} w-full`} value={start} onChange={e => setStart(e.target.value)} /></label>
+                <label className="text-[11px] text-[var(--muted)]">Fin<input type="date" className={`${inputCls} w-full`} value={end} onChange={e => setEnd(e.target.value)} /></label>
               </div>
             )}
             <button onClick={save} disabled={saving}
@@ -196,18 +196,18 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
           </div>
         )}
 
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mt-5 mb-2">Cours encadrés ({byDay.length})</p>
+        <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wide mt-5 mb-2">Cours encadrés ({byDay.length})</p>
         {byDay.length === 0 ? (
-          <p className="text-sm text-gray-300">Aucun cours assigné à ce coach.</p>
+          <p className="text-sm text-[var(--border-strong)]">Aucun cours assigné à ce coach.</p>
         ) : (
           <div className="space-y-2">
             {byDay.map(c => (
-              <div key={c.id} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
+              <div key={c.id} className="bg-[var(--bg)] rounded-xl p-3 flex items-center justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-gray-800 truncate">{c.title}</p>
-                  <p className="text-xs text-gray-400">{DAYS[c.weekday]} · {c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
+                  <p className="text-sm font-bold text-[var(--ink)] truncate">{c.title}</p>
+                  <p className="text-xs text-[var(--muted)]">{DAYS[c.weekday]} · {c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
                 </div>
-                <span className="text-xs text-gray-400 flex-shrink-0">{c.capacity} pl.</span>
+                <span className="text-xs text-[var(--muted)] flex-shrink-0">{c.capacity} pl.</span>
               </div>
             ))}
           </div>
@@ -222,8 +222,8 @@ function InviteForm({ orgId, onClose, onSaved }: { orgId: string; onClose: () =>
   const [role, setRole] = useState<InviteRole>('coach')
   const [saving, setSaving] = useState(false)
 
-  const fieldCls = 'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
-  const labelCls = 'block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5'
+  const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
+  const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-1.5'
 
   const submit = async () => {
     if (!email.trim()) { toast.error('Email requis'); return }
@@ -239,10 +239,10 @@ function InviteForm({ orgId, onClose, onSaved }: { orgId: string; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg rounded-t-3xl p-5 pb-8" onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
-        <h2 className="text-lg font-black text-gray-900 mb-1">Inviter par email</h2>
-        <p className="text-xs text-gray-400 mb-4">La personne est ajoutée automatiquement à sa première connexion avec cet email.</p>
+      <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
+        <h2 className="text-lg font-black text-[var(--ink)] mb-1">Inviter par email</h2>
+        <p className="text-xs text-[var(--muted)] mb-4">La personne est ajoutée automatiquement à sa première connexion avec cet email.</p>
 
         <div className="space-y-3">
           <div>

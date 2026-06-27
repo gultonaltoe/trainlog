@@ -8,7 +8,7 @@ export default function BoxSettingsPage() {
   if (!org) return null
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[var(--bg)] min-h-screen">
       <div className="max-w-lg mx-auto px-4 pb-8">
         <PageHeader title="Réglages" subtitle={org.orgName} />
         <div className="space-y-2">

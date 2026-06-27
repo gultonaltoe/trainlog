@@ -43,12 +43,12 @@ export default function ReservationSettingsPage() {
   if (!org) return null
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[var(--bg)] min-h-screen">
       <div className="max-w-lg mx-auto px-4 pb-8">
         <PageHeader title="Réservations" subtitle="Règles de réservation des membres" backHref="/box/settings" />
 
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-10">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-10">Chargement…</p>
         ) : (
           <div className="space-y-4">
             <Card className="p-4 space-y-4">
@@ -64,7 +64,7 @@ export default function ReservationSettingsPage() {
                       value={resa.waitlistMode}
                       onChange={v => canEdit && upd({ waitlistMode: v })}
                       options={[['auto_promote', 'Promotion auto'], ['notify', 'Notifier 1er'], ['notify_all', 'Notifier tous']]} />
-                    <p className="text-[11px] text-gray-400 mt-1.5">
+                    <p className="text-[11px] text-[var(--muted)] mt-1.5">
                       {resa.waitlistMode === 'auto_promote'
                         ? 'Le premier en attente est automatiquement inscrit.'
                         : resa.waitlistMode === 'notify_all'

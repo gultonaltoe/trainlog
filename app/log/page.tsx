@@ -42,10 +42,10 @@ const RUN_SURFACES   = ['Route','Trail','Piste','Tapis']
 const PAIN_PARTS     = ['Épaule G','Épaule D','Poignet G','Poignet D','Coude G','Coude D','Avant-bras G','Avant-bras D','Genou G','Genou D','Hanche G','Hanche D','Bas du dos','Lombaires','Cheville G','Cheville D','Cou','Quad G','Quad D','Ischio G','Ischio D']
 const SEVERITY       = [
   { v: 1 as const, l: 'Légère',  cls: 'border-yellow-300 bg-yellow-50 text-yellow-700' },
-  { v: 2 as const, l: 'Modérée', cls: 'border-orange-300 bg-orange-50 text-orange-700' },
+  { v: 2 as const, l: 'Modérée', cls: 'border-orange-300 bg-[var(--accent-soft)] text-[var(--accent-text)]' },
   { v: 3 as const, l: 'Forte',   cls: 'border-red-300 bg-red-50 text-red-700'          },
 ]
-const SEV_PILL   = ['','bg-yellow-100 text-yellow-700','bg-orange-100 text-orange-700','bg-red-100 text-red-700']
+const SEV_PILL   = ['','bg-yellow-100 text-yellow-700','bg-[var(--accent-soft)] text-[var(--accent-text)]','bg-red-100 text-red-700']
 const RPE_COLORS = ['#3B82F6','#3B82F6','#3B82F6','#F59E0B','#F59E0B','#D97706','#EA580C','#EA580C','#EF4444','#DC2626']
 const RPE_LABELS = ['','Très facile','Facile','Un peu dur','Modéré','Modéré+','Dur','Très dur','Intense','Extrême','Maximum']
 
@@ -141,8 +141,8 @@ function ivPace(distance: string, timeMin: string, timeSec: string): string | nu
   return `${Math.floor(paceSecKm / 60)}'${String(Math.round(paceSecKm % 60)).padStart(2,'0')}"/km`
 }
 
-const inputCls = "w-full rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
-const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2"
+const inputCls = "w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400"
+const labelCls = "block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2"
 
 // ── Composant principal ────────────────────────────────────
 export default function LogPage() {
@@ -485,22 +485,22 @@ export default function LogPage() {
       <div className="w-full max-w-sm text-center space-y-5">
         <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-4xl mx-auto">✓</div>
         <div>
-          <h2 className="text-2xl font-black text-gray-900 mb-1">Séance enregistrée</h2>
-          <p className="text-sm text-gray-400">Beau travail !</p>
+          <h2 className="text-2xl font-black text-[var(--ink)] mb-1">Séance enregistrée</h2>
+          <p className="text-sm text-[var(--muted)]">Beau travail !</p>
         </div>
         {hasWod && wodResult.trim() && (
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3 text-left">
-            <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mb-1">Score WOD</p>
-            <p className="text-sm text-gray-800 font-semibold mb-2">«&nbsp;{wodResult}&nbsp;»</p>
+          <div className="bg-[var(--accent-soft)] border border-[color:var(--accent-soft)] rounded-2xl px-4 py-3 text-left">
+            <p className="text-xs font-bold text-[var(--accent-text)] uppercase tracking-wide mb-1">Score WOD</p>
+            <p className="text-sm text-[var(--ink)] font-semibold mb-2">«&nbsp;{wodResult}&nbsp;»</p>
             <Link href="/prs"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 transition">
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-text)] hover:text-[var(--accent-text)] transition">
               Enregistrer comme perf perso →
             </Link>
           </div>
         )}
         <div className="flex gap-3">
           <button onClick={reset}
-            className="flex-1 py-3.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer">
+            className="flex-1 py-3.5 rounded-xl border border-[color:var(--border-strong)] text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--hover)] transition cursor-pointer">
             + Nouvelle
           </button>
           <Link href={`/sessions/${savedId}`}
@@ -516,13 +516,13 @@ export default function LogPage() {
   // ── Steps bar ───────────────────────────────────────────
   return (
     <>
-    <div className="bg-gray-50 pb-24">
+    <div className="bg-[var(--bg)] pb-24">
       <div className="max-w-lg mx-auto px-4">
 
         {/* Header */}
         <div className="pt-5 pb-4">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-black text-gray-900">
+            <h1 className="text-xl font-black text-[var(--ink)]">
               {curKey === 'sleep' && 'Nouvelle séance'}
               {curKey === 'type'  && 'Type de séance'}
               {curKey === 'strength'     && 'Séance'}
@@ -532,12 +532,12 @@ export default function LogPage() {
               {curKey === 'wod'          && 'WOD'}
               {curKey === 'post'         && 'Post-séance'}
             </h1>
-            <span className="text-xs text-gray-400 font-medium">{step + 1} / {STEPS.length}</span>
+            <span className="text-xs text-[var(--muted)] font-medium">{step + 1} / {STEPS.length}</span>
           </div>
           <div className="flex gap-1">
             {STEPS.map((_, i) => (
               <div key={i} className="flex-1 h-1 rounded-full transition-colors"
-                style={{ background: i <= step ? 'var(--theme-primary, #F97316)' : '#E5E7EB' }} />
+                style={{ background: i <= step ? 'var(--theme-primary, #F97316)' : 'var(--border)' }} />
             ))}
           </div>
         </div>
@@ -557,13 +557,13 @@ export default function LogPage() {
                       {chips.map(([label, val]) => (
                         <button key={label} type="button"
                           onClick={() => { setDate(val); setShowDatePicker(false) }}
-                          className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${date === val && !showDatePicker ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-200 bg-white text-gray-600'}`}>
+                          className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${date === val && !showDatePicker ? 'bg-orange-500 border-orange-500 text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                           {label}
                         </button>
                       ))}
                       <button type="button"
                         onClick={() => setShowDatePicker(true)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${(showDatePicker || !isChip) ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-200 bg-white text-gray-600'}`}>
+                        className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${(showDatePicker || !isChip) ? 'bg-orange-500 border-orange-500 text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                         Autre
                       </button>
                     </div>
@@ -578,7 +578,7 @@ export default function LogPage() {
               <label className={labelCls}>Nuit de sommeil — {Math.floor(sleepHours)}h{sleepHours % 1 ? '30' : ''}</label>
               <input type="range" min={3} max={12} step={0.5} value={sleepHours} onChange={e => setSleepHours(parseFloat(e.target.value))}
                 className="w-full accent-orange-400" />
-              <div className="flex justify-between text-xs text-gray-400 mt-1"><span>3h</span><span>12h</span></div>
+              <div className="flex justify-between text-xs text-[var(--muted)] mt-1"><span>3h</span><span>12h</span></div>
             </div>
             <div>
               <label className={labelCls}>Énergie au réveil</label>
@@ -587,7 +587,7 @@ export default function LogPage() {
                   { v: 1, l: '😴' }, { v: 2, l: '😕' }, { v: 3, l: '😐' }, { v: 4, l: '😊' }, { v: 5, l: '⚡' }
                 ].map(o => (
                   <button key={o.v} onClick={() => setEnergy(o.v)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xl transition ${energy === o.v ? 'border-orange-400 bg-orange-50' : 'border-gray-300 bg-white'}`}>
+                    className={`flex-1 py-2.5 rounded-xl border text-xl transition ${energy === o.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border-strong)] bg-[var(--card)]'}`}>
                     {o.l}
                   </button>
                 ))}
@@ -604,7 +604,7 @@ export default function LogPage() {
               <div className="grid grid-cols-3 gap-2">
                 {sessionTypes.map(t => (
                   <button key={t.id} onClick={() => { setTypeId(t.id); setError(null) }}
-                    className={`p-3 rounded-xl border text-xs font-medium transition flex flex-col items-center gap-1 ${typeId === t.id ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-300 bg-white text-gray-600'}`}>
+                    className={`p-3 rounded-xl border text-xs font-medium transition flex flex-col items-center gap-1 ${typeId === t.id ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                     <span className="text-xl">{t.emoji}</span>{t.name}
                   </button>
                 ))}
@@ -613,7 +613,7 @@ export default function LogPage() {
             <div>
               <label className={labelCls}>Durée (min) — optionnel</label>
               <input type="number" placeholder="ex: 75" value={duration} onChange={e => setDuration(e.target.value)}
-                className="w-28 rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                className="w-28 rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
             </div>
           </div>
         )}
@@ -626,7 +626,7 @@ export default function LogPage() {
               <div className="flex flex-wrap gap-2">
                 {RUN_TYPES.map(t => (
                   <button key={t} onClick={() => setRunType(t)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition ${runType === t ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-300 bg-white text-gray-600'}`}>{t}</button>
+                    className={`px-4 py-2 rounded-full text-sm font-medium border transition ${runType === t ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>{t}</button>
                 ))}
               </div>
             </div>
@@ -634,12 +634,12 @@ export default function LogPage() {
               <div>
                 <label className={labelCls}>Distance (km)</label>
                 <input type="number" step="0.1" placeholder="ex: 10" value={runDistance} onChange={e => setRunDistance(e.target.value)}
-                  className="w-full rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
               </div>
               <div>
                 <label className={labelCls}>Dénivelé+ (m)</label>
                 <input type="number" placeholder="ex: 250" value={runElevation} onChange={e => setRunElevation(e.target.value)}
-                  className="w-full rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
               </div>
             </div>
             {paceStr && (
@@ -654,7 +654,7 @@ export default function LogPage() {
               <div className="flex gap-2">
                 {RUN_SURFACES.map(s => (
                   <button key={s} onClick={() => setRunSurface(s)}
-                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition ${runSurface === s ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-300 bg-white text-gray-600'}`}>{s}</button>
+                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition ${runSurface === s ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>{s}</button>
                 ))}
               </div>
             </div>
@@ -667,37 +667,37 @@ export default function LogPage() {
                   {runIntervals.map((iv, i) => {
                     const pace = ivPace(iv.distance, iv.timeMin, iv.timeSec)
                     return (
-                      <div key={i} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+                      <div key={i} className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Rep {i+1}</span>
+                          <span className="text-xs font-bold text-[var(--sub)] uppercase tracking-wide">Rep {i+1}</span>
                           {runIntervals.length > 1 && (
-                            <button onClick={() => setRunIntervals(iv => iv.filter((_,idx) => idx !== i))} className="text-gray-300 hover:text-red-400 text-base">×</button>
+                            <button onClick={() => setRunIntervals(iv => iv.filter((_,idx) => idx !== i))} className="text-[var(--border-strong)] hover:text-red-400 text-base">×</button>
                           )}
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                           <div>
-                            <label className="block text-xs text-gray-400 mb-1">Distance</label>
+                            <label className="block text-xs text-[var(--muted)] mb-1">Distance</label>
                             <input type="text" placeholder="400m" value={iv.distance}
                               onChange={e => updInterval(i, { distance: e.target.value })}
-                              className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                              className="w-full rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                           </div>
                           <div>
-                            <label className="block text-xs text-gray-400 mb-1">Temps mm:ss</label>
+                            <label className="block text-xs text-[var(--muted)] mb-1">Temps mm:ss</label>
                             <div className="flex items-center gap-0.5">
                               <input type="number" placeholder="mm" value={iv.timeMin}
                                 onChange={e => updInterval(i, { timeMin: e.target.value })}
-                                className="w-full rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
-                              <span className="text-gray-400 text-xs">:</span>
+                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              <span className="text-[var(--muted)] text-xs">:</span>
                               <input type="number" placeholder="ss" value={iv.timeSec}
                                 onChange={e => updInterval(i, { timeSec: e.target.value })}
-                                className="w-full rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
                             </div>
                           </div>
                           <div>
-                            <label className="block text-xs text-gray-400 mb-1">Repos</label>
+                            <label className="block text-xs text-[var(--muted)] mb-1">Repos</label>
                             <input type="text" placeholder="2'" value={iv.rest}
                               onChange={e => updInterval(i, { rest: e.target.value })}
-                              className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                              className="w-full rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                           </div>
                         </div>
                         {pace && (
@@ -707,7 +707,7 @@ export default function LogPage() {
                     )
                   })}
                   <button onClick={() => setRunIntervals(ivs => [...ivs, mkRunIv()])}
-                    className="w-full py-2.5 border border-dashed border-gray-300 text-gray-400 rounded-xl text-xs font-bold hover:border-orange-300 hover:text-orange-400 transition">
+                    className="w-full py-2.5 border border-dashed border-[color:var(--border-strong)] text-[var(--muted)] rounded-xl text-xs font-bold hover:border-orange-300 hover:text-orange-400 transition">
                     + Rep
                   </button>
                 </div>
@@ -724,18 +724,18 @@ export default function LogPage() {
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
             <input ref={photoCaptureRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
             {photoPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-gray-200">
+              <div className="relative rounded-xl overflow-hidden border border-[color:var(--border)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photoPreview} alt="Tableau" className="w-full max-h-44 object-cover" />
                 {analyzingPhoto && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-[var(--card)]/80 flex items-center justify-center gap-2">
                     <span className="animate-spin text-xl">⏳</span>
-                    <span className="text-sm font-semibold text-gray-700">Analyse en cours...</span>
+                    <span className="text-sm font-semibold text-[var(--ink-soft)]">Analyse en cours...</span>
                   </div>
                 )}
                 {!analyzingPhoto && (
                   <button onClick={deletePhoto}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-400 transition text-sm cursor-pointer">×</button>
+                    className="absolute top-2 right-2 w-7 h-7 bg-[var(--card)] rounded-full shadow flex items-center justify-center text-[var(--sub)] hover:text-red-400 transition text-sm cursor-pointer">×</button>
                 )}
               </div>
             ) : (
@@ -750,18 +750,18 @@ export default function LogPage() {
                   </div>
                 </button>
                 <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
-                  className="w-full mt-2 text-xs font-bold text-gray-400 cursor-pointer">ou importer depuis la galerie</button>
+                  className="w-full mt-2 text-xs font-bold text-[var(--muted)] cursor-pointer">ou importer depuis la galerie</button>
               </div>
             )}
 
             {/* Échauffement */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔥</span>
-                  <span className="text-sm font-bold text-gray-700">Échauffement</span>
+                  <span className="text-sm font-bold text-[var(--ink-soft)]">Échauffement</span>
                 </div>
-                <span className="text-xs text-gray-400">optionnel</span>
+                <span className="text-xs text-[var(--muted)]">optionnel</span>
               </div>
               <textarea value={warmupNotes}
                 onChange={e => { setWarmupNotes(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
@@ -779,28 +779,28 @@ export default function LogPage() {
 
             {/* Blocs */}
             {hBlocks.map((block, bi) => (
-              <div key={block.id} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+              <div key={block.id} className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 space-y-3">
                 {/* Header */}
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  <span className="w-6 h-6 rounded-md bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center text-xs font-bold flex-shrink-0">
                     {bi + 1}
                   </span>
-                  <span className="text-sm font-bold text-gray-700 flex-1">
+                  <span className="text-sm font-bold text-[var(--ink-soft)] flex-1">
                     {block.isComplex ? (block.complexLabel || 'Complexe') : (block.movementLabel || 'Mouvement')}
                   </span>
                   {hBlocks.length > 1 && (
-                    <button onClick={() => removeHBlock(block.id)} className="text-gray-300 hover:text-red-400 text-xl leading-none">×</button>
+                    <button onClick={() => removeHBlock(block.id)} className="text-[var(--border-strong)] hover:text-red-400 text-xl leading-none">×</button>
                   )}
                 </div>
 
                 {/* Simple / Complex toggle */}
                 <div className="flex gap-2">
                   <button onClick={() => updHBlock(block.id, { isComplex: false })}
-                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${!block.isComplex ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-400'}`}>
+                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${!block.isComplex ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--muted)]'}`}>
                     Mouvement unique
                   </button>
                   <button onClick={() => updHBlock(block.id, { isComplex: true })}
-                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${block.isComplex ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-400'}`}>
+                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${block.isComplex ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--muted)]'}`}>
                     Complexe
                   </button>
                 </div>
@@ -819,18 +819,18 @@ export default function LogPage() {
 
                 {/* 1RM référence */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 flex-shrink-0">1RM réf :</span>
+                  <span className="text-xs text-[var(--sub)] flex-shrink-0">1RM réf :</span>
                   <input type="number" placeholder="—" value={block.rm1}
                     onChange={e => updHBlock(block.id, { rm1: e.target.value })}
-                    className="w-20 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                  <span className="text-xs text-gray-400">kg</span>
-                  <span className="text-xs text-gray-300 ml-1">→ auto %RM</span>
+                    className="w-20 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  <span className="text-xs text-[var(--muted)]">kg</span>
+                  <span className="text-xs text-[var(--border-strong)] ml-1">→ auto %RM</span>
                 </div>
 
                 {/* Sets */}
                 <div>
                   {/* Column headers */}
-                  <div className="grid grid-cols-[18px_1fr_1fr_56px_36px_68px_20px] gap-1 text-[9px] text-gray-400 uppercase font-semibold px-0.5 mb-1.5">
+                  <div className="grid grid-cols-[18px_1fr_1fr_56px_36px_68px_20px] gap-1 text-[9px] text-[var(--muted)] uppercase font-semibold px-0.5 mb-1.5">
                     <span /><span>Reps</span><span>Poids</span><span>Tempo</span><span>%</span><span>Exec</span><span />
                   </div>
                   <div className="space-y-1.5">
@@ -841,24 +841,24 @@ export default function LogPage() {
                       return (
                         <div key={si}>
                           <div className="grid grid-cols-[18px_1fr_1fr_56px_36px_68px_20px] gap-1 items-center">
-                            <span className="text-[10px] text-gray-300 font-bold text-center">S{si+1}</span>
+                            <span className="text-[10px] text-[var(--border-strong)] font-bold text-center">S{si+1}</span>
                             <input type="number" placeholder="—" value={set.reps}
                               onChange={e => updHSet(block.id, si, { reps: e.target.value })}
-                              className="rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
                             <div>
                               <input type="number" step="0.5" placeholder="—" value={set.weight}
                                 onChange={e => updHSet(block.id, si, { weight: e.target.value })}
-                                className="w-full rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
                               {autoKg !== null && !set.weight && (
                                 <p className="text-[9px] text-orange-400 text-center mt-0.5">{autoKg}kg</p>
                               )}
                             </div>
                             <input type="text" placeholder="@30X1" value={set.tempo}
                               onChange={e => updHSet(block.id, si, { tempo: e.target.value })}
-                              className="rounded-lg border border-gray-300 px-1 py-1.5 text-[11px] text-center font-mono focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-[11px] text-center font-mono focus:outline-none focus:ring-1 focus:ring-orange-400" />
                             <input type="number" placeholder="%" value={set.pct_rm}
                               onChange={e => updHSet(block.id, si, { pct_rm: e.target.value })}
-                              className="rounded-lg border border-gray-300 px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
                             <div className="flex gap-0.5">
                               {([
                                 { v: 'good', l: '✓', active: 'bg-green-100 text-green-600 border-green-300' },
@@ -867,7 +867,7 @@ export default function LogPage() {
                               ] as { v: 'good'|'ok'|'fail'; l: string; active: string }[]).map(o => (
                                 <button key={o.v}
                                   onClick={() => updHSet(block.id, si, { execution: set.execution === o.v ? '' : o.v })}
-                                  className={`flex-1 py-1 text-xs font-bold rounded border transition ${set.execution === o.v ? o.active : 'border-gray-200 bg-white text-gray-300'}`}>
+                                  className={`flex-1 py-1 text-xs font-bold rounded border transition ${set.execution === o.v ? o.active : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--border-strong)]'}`}>
                                   {o.l}
                                 </button>
                               ))}
@@ -875,14 +875,14 @@ export default function LogPage() {
                             <button onClick={() => {
                               if (block.sets.length > 1)
                                 updHBlock(block.id, { sets: block.sets.filter((_, i) => i !== si) })
-                            }} className="text-gray-300 hover:text-gray-500 text-base text-center">×</button>
+                            }} className="text-[var(--border-strong)] hover:text-[var(--sub)] text-base text-center">×</button>
                           </div>
                         </div>
                       )
                     })}
                   </div>
                   <button onClick={() => updHBlock(block.id, { sets: [...block.sets, { reps: '', weight: '', tempo: '', pct_rm: '', execution: '' }] })}
-                    className="w-full mt-2 py-1.5 text-xs text-gray-400 border border-dashed border-gray-300 rounded-lg hover:border-orange-300 hover:text-orange-400 transition">
+                    className="w-full mt-2 py-1.5 text-xs text-[var(--muted)] border border-dashed border-[color:var(--border-strong)] rounded-lg hover:border-orange-300 hover:text-orange-400 transition">
                     + Série
                   </button>
                 </div>
@@ -890,7 +890,7 @@ export default function LogPage() {
             ))}
 
             <button onClick={() => setHBlocks(bs => [...bs, mkHBlock(Date.now())])}
-              className="w-full py-3 border-2 border-dashed border-orange-200 text-orange-400 rounded-2xl text-sm font-bold hover:border-orange-400 transition flex items-center justify-center gap-2">
+              className="w-full py-3 border-2 border-dashed border-[color:var(--accent-soft)] text-orange-400 rounded-2xl text-sm font-bold hover:border-orange-400 transition flex items-center justify-center gap-2">
               <span>🏋️</span> Ajouter un exercice
             </button>
           </div>
@@ -901,7 +901,7 @@ export default function LogPage() {
           <div className="space-y-4">
 
             {/* Total time */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4">
               <label className={labelCls}>Temps total</label>
               <input type="text" placeholder="ex: 1:12:45" value={hyroxTotalTime}
                 onChange={e => setHyroxTotalTime(e.target.value)}
@@ -909,41 +909,41 @@ export default function LogPage() {
             </div>
 
             {/* Format reminder */}
-            <div className="bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
-              <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mb-0.5">Format Hyrox</p>
-              <p className="text-xs text-gray-500">1km run → station → 1km run → station × 8</p>
+            <div className="bg-[var(--accent-soft)] border border-[color:var(--accent-soft)] rounded-2xl px-4 py-3">
+              <p className="text-xs font-bold text-[var(--accent-text)] uppercase tracking-wide mb-0.5">Format Hyrox</p>
+              <p className="text-xs text-[var(--sub)]">1km run → station → 1km run → station × 8</p>
             </div>
 
             {/* Stations */}
             {HYROX_STATIONS.map((station, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div key={i} className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">{station.icon}</span>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-gray-800">{station.name}</p>
-                    <p className="text-xs text-gray-400">{station.distance}</p>
+                    <p className="text-sm font-bold text-[var(--ink)]">{station.name}</p>
+                    <p className="text-xs text-[var(--muted)]">{station.distance}</p>
                   </div>
-                  <span className="text-xs font-bold text-gray-300 bg-gray-100 rounded-full px-2 py-0.5">#{i+1}</span>
+                  <span className="text-xs font-bold text-[var(--border-strong)] bg-[var(--track)] rounded-full px-2 py-0.5">#{i+1}</span>
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-400 mb-1">Temps station</label>
+                    <label className="block text-xs text-[var(--muted)] mb-1">Temps station</label>
                     <div className="flex items-center gap-1">
                       <input type="number" placeholder="mm" value={hyroxStations[i].timeMin}
                         onChange={e => updStation(i, { timeMin: e.target.value })}
-                        className="w-14 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                      <span className="text-gray-400 font-bold">:</span>
+                        className="w-14 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                      <span className="text-[var(--muted)] font-bold">:</span>
                       <input type="number" placeholder="ss" value={hyroxStations[i].timeSec}
                         onChange={e => updStation(i, { timeSec: e.target.value })}
-                        className="w-14 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                        className="w-14 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                     </div>
                   </div>
                   {station.hasWeight && (
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Charge (kg)</label>
+                      <label className="block text-xs text-[var(--muted)] mb-1">Charge (kg)</label>
                       <input type="number" placeholder="—" value={hyroxStations[i].weight}
                         onChange={e => updStation(i, { weight: e.target.value })}
-                        className="w-20 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                        className="w-20 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                     </div>
                   )}
                 </div>
@@ -960,18 +960,18 @@ export default function LogPage() {
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
             <input ref={photoCaptureRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
             {photoPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-gray-200">
+              <div className="relative rounded-xl overflow-hidden border border-[color:var(--border)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photoPreview} alt="Tableau" className="w-full max-h-44 object-cover" />
                 {analyzingPhoto && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-[var(--card)]/80 flex items-center justify-center gap-2">
                     <span className="animate-spin text-xl">⏳</span>
-                    <span className="text-sm font-semibold text-gray-700">Analyse en cours...</span>
+                    <span className="text-sm font-semibold text-[var(--ink-soft)]">Analyse en cours...</span>
                   </div>
                 )}
                 {!analyzingPhoto && (
                   <button onClick={deletePhoto}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-red-400 transition text-sm cursor-pointer">×</button>
+                    className="absolute top-2 right-2 w-7 h-7 bg-[var(--card)] rounded-full shadow flex items-center justify-center text-[var(--sub)] hover:text-red-400 transition text-sm cursor-pointer">×</button>
                 )}
               </div>
             ) : (
@@ -986,18 +986,18 @@ export default function LogPage() {
                   </div>
                 </button>
                 <button onClick={() => photoInputRef.current?.click()} disabled={analyzingPhoto}
-                  className="w-full mt-2 text-xs font-bold text-gray-400 cursor-pointer">ou importer depuis la galerie</button>
+                  className="w-full mt-2 text-xs font-bold text-[var(--muted)] cursor-pointer">ou importer depuis la galerie</button>
               </div>
             )}
 
             {/* Échauffement */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔥</span>
-                  <span className="text-sm font-bold text-gray-700">Échauffement</span>
+                  <span className="text-sm font-bold text-[var(--ink-soft)]">Échauffement</span>
                 </div>
-                <span className="text-xs text-gray-400">optionnel</span>
+                <span className="text-xs text-[var(--muted)]">optionnel</span>
               </div>
               <textarea value={warmupNotes}
                 onChange={e => { setWarmupNotes(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
@@ -1009,14 +1009,14 @@ export default function LogPage() {
 
             {/* Préparation */}
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Skills — Optionnel</p>
+              <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wide mb-2">Skills — Optionnel</p>
               <div className="space-y-3">
                 {prepItems.map((item, idx) => item.kind === 'note' ? (
-                  <div key={item.id} className="bg-white rounded-2xl border border-blue-100 p-4">
+                  <div key={item.id} className="bg-[var(--card)] rounded-2xl border border-blue-100 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">🎯</span>
-                      <span className="text-sm font-bold text-gray-700 flex-1">Note technique</span>
-                      <button onClick={() => removeItem(item.id)} className="text-gray-300 hover:text-red-400 text-xl leading-none">×</button>
+                      <span className="text-sm font-bold text-[var(--ink-soft)] flex-1">Note technique</span>
+                      <button onClick={() => removeItem(item.id)} className="text-[var(--border-strong)] hover:text-red-400 text-xl leading-none">×</button>
                     </div>
                     <textarea rows={2} value={item.text}
                       onChange={e => setPrepItems(ps => ps.map(p => p.id === item.id ? { ...p, text: e.target.value } : p))}
@@ -1024,14 +1024,14 @@ export default function LogPage() {
                       className={inputCls + ' resize-none'} autoFocus={idx === prepItems.length - 1 && item.text === ''} />
                   </div>
                 ) : (
-                  <div key={item.id} className="bg-white rounded-2xl border border-gray-200 p-4">
+                  <div key={item.id} className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                      <span className="w-6 h-6 rounded-md bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center justify-center text-xs font-bold flex-shrink-0">
                         {prepItems.filter(p => p.kind === 'block').indexOf(item as PrepBlock) + 1}
                       </span>
-                      <span className="text-sm font-bold text-gray-700 flex-1">{(item as PrepBlock).movementLabel || 'Mouvement'}</span>
+                      <span className="text-sm font-bold text-[var(--ink-soft)] flex-1">{(item as PrepBlock).movementLabel || 'Mouvement'}</span>
                       {prepItems.length > 1 && (
-                        <button onClick={() => removeItem(item.id)} className="text-gray-300 hover:text-red-400 text-xl leading-none">×</button>
+                        <button onClick={() => removeItem(item.id)} className="text-[var(--border-strong)] hover:text-red-400 text-xl leading-none">×</button>
                       )}
                     </div>
                     <div className="mb-3">
@@ -1040,33 +1040,33 @@ export default function LogPage() {
                     </div>
                     <div className="flex items-center gap-2 mb-3">
                       <button onClick={() => updBlock(item.id, { hasWeight: !(item as PrepBlock).hasWeight })}
-                        className={`w-9 h-5 rounded-full relative transition-colors flex-shrink-0 ${(item as PrepBlock).hasWeight ? 'bg-orange-500' : 'bg-gray-200'}`}>
-                        <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${(item as PrepBlock).hasWeight ? 'left-4' : 'left-0.5'}`} />
+                        className={`w-9 h-5 rounded-full relative transition-colors flex-shrink-0 ${(item as PrepBlock).hasWeight ? 'bg-orange-500' : 'bg-[var(--border)]'}`}>
+                        <span className={`absolute top-0.5 w-4 h-4 bg-[var(--card)] rounded-full shadow transition-all ${(item as PrepBlock).hasWeight ? 'left-4' : 'left-0.5'}`} />
                       </button>
-                      <span className="text-xs text-gray-500">{(item as PrepBlock).hasWeight ? 'Avec poids (kg)' : 'Reps uniquement'}</span>
+                      <span className="text-xs text-[var(--sub)]">{(item as PrepBlock).hasWeight ? 'Avec poids (kg)' : 'Reps uniquement'}</span>
                     </div>
-                    <div className={`grid gap-2 text-xs text-gray-400 uppercase font-semibold px-0.5 mb-1.5 ${(item as PrepBlock).hasWeight ? 'grid-cols-[20px_1fr_1fr_24px]' : 'grid-cols-[20px_1fr_24px]'}`}>
+                    <div className={`grid gap-2 text-xs text-[var(--muted)] uppercase font-semibold px-0.5 mb-1.5 ${(item as PrepBlock).hasWeight ? 'grid-cols-[20px_1fr_1fr_24px]' : 'grid-cols-[20px_1fr_24px]'}`}>
                       <span/><span>Reps</span>{(item as PrepBlock).hasWeight && <span>Poids kg</span>}<span/>
                     </div>
                     {(item as PrepBlock).sets.map((set, si) => (
                       <div key={si} className={`grid gap-2 mb-1.5 items-center ${(item as PrepBlock).hasWeight ? 'grid-cols-[20px_1fr_1fr_24px]' : 'grid-cols-[20px_1fr_24px]'}`}>
-                        <span className="text-xs text-gray-300 font-bold text-center">S{si+1}</span>
+                        <span className="text-xs text-[var(--border-strong)] font-bold text-center">S{si+1}</span>
                         <input type="number" placeholder="—" value={set.reps}
                           onChange={e => updSet(item.id, si, { reps: e.target.value })}
-                          className="w-full min-w-0 rounded-lg border border-gray-400 px-2 py-1.5 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                          className="w-full min-w-0 rounded-lg border border-[color:var(--muted)] px-2 py-1.5 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                         {(item as PrepBlock).hasWeight && (
                           <input type="number" placeholder="—" value={set.weight}
                             onChange={e => updSet(item.id, si, { weight: e.target.value })}
-                            className="w-full min-w-0 rounded-lg border border-gray-400 px-2 py-1.5 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                            className="w-full min-w-0 rounded-lg border border-[color:var(--muted)] px-2 py-1.5 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                         )}
                         <button onClick={() => {
                           if ((item as PrepBlock).sets.length > 1)
                             updBlock(item.id, { sets: (item as PrepBlock).sets.filter((_, i) => i !== si) })
-                        }} className="text-gray-300 hover:text-gray-500 text-base text-center">×</button>
+                        }} className="text-[var(--border-strong)] hover:text-[var(--sub)] text-base text-center">×</button>
                       </div>
                     ))}
                     <button onClick={() => updBlock(item.id, { sets: [...(item as PrepBlock).sets, { reps: '', weight: '' }] })}
-                      className="w-full mt-2 py-1.5 text-xs text-gray-400 border border-dashed border-gray-300 rounded-lg hover:border-orange-300 hover:text-orange-400 transition">
+                      className="w-full mt-2 py-1.5 text-xs text-[var(--muted)] border border-dashed border-[color:var(--border-strong)] rounded-lg hover:border-orange-300 hover:text-orange-400 transition">
                       + Série
                     </button>
                   </div>
@@ -1080,7 +1080,7 @@ export default function LogPage() {
                   <span>🎯</span> Note technique
                 </button>
                 <button onClick={() => setPrepItems(ps => [...ps, mkBlock(Date.now())])}
-                  className="flex-1 py-2.5 border-2 border-dashed border-orange-200 text-orange-400 rounded-xl text-xs font-bold hover:border-orange-400 transition flex items-center justify-center gap-1">
+                  className="flex-1 py-2.5 border-2 border-dashed border-[color:var(--accent-soft)] text-orange-400 rounded-xl text-xs font-bold hover:border-orange-400 transition flex items-center justify-center gap-1">
                   <span>🏋️</span> Bloc force
                 </button>
               </div>
@@ -1093,21 +1093,21 @@ export default function LogPage() {
           <div className="space-y-4">
 
             {/* Toggle WOD */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between">
+            <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 flex items-center justify-between">
               <div>
-                <p className="font-bold text-sm text-gray-800">WOD aujourd&apos;hui ?</p>
-                <p className="text-xs text-gray-400 mt-0.5">Conditioning / partie métabolique</p>
+                <p className="font-bold text-sm text-[var(--ink)]">WOD aujourd&apos;hui ?</p>
+                <p className="text-xs text-[var(--muted)] mt-0.5">Conditioning / partie métabolique</p>
               </div>
               <button onClick={() => setHasWod(v => !v)}
-                className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ${hasWod ? 'bg-orange-500' : 'bg-gray-200'}`}>
-                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${hasWod ? 'left-5' : 'left-0.5'}`} />
+                className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ${hasWod ? 'bg-orange-500' : 'bg-[var(--border)]'}`}>
+                <span className={`absolute top-0.5 w-5 h-5 bg-[var(--card)] rounded-full shadow transition-all ${hasWod ? 'left-5' : 'left-0.5'}`} />
               </button>
             </div>
 
             {hasWod && (<>
 
               {/* ① Format + durée */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+              <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 space-y-4">
                 <div>
                   <label className={labelCls}>① Format</label>
                   <div className="flex flex-wrap gap-2">
@@ -1116,20 +1116,20 @@ export default function LogPage() {
                         className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition ${
                           wodFormat === f
                             ? 'bg-orange-500 border-orange-500 text-white'
-                            : 'border-gray-200 bg-white text-gray-600'
+                            : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'
                         }`}>
                         {f}
                       </button>
                     ))}
                   </div>
                   {(wodFormat === 'Autre' || WOD_FORMATS_EXTRA.includes(wodFormat)) && (
-                    <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-[color:var(--track)]">
                       {WOD_FORMATS_EXTRA.map(f => (
                         <button key={f} onClick={() => setWodFormat(f === wodFormat ? 'Autre' : f)}
                           className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition ${
                             wodFormat === f
                               ? 'bg-orange-500 border-orange-500 text-white'
-                              : 'border-gray-200 bg-white text-gray-600'
+                              : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'
                           }`}>
                           {f}
                         </button>
@@ -1144,36 +1144,36 @@ export default function LogPage() {
                     <div className="flex flex-wrap gap-2">
                       {DURATION_CHIPS.map(d => (
                         <button key={d} onClick={() => setWodTimeCap(wodTimeCap === String(d) ? '' : String(d))}
-                          className={`px-3 py-2 rounded-xl border font-bold text-sm transition ${wodTimeCap === String(d) ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-600'}`}>
+                          className={`px-3 py-2 rounded-xl border font-bold text-sm transition ${wodTimeCap === String(d) ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                           {d}&apos;
                         </button>
                       ))}
                       <input type="number" placeholder="autre"
                         value={DURATION_CHIPS.includes(parseInt(wodTimeCap)) ? '' : wodTimeCap}
                         onChange={e => setWodTimeCap(e.target.value)}
-                        className="w-20 rounded-xl border border-gray-400 bg-white px-2 py-2 text-sm text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                        className="w-20 rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-2 py-2 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
                     </div>
                   </div>
                 )}
               </div>
 
               {/* ② Description */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4">
                 <label className={labelCls}>② Mouvements du WOD</label>
                 <input
                   type="text" placeholder="Chercher un mouvement..." value={wodMoveSearch}
                   onChange={e => setWodMoveSearch(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2" />
+                  className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2" />
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {COMMON_MOVES.filter(m => m.toLowerCase().includes(wodMoveSearch.toLowerCase())).map(m => (
                     <button key={m} onClick={() => { setWodDesc(d => d ? d + '\n' + m : m); setWodMoveSearch('') }}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-500 hover:border-orange-300 hover:text-orange-500 transition cursor-pointer">
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)] hover:border-orange-300 hover:text-orange-500 transition cursor-pointer">
                       + {m}
                     </button>
                   ))}
                   {COMMON_MOVES.filter(m => m.toLowerCase().includes(wodMoveSearch.toLowerCase())).length === 0 && wodMoveSearch && (
                     <button onClick={() => { setWodDesc(d => d ? d + '\n' + wodMoveSearch : wodMoveSearch); setWodMoveSearch('') }}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-orange-300 bg-orange-50 text-orange-600 transition cursor-pointer">
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-orange-300 bg-[var(--accent-soft)] text-[var(--accent-text)] transition cursor-pointer">
                       + Ajouter «{wodMoveSearch}»
                     </button>
                   )}
@@ -1191,7 +1191,7 @@ export default function LogPage() {
               </div>
 
               {/* ③ Résultat + RX */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+              <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 space-y-3">
                 <label className={labelCls}>③ Résultat</label>
                 <input type="text" value={wodResult} onChange={e => setWodResult(e.target.value)}
                   placeholder={
@@ -1207,7 +1207,7 @@ export default function LogPage() {
                     { v: false, l: 'Scaled', a: 'border-amber-400 bg-amber-50 text-amber-700' },
                   ].map(o => (
                     <button key={String(o.v)} onClick={() => setWodRx(o.v)}
-                      className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition ${wodRx === o.v ? o.a : 'border-gray-300 bg-white text-gray-400'}`}>
+                      className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition ${wodRx === o.v ? o.a : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--muted)]'}`}>
                       {o.l}
                     </button>
                   ))}
@@ -1224,12 +1224,12 @@ export default function LogPage() {
             {/* RPE */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--sub)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   RPE — {rpe}/10
                 </span>
                 <span style={{ color: 'var(--theme-primary, #F97316)', fontSize: 12 }}>· {RPE_LABELS[rpe]}</span>
                 <button onClick={() => setShowRpeInfo(v => !v)}
-                  style={{ width: 18, height: 18, borderRadius: '50%', background: '#E5E7EB', color: '#6B7280', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', border: 'none' }}>
+                  style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--border)', color: 'var(--sub)', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', border: 'none' }}>
                   ?
                 </button>
               </div>
@@ -1247,10 +1247,10 @@ export default function LogPage() {
                 {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
                   <button key={n} onClick={() => setRpe(n)}
                     className="flex-1 rounded-md cursor-pointer transition-all duration-100"
-                    style={{ height: n === rpe ? '100%' : `${35 + n * 6}%`, background: n <= rpe ? RPE_COLORS[n-1] : '#E5E7EB', opacity: n <= rpe ? 1 : 0.4 }} />
+                    style={{ height: n === rpe ? '100%' : `${35 + n * 6}%`, background: n <= rpe ? RPE_COLORS[n-1] : 'var(--border)', opacity: n <= rpe ? 1 : 0.4 }} />
                 ))}
               </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1.5"><span>Très facile</span><span>Maximum</span></div>
+              <div className="flex justify-between text-xs text-[var(--muted)] mt-1.5"><span>Très facile</span><span>Maximum</span></div>
             </div>
 
             {/* Ressenti */}
@@ -1259,9 +1259,9 @@ export default function LogPage() {
               <div className="flex gap-2">
                 {[{v:1,e:'😩',l:'Mauvais'},{v:2,e:'😕',l:'Passable'},{v:3,e:'😐',l:'Correct'},{v:4,e:'😊',l:'Bien'},{v:5,e:'🤩',l:'Excellent'}].map(f => (
                   <button key={f.v} onClick={() => setFeeling(f.v)}
-                    className={`flex-1 py-2 rounded-xl border flex flex-col items-center gap-1 transition ${feeling === f.v ? 'border-orange-400 bg-orange-50' : 'border-gray-200 bg-white'}`}>
+                    className={`flex-1 py-2 rounded-xl border flex flex-col items-center gap-1 transition ${feeling === f.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'}`}>
                     <span className="text-xl">{f.e}</span>
-                    <span className={`text-xs font-medium ${feeling === f.v ? 'text-orange-500' : 'text-gray-400'}`}>{f.l}</span>
+                    <span className={`text-xs font-medium ${feeling === f.v ? 'text-orange-500' : 'text-[var(--muted)]'}`}>{f.l}</span>
                   </button>
                 ))}
               </div>
@@ -1282,31 +1282,31 @@ export default function LogPage() {
                 </div>
               )}
               {addingPain ? (
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+                <div className="bg-[var(--bg)] border border-[color:var(--border)] rounded-xl p-4 space-y-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">Zone</label>
+                    <label className="block text-xs text-[var(--sub)] mb-1.5">Zone</label>
                     <input list="pain-parts-list" value={painPart} onChange={e => setPainPart(e.target.value)}
                       placeholder="Sélectionne ou tape une zone..."
-                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                      className="w-full rounded-lg border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
                     <datalist id="pain-parts-list">{PAIN_PARTS.map(p => <option key={p} value={p} />)}</datalist>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">Intensité</label>
+                    <label className="block text-xs text-[var(--sub)] mb-1.5">Intensité</label>
                     <div className="flex gap-2">
                       {SEVERITY.map(s => (
                         <button key={s.v} onClick={() => setPainSev(s.v)}
-                          className={`flex-1 py-2 rounded-lg border text-xs font-bold transition ${painSev === s.v ? s.cls : 'border-gray-200 bg-white text-gray-400'}`}>{s.l}</button>
+                          className={`flex-1 py-2 rounded-lg border text-xs font-bold transition ${painSev === s.v ? s.cls : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--muted)]'}`}>{s.l}</button>
                       ))}
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => { setAddingPain(false); setPainPart('') }} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-500">Annuler</button>
+                    <button onClick={() => { setAddingPain(false); setPainPart('') }} className="flex-1 py-2 rounded-lg border border-[color:var(--border)] text-sm text-[var(--sub)]">Annuler</button>
                     <button onClick={addPain} className="flex-1 py-2 rounded-lg text-white text-sm font-bold" style={{ background: 'var(--theme-primary, #F97316)' }}>Ajouter</button>
                   </div>
                 </div>
               ) : (
                 <button onClick={() => setAddingPain(true)}
-                  className="w-full py-2.5 border border-dashed border-gray-300 text-gray-400 rounded-xl text-sm hover:border-orange-300 hover:text-orange-400 transition">
+                  className="w-full py-2.5 border border-dashed border-[color:var(--border-strong)] text-[var(--muted)] rounded-xl text-sm hover:border-orange-300 hover:text-orange-400 transition">
                   + Ajouter une douleur
                 </button>
               )}
@@ -1330,7 +1330,7 @@ export default function LogPage() {
 
         <div className="flex gap-3 pt-4 pb-10">
           {step > 0 && (
-            <button onClick={goBack} className="flex-1 py-3.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100 transition">← Retour</button>
+            <button onClick={goBack} className="flex-1 py-3.5 rounded-xl border border-[color:var(--border-strong)] text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--hover)] transition">← Retour</button>
           )}
           <button onClick={step < STEPS.length - 1 ? goNext : handleSubmit} disabled={saving}
             style={{ flex: 2, background: step === STEPS.length - 1 ? '#22C55E' : 'var(--theme-primary, #F97316)' }}
@@ -1345,12 +1345,12 @@ export default function LogPage() {
     {/* ── Dialog: effacer contenu IA après suppression photo ── */}
     {showClearAIDialog && (
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
-        <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-          <p className="text-base font-black text-gray-900 mb-1">Effacer le contenu généré ?</p>
-          <p className="text-sm text-gray-500 mb-5">L'IA avait pré-rempli l'échauffement, les blocs et le WOD. Veux-tu les effacer aussi ?</p>
+        <div className="bg-[var(--card)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
+          <p className="text-base font-black text-[var(--ink)] mb-1">Effacer le contenu généré ?</p>
+          <p className="text-sm text-[var(--sub)] mb-5">L'IA avait pré-rempli l'échauffement, les blocs et le WOD. Veux-tu les effacer aussi ?</p>
           <div className="flex gap-3">
             <button onClick={() => setShowClearAIDialog(false)}
-              className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition cursor-pointer">
+              className="flex-1 py-3 rounded-xl border border-[color:var(--border)] text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--hover)] transition cursor-pointer">
               Garder
             </button>
             <button onClick={() => { clearAIContent(); setShowClearAIDialog(false) }}

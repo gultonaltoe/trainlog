@@ -155,16 +155,16 @@ export default function MovementPRPage() {
   const area = chartData.length > 1 ? `0,${H} ${pts} ${W},${H}` : ''
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4">
 
         {/* Header */}
         <div className="pt-6 pb-4 flex items-center gap-3">
           <button onClick={() => router.back()}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 flex-shrink-0">←</button>
+            className="w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] flex items-center justify-center text-[var(--sub)] flex-shrink-0">←</button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-black text-gray-900 truncate">{name}</h1>
-            <p className="text-sm text-gray-400">{prs.length} performance{prs.length !== 1 ? 's' : ''}</p>
+            <h1 className="text-xl font-black text-[var(--ink)] truncate">{name}</h1>
+            <p className="text-sm text-[var(--muted)]">{prs.length} performance{prs.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
 
@@ -184,8 +184,8 @@ export default function MovementPRPage() {
         <div className="grid grid-cols-3 gap-3 mb-4">
 
           {/* Trend */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-3 text-center">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tendance</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-3 text-center">
+            <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wide mb-1">Tendance</p>
             {trendDir === 'up' && (
               <>
                 <p className="text-xl font-black text-green-500">↑</p>
@@ -205,26 +205,26 @@ export default function MovementPRPage() {
               </>
             )}
             {trendDir === null && (
-              <p className="text-xs text-gray-300 mt-2">—</p>
+              <p className="text-xs text-[var(--border-strong)] mt-2">—</p>
             )}
           </div>
 
           {/* Estimated 1RM */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-3 text-center">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">1RM estimé</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-3 text-center">
+            <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wide mb-1">1RM estimé</p>
             {bestE1rm > 0 ? (
               <>
                 <p className="text-xl font-black text-purple-600">{bestE1rm}</p>
                 <p className="text-xs text-purple-400 font-semibold">kg Brzycki</p>
               </>
             ) : (
-              <p className="text-xs text-gray-300 mt-2">—</p>
+              <p className="text-xs text-[var(--border-strong)] mt-2">—</p>
             )}
           </div>
 
           {/* Mois/Mois */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-3 text-center">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">M / M</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-3 text-center">
+            <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wide mb-1">M / M</p>
             {momPct !== null ? (
               <>
                 <p className={`text-xl font-black ${momPct >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -236,11 +236,11 @@ export default function MovementPRPage() {
               </>
             ) : thisMonthBest > 0 ? (
               <>
-                <p className="text-xl font-black text-gray-400">—</p>
-                <p className="text-xs text-gray-400 font-semibold">{thisMonthBest} {unit}</p>
+                <p className="text-xl font-black text-[var(--muted)]">—</p>
+                <p className="text-xs text-[var(--muted)] font-semibold">{thisMonthBest} {unit}</p>
               </>
             ) : (
-              <p className="text-xs text-gray-300 mt-2">—</p>
+              <p className="text-xs text-[var(--border-strong)] mt-2">—</p>
             )}
           </div>
         </div>
@@ -258,8 +258,8 @@ export default function MovementPRPage() {
 
         {/* PR chart */}
         {chartData.length >= 2 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4">
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-4">
               Progression — {chartData.length} séances
             </p>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 80 }}>
@@ -278,7 +278,7 @@ export default function MovementPRPage() {
                 )
               })}
             </svg>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
+            <div className="flex justify-between text-xs text-[var(--muted)] mt-2">
               <span>{formatDate(chartData[0].date)}</span>
               <span>{formatDate(chartData[chartData.length - 1].date)}</span>
             </div>
@@ -287,9 +287,9 @@ export default function MovementPRPage() {
 
         {/* Estimated 1RM timeline */}
         {e1rmPoints.length >= 2 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">1RM estimé (Brzycki)</p>
+              <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">1RM estimé (Brzycki)</p>
               <span className="text-xs text-purple-500 font-bold">{bestE1rm} kg max</span>
             </div>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 80 }}>
@@ -319,14 +319,14 @@ export default function MovementPRPage() {
                 )
               })()}
             </svg>
-            <p className="text-[10px] text-gray-400 mt-2 text-center">Calculé à partir de tes séries multi-reps (≤ 12 reps)</p>
+            <p className="text-[10px] text-[var(--muted)] mt-2 text-center">Calculé à partir de tes séries multi-reps (≤ 12 reps)</p>
           </div>
         )}
 
         {/* Volume hebdo */}
         {weekVols.length >= 2 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Volume hebdo (tonnage kg)</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4">
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-4">Volume hebdo (tonnage kg)</p>
             <div className="flex items-end gap-1" style={{ height: 60 }}>
               {weekVols.map((wv, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -339,7 +339,7 @@ export default function MovementPRPage() {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between text-[9px] text-gray-400 mt-1.5">
+            <div className="flex justify-between text-[9px] text-[var(--muted)] mt-1.5">
               <span>{formatDate(weekVols[0].week)}</span>
               <span>{formatDate(weekVols[weekVols.length - 1].week)}</span>
             </div>
@@ -347,8 +347,8 @@ export default function MovementPRPage() {
         )}
 
         {/* Historique */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Historique</p>
+        <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5">
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-3">Historique</p>
           <div className="space-y-2">
             {recent.map(p => {
               const isPR = p.value === best
@@ -358,11 +358,11 @@ export default function MovementPRPage() {
                 : null
               const e1rm = bestSet?.reps && bestSet.reps <= 12 ? brzycki(bestSet.weight_kg, bestSet.reps) : null
               return (
-                <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl ${isPR ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50'}`}>
+                <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl ${isPR ? 'bg-[var(--accent-soft)] border border-[color:var(--accent-soft)]' : 'bg-[var(--bg)]'}`}>
                   <div className="flex items-center gap-3">
                     {isPR && <span className="text-base">🏆</span>}
                     <div>
-                      <p className="text-sm font-bold text-gray-800">{formatDateLong(p.date)}</p>
+                      <p className="text-sm font-bold text-[var(--ink)]">{formatDateLong(p.date)}</p>
                       <div className="flex items-center gap-2">
                         {p.session_id && (
                           <a href={`/sessions/${p.session_id}`} className="text-xs text-orange-500 hover:underline">Voir →</a>
@@ -373,8 +373,8 @@ export default function MovementPRPage() {
                       </div>
                     </div>
                   </div>
-                  <p className={`text-lg font-black ${isPR ? 'text-orange-600' : 'text-gray-800'}`}>
-                    {p.value} <span className="text-sm font-normal text-gray-400">{p.unit}</span>
+                  <p className={`text-lg font-black ${isPR ? 'text-[var(--accent-text)]' : 'text-[var(--ink)]'}`}>
+                    {p.value} <span className="text-sm font-normal text-[var(--muted)]">{p.unit}</span>
                   </p>
                 </div>
               )

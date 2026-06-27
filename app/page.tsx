@@ -156,7 +156,7 @@ export default function Dashboard() {
     return <CoachDashboard orgId={active.orgId} orgName={active.orgName} role={active.role} />
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
         {/* Header */}
@@ -164,11 +164,11 @@ export default function Dashboard() {
           <div>
             {loading
               ? <Skeleton className="h-7 w-40 mb-1.5" />
-              : <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+              : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">
                   Bonjour {profile?.first_name} 👋
                 </h1>
             }
-            <p className="text-sm text-gray-400 mt-0.5">{capitalize(today)}</p>
+            <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
           </div>
           <Link href="/log"
             className="text-white text-sm font-black px-5 py-3 rounded-2xl whitespace-nowrap flex items-center gap-1.5"
@@ -204,8 +204,8 @@ export default function Dashboard() {
 
         {/* Semaine courante */}
         {loading ? <Skeleton className="h-44 mb-4" /> : (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Cette semaine</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4">
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-3">Cette semaine</p>
             <div className="flex gap-1 mb-4">
               {weekDays.map((d, i) => {
                 const str = toDateStr(d)
@@ -213,7 +213,7 @@ export default function Dashboard() {
                 const isToday = str === toDateStr(new Date())
                 return (
                   <div key={str} className="flex-1 flex flex-col items-center gap-1">
-                    <span className={`text-xs font-semibold ${isToday ? 'text-orange-500' : 'text-gray-400'}`}>
+                    <span className={`text-xs font-semibold ${isToday ? 'text-orange-500' : 'text-[var(--muted)]'}`}>
                       {DAY_LABELS[i]}
                     </span>
                     {daySessions.length > 0 ? (
@@ -226,30 +226,30 @@ export default function Dashboard() {
                         ))}
                       </div>
                     ) : (
-                      <div className={`w-8 h-8 rounded-lg border-2 border-dashed ${isToday ? 'border-orange-300' : 'border-gray-200'}`} />
+                      <div className={`w-8 h-8 rounded-lg border-2 border-dashed ${isToday ? 'border-orange-300' : 'border-[color:var(--border)]'}`} />
                     )}
                   </div>
                 )
               })}
             </div>
             <div className="flex gap-3">
-              <div className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
-                <p className="text-2xl font-black text-gray-900">
-                  {weekCount}{weekTarget > 0 && <span className="text-base text-gray-400 font-semibold">/{weekTarget}</span>}
+              <div className="flex-1 bg-[var(--bg)] rounded-xl p-3 text-center">
+                <p className="text-2xl font-black text-[var(--ink)]">
+                  {weekCount}{weekTarget > 0 && <span className="text-base text-[var(--muted)] font-semibold">/{weekTarget}</span>}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">séances</p>
+                <p className="text-xs text-[var(--muted)] mt-0.5">séances</p>
                 {weekTarget > 0 && (
-                  <div className="mt-1.5 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="mt-1.5 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all"
                       style={{ width: `${Math.min(100, (weekCount / weekTarget) * 100)}%`, background: 'var(--theme-primary, #F97316)' }} />
                   </div>
                 )}
               </div>
-              <div className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
-                <p className="text-2xl font-black text-gray-900">
+              <div className="flex-1 bg-[var(--bg)] rounded-xl p-3 text-center">
+                <p className="text-2xl font-black text-[var(--ink)]">
                   {weekAvgRpe !== null ? weekAvgRpe.toFixed(1) : '—'}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">RPE moyen</p>
+                <p className="text-xs text-[var(--muted)] mt-0.5">RPE moyen</p>
               </div>
             </div>
           </div>
@@ -257,17 +257,17 @@ export default function Dashboard() {
 
         {/* Calendrier navigable */}
         {!loading && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
-              <button onClick={prevDashCal} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-lg leading-none">‹</button>
-              <p className="text-xs font-bold text-gray-700">{MONTHS_FR[dashCalM]} {dashCalY}</p>
+              <button onClick={prevDashCal} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[var(--hover)] text-[var(--sub)] text-lg leading-none">‹</button>
+              <p className="text-xs font-bold text-[var(--ink-soft)]">{MONTHS_FR[dashCalM]} {dashCalY}</p>
               <button onClick={nextDashCal} disabled={isCalNow}
-                className={`w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition ${isCalNow ? 'text-gray-200' : 'hover:bg-gray-100 text-gray-500'}`}>›</button>
+                className={`w-7 h-7 flex items-center justify-center rounded-full text-lg leading-none transition ${isCalNow ? 'text-[var(--border)]' : 'hover:bg-[var(--hover)] text-[var(--sub)]'}`}>›</button>
             </div>
             {/* Jours de la semaine */}
             <div className="grid grid-cols-7 mb-1">
               {DAY_LABELS.map((d, i) => (
-                <p key={i} className="text-center text-[10px] font-semibold text-gray-400">{d}</p>
+                <p key={i} className="text-center text-[10px] font-semibold text-[var(--muted)]">{d}</p>
               ))}
             </div>
             {/* Grille */}
@@ -289,20 +289,20 @@ export default function Dashboard() {
                       outline: isToday ? '2px solid var(--theme-primary, #F97316)' : undefined,
                     }}>
                     <span className={`text-[10px] font-bold leading-none mb-0.5 ${
-                      isToday ? 'text-orange-500' : items.length > 0 ? 'text-gray-700' : 'text-gray-300'
+                      isToday ? 'text-orange-500' : items.length > 0 ? 'text-[var(--ink-soft)]' : 'text-[var(--border-strong)]'
                     }`}>
                       {day}
                     </span>
                     {first && <span className="text-xs leading-none">{first.type_emoji}</span>}
-                    {items.length > 1 && <span className="text-[8px] font-bold text-gray-400">+{items.length - 1}</span>}
+                    {items.length > 1 && <span className="text-[8px] font-bold text-[var(--muted)]">+{items.length - 1}</span>}
                   </Link>
                 )
               })}
             </div>
             {/* Résumé */}
-            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
-              <p className="text-xs text-gray-400">
-                <span className="font-bold text-gray-700">{Object.values(calByDate).flat().length}</span> séance{Object.values(calByDate).flat().length !== 1 ? 's' : ''}
+            <div className="mt-2 pt-2 border-t border-[color:var(--track)] flex items-center justify-between">
+              <p className="text-xs text-[var(--muted)]">
+                <span className="font-bold text-[var(--ink-soft)]">{Object.values(calByDate).flat().length}</span> séance{Object.values(calByDate).flat().length !== 1 ? 's' : ''}
               </p>
               <Link href="/sessions" className="text-xs font-semibold text-orange-500">Voir tout →</Link>
             </div>
@@ -311,8 +311,8 @@ export default function Dashboard() {
 
         {/* Comparaison mois */}
         {!loading && (thisMoS.length > 0 || lastMoS.length > 0) && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Mois en cours vs précédent</p>
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4">
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-3">Mois en cours vs précédent</p>
             <div className="grid grid-cols-2 gap-3">
               {[
                 {
@@ -328,12 +328,12 @@ export default function Dashboard() {
                   main:  false
                 },
               ].map(m => (
-                <div key={m.label} className={`rounded-xl p-3 ${m.main ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50 border border-gray-100'}`}>
-                  <p className={`text-xs font-bold mb-2 ${m.main ? 'text-orange-600' : 'text-gray-400'}`}>{m.label}</p>
-                  <p className={`text-2xl font-black ${m.main ? 'text-orange-700' : 'text-gray-700'}`}>{m.count}</p>
-                  <p className="text-xs text-gray-400">séances</p>
+                <div key={m.label} className={`rounded-xl p-3 ${m.main ? 'bg-[var(--accent-soft)] border border-[color:var(--accent-soft)]' : 'bg-[var(--bg)] border border-[color:var(--track)]'}`}>
+                  <p className={`text-xs font-bold mb-2 ${m.main ? 'text-[var(--accent-text)]' : 'text-[var(--muted)]'}`}>{m.label}</p>
+                  <p className={`text-2xl font-black ${m.main ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{m.count}</p>
+                  <p className="text-xs text-[var(--muted)]">séances</p>
                   {m.rpe !== null && (
-                    <p className="text-xs text-gray-500 mt-1">RPE {m.rpe.toFixed(1)}</p>
+                    <p className="text-xs text-[var(--sub)] mt-1">RPE {m.rpe.toFixed(1)}</p>
                   )}
                 </div>
               ))}
@@ -358,30 +358,30 @@ export default function Dashboard() {
         )}
 
 <Link href="/prs"
-  className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 p-4 mb-4 hover:shadow-sm transition">
+  className="flex items-center justify-between bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 mb-4 hover:shadow-sm transition">
   <div className="flex items-center gap-3">
     <span className="text-2xl">🏆</span>
     <div>
-      <p className="text-sm font-bold text-gray-800">Personal Records</p>
-      <p className="text-xs text-gray-400">Tes charges maximales par mouvement</p>
+      <p className="text-sm font-bold text-[var(--ink)]">Personal Records</p>
+      <p className="text-xs text-[var(--muted)]">Tes charges maximales par mouvement</p>
     </div>
   </div>
-  <span className="text-gray-300">›</span>
+  <span className="text-[var(--border-strong)]">›</span>
 </Link>
 
 
         {/* Distribution par période */}
         {!loading && sessions.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Répartition</p>
+              <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">Répartition</p>
               <div className="flex gap-1">
                 {(['7j','30j','3m','tout'] as Period[]).map(p => (
                   <button key={p} onClick={() => setPeriod(p)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
                       period === p
                         ? 'text-white'
-                        : 'text-gray-400 bg-gray-50'
+                        : 'text-[var(--muted)] bg-[var(--bg)]'
                     }`}
                     style={period === p ? { background: 'var(--theme-primary, #F97316)' } : {}}>
                     {p}
@@ -390,7 +390,7 @@ export default function Dashboard() {
               </div>
             </div>
             {sortedTypes.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-4">Aucune séance sur cette période</p>
+              <p className="text-xs text-[var(--muted)] text-center py-4">Aucune séance sur cette période</p>
             ) : (
               <div className="space-y-2.5">
                 {sortedTypes.map(([type, { count, color, emoji }]) => {
@@ -398,10 +398,10 @@ export default function Dashboard() {
                   return (
                     <div key={type} className="flex items-center gap-2.5">
                       <span className="text-base w-5 flex-shrink-0">{emoji}</span>
-                      <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <div className="flex-1 bg-[var(--track)] rounded-full h-2 overflow-hidden">
                         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
                       </div>
-                      <span className="text-xs text-gray-500 whitespace-nowrap text-right w-24">
+                      <span className="text-xs text-[var(--sub)] whitespace-nowrap text-right w-24">
                         {type} · {count}
                       </span>
                     </div>

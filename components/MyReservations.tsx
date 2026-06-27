@@ -32,22 +32,22 @@ export default function MyReservations({ orgId }: { orgId: string }) {
     setBusy(null)
   }
 
-  if (items === null) return <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
+  if (items === null) return <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>
 
   return (
     <div>
-      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">À venir</p>
+      <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-2">À venir</p>
       {upcoming.length === 0 ? (
-        <p className="text-sm text-gray-300 py-2 mb-4">Aucune réservation à venir.</p>
+        <p className="text-sm text-[var(--border-strong)] py-2 mb-4">Aucune réservation à venir.</p>
       ) : (
         <div className="space-y-2 mb-6">
           {upcoming.map(r => {
             const key = `${r.scheduleId}|${r.date}`
             return (
-              <div key={key} className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between gap-2">
+              <div key={key} className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-gray-800 truncate">{r.title}</p>
-                  <p className="text-xs text-gray-400 capitalize">{fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}</p>
+                  <p className="text-sm font-bold text-[var(--ink)] truncate">{r.title}</p>
+                  <p className="text-xs text-[var(--muted)] capitalize">{fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}</p>
                   {r.status === 'waitlisted' && <p className="text-[11px] font-bold text-amber-600">Liste d’attente</p>}
                 </div>
                 <button onClick={() => cancel(r)} disabled={busy === key}
@@ -62,12 +62,12 @@ export default function MyReservations({ orgId }: { orgId: string }) {
 
       {past.length > 0 && (
         <>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Passées</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-2">Passées</p>
           <div className="space-y-2">
             {past.slice(0, 30).map(r => (
-              <div key={`${r.scheduleId}|${r.date}`} className="bg-white rounded-xl border border-gray-100 p-3 opacity-70">
-                <p className="text-sm font-semibold text-gray-700 truncate">{r.title}</p>
-                <p className="text-xs text-gray-400 capitalize">{fmtDay(r.date)} · {r.startTime}</p>
+              <div key={`${r.scheduleId}|${r.date}`} className="bg-[var(--card)] rounded-xl border border-[color:var(--track)] p-3 opacity-70">
+                <p className="text-sm font-semibold text-[var(--ink-soft)] truncate">{r.title}</p>
+                <p className="text-xs text-[var(--muted)] capitalize">{fmtDay(r.date)} · {r.startTime}</p>
               </div>
             ))}
           </div>

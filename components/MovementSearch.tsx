@@ -87,25 +87,25 @@ export default function MovementSearch({ value, onChange }: Props) {
           type="text" value={query} onFocus={onFocus}
           onChange={e => onType(e.target.value)}
           placeholder="Chercher ou parcourir les mouvements..."
-          className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 pr-7"
+          className="w-full rounded-lg border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400 pr-7"
         />
         {locked
-          ? <button onClick={clear} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg">×</button>
-          : <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs pointer-events-none">▾</span>
+          ? <button onClick={clear} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--ink-soft)] text-lg">×</button>
+          : <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--border-strong)] text-xs pointer-events-none">▾</span>
         }
       </div>
 
       {mode !== 'idle' && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-[color:var(--border)] bg-[var(--card)] shadow-xl overflow-hidden">
 
           {/* Catégories */}
           {mode === 'categories' && (
             <div className="p-2">
-              <p className="text-xs text-gray-400 px-2 pb-2 pt-1">Parcourir par catégorie</p>
+              <p className="text-xs text-[var(--muted)] px-2 pb-2 pt-1">Parcourir par catégorie</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {CATS.map(c => (
                   <button key={c.id} onClick={() => pickCategory(c.id)}
-                    className="flex flex-col items-center gap-1 p-2.5 rounded-lg hover:bg-orange-50 hover:text-orange-600 text-gray-600 transition border border-transparent hover:border-orange-200">
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-lg hover:bg-[var(--accent-soft)] hover:text-[var(--accent-text)] text-[var(--ink-soft)] transition border border-transparent hover:border-[color:var(--accent-soft)]">
                     <span className="text-lg">{c.emoji}</span>
                     <span className="text-xs font-medium">{c.label}</span>
                   </button>
@@ -117,17 +117,17 @@ export default function MovementSearch({ value, onChange }: Props) {
           {/* Browse */}
           {mode === 'browsing' && (
             <>
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100">
-                <button onClick={() => setMode('categories')} className="text-xs text-gray-400 hover:text-gray-600">← Catégories</button>
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-[color:var(--track)]">
+                <button onClick={() => setMode('categories')} className="text-xs text-[var(--muted)] hover:text-[var(--ink-soft)]">← Catégories</button>
                 <span className="text-xs font-semibold text-orange-500">
                   {CATS.find(c => c.id === browseCategory)?.emoji} {CAT_LABELS[browseCategory]}
                 </span>
               </div>
               {loading
-                ? <p className="text-xs text-gray-400 px-4 py-3">Chargement...</p>
+                ? <p className="text-xs text-[var(--muted)] px-4 py-3">Chargement...</p>
                 : results.map(m => (
                   <button key={m.id} onClick={() => select(m)}
-                    className="w-full flex px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-orange-50 border-b border-gray-100 last:border-0 text-left transition">
+                    className="w-full flex px-4 py-2.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--accent-soft)] border-b border-[color:var(--track)] last:border-0 text-left transition">
                     {m.name}
                   </button>
                 ))
@@ -139,22 +139,22 @@ export default function MovementSearch({ value, onChange }: Props) {
           {mode === 'searching' && (
             <>
               {browseCategory && (
-                <div className="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">
+                <div className="px-3 py-1.5 border-b border-[color:var(--track)] flex items-center justify-between">
+                  <span className="text-xs text-[var(--muted)]">
                     Dans <span className="font-medium text-orange-500">{CAT_LABELS[browseCategory]}</span>
                   </span>
-                  <button onClick={() => setBrowseCategory('')} className="text-xs text-gray-400 hover:text-gray-600">Tout</button>
+                  <button onClick={() => setBrowseCategory('')} className="text-xs text-[var(--muted)] hover:text-[var(--ink-soft)]">Tout</button>
                 </div>
               )}
               {loading
-                ? <p className="text-xs text-gray-400 px-4 py-3">Recherche...</p>
+                ? <p className="text-xs text-[var(--muted)] px-4 py-3">Recherche...</p>
                 : results.length === 0
-                ? <p className="text-xs text-gray-400 px-4 py-3">Aucun résultat pour &quot;{query}&quot;</p>
+                ? <p className="text-xs text-[var(--muted)] px-4 py-3">Aucun résultat pour &quot;{query}&quot;</p>
                 : results.map(m => (
                   <button key={m.id} onClick={() => select(m)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-orange-50 border-b border-gray-100 last:border-0 text-left transition">
-                    <span className="font-medium text-gray-900">{m.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">{CAT_LABELS[m.category] ?? m.category}</span>
+                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-[var(--accent-soft)] border-b border-[color:var(--track)] last:border-0 text-left transition">
+                    <span className="font-medium text-[var(--ink)]">{m.name}</span>
+                    <span className="text-xs text-[var(--muted)] ml-2">{CAT_LABELS[m.category] ?? m.category}</span>
                   </button>
                 ))
               }

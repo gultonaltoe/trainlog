@@ -36,12 +36,12 @@ export default function BrandSettingsPage() {
   if (!org) return null
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[var(--bg)] min-h-screen">
       <div className="max-w-lg mx-auto px-4 pb-8">
         <PageHeader title="Marque & politique" subtitle="Visibles par tes membres" backHref="/box/settings" />
 
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-10">Chargement…</p>
+          <p className="text-sm text-[var(--muted)] text-center py-10">Chargement…</p>
         ) : (
           <div className="space-y-4">
             <Card className="p-4 space-y-4">
@@ -52,13 +52,13 @@ export default function BrandSettingsPage() {
               </Field>
               {brand.logoUrl.trim() && (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={brand.logoUrl} alt="Logo" className="h-12 w-auto rounded-lg border border-gray-100" />
+                <img src={brand.logoUrl} alt="Logo" className="h-12 w-auto rounded-lg border border-[color:var(--track)]" />
               )}
               <Field label="Couleur de marque">
                 <div className="flex items-center gap-2">
                   <input type="color" disabled={!canEdit} value={brand.brandColor || '#F97316'}
                     onChange={e => setBrand(b => ({ ...b, brandColor: e.target.value }))}
-                    className="h-10 w-12 rounded-lg border border-gray-300 bg-white flex-shrink-0" />
+                    className="h-10 w-12 rounded-lg border border-[color:var(--border-strong)] bg-[var(--card)] flex-shrink-0" />
                   <input type="text" className={ui.field} value={brand.brandColor} disabled={!canEdit}
                     placeholder="#F97316 (vide = orange par défaut)"
                     onChange={e => setBrand(b => ({ ...b, brandColor: e.target.value }))} />
