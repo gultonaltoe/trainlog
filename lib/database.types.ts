@@ -1068,6 +1068,7 @@ export type Database = {
           notes: string | null
           sports: string[] | null
           theme_color: string | null
+          training_profile: Json | null
           updated_at: string | null
           user_id: string | null
           weekly_target: number | null
@@ -1086,6 +1087,7 @@ export type Database = {
           notes?: string | null
           sports?: string[] | null
           theme_color?: string | null
+          training_profile?: Json | null
           updated_at?: string | null
           user_id?: string | null
           weekly_target?: number | null
@@ -1104,6 +1106,7 @@ export type Database = {
           notes?: string | null
           sports?: string[] | null
           theme_color?: string | null
+          training_profile?: Json | null
           updated_at?: string | null
           user_id?: string | null
           weekly_target?: number | null

@@ -7,8 +7,9 @@ import { toast } from '@/lib/toast'
 import { getSessionUserId } from '@/lib/auth'
 import { useAppContext } from '@/components/AppContext'
 import ThemeToggle from '@/components/ThemeToggle'
-import { StickyBar } from '@/components/ui'
+import { StickyBar, Select } from '@/components/ui'
 import { useUnsavedGuard } from '@/components/useUnsavedGuard'
+import type { Json } from '@/lib/database.types'
 
 const ROLE_LABEL: Record<string, string> = {
   owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
@@ -36,6 +37,23 @@ const GOALS = [
   {v:'compétition',l:'🏆 Compétition',d:'Préparer des compétitions'},
 ]
 const SPORTS = ['CrossFit','Haltérophilie','Run','Renfo','Endurance','Hyrox','Natation','Vélo','Autre']
+
+// Structured training profile for AI recommendations (ST-41), stored in the
+// user_profile.training_profile jsonb column.
+type TrainingProfile = {
+  injuries: string
+  available_days: string[]
+  preferred_times: string
+  equipment: string[]
+  goal_detail: string
+  experience: Record<string, string>
+}
+const EMPTY_TP: TrainingProfile = { injuries:'', available_days:[], preferred_times:'', equipment:[], goal_detail:'', experience:{} }
+const DAYS = [['mon','Lun'],['tue','Mar'],['wed','Mer'],['thu','Jeu'],['fri','Ven'],['sat','Sam'],['sun','Dim']] as const
+const TIMES = [{value:'matin',label:'Matin'},{value:'midi',label:'Midi'},{value:'soir',label:'Soir'},{value:'flexible',label:'Peu importe'}]
+const EQUIPMENT = ['Barre','Haltères','Kettlebell','Anneaux','Rameur','Assault bike','Corde à sauter','Box','Wall ball','Élastiques']
+const MOVEMENTS = [['snatch','Arraché'],['clean_jerk','Épaulé-jeté'],['muscle_up','Muscle-up'],['hspu','HSPU'],['double_unders','Double-unders'],['pull_up','Tractions']] as const
+const XP_LEVELS = [{value:'none',label:'Non acquis'},{value:'beginner',label:'Débutant'},{value:'intermediate',label:'Intermédiaire'},{value:'advanced',label:'Avancé'}]
 const THEMES = [
   {name:'Orange',hex:'#F97316'},{name:'Bleu',hex:'#3B82F6'},{name:'Violet',hex:'#8B5CF6'},
   {name:'Vert',hex:'#10B981'},{name:'Rouge',hex:'#EF4444'},{name:'Rose',hex:'#EC4899'},
@@ -50,11 +68,16 @@ export default function ProfilePage() {
   const { memberships } = useAppContext()
   const [p, setP]     = useState<Profile>(EMPTY)
   const [saved, setSaved] = useState<Profile>(EMPTY)   // last-persisted snapshot
+  const [tp, setTp] = useState<TrainingProfile>(EMPTY_TP)
+  const [tpSaved, setTpSaved] = useState<TrainingProfile>(EMPTY_TP)
   const [loading, setL] = useState(true)
   const [saving, setS]  = useState(false)
   const [pid, setPid]   = useState<string|null>(null)
-  const dirty = JSON.stringify(p) !== JSON.stringify(saved)
+  const dirty = JSON.stringify(p) !== JSON.stringify(saved) || JSON.stringify(tp) !== JSON.stringify(tpSaved)
   useUnsavedGuard(dirty)
+
+  const updTp = (patch: Partial<TrainingProfile>) => setTp(prev => ({ ...prev, ...patch }))
+  const toggleIn = (arr: string[], v: string) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
 
   useEffect(() => {
     const run = async () => {
@@ -81,6 +104,8 @@ export default function ProfilePage() {
           theme_color:   data.theme_color   ?? '#F97316',
         }
         setP(prof); setSaved(prof)
+        const tpLoaded = { ...EMPTY_TP, ...(data.training_profile as Partial<TrainingProfile> | null ?? {}) }
+        setTp(tpLoaded); setTpSaved(tpLoaded)
         if (data.theme_color) {
           document.documentElement.style.setProperty('--theme-primary', data.theme_color)
         }
@@ -112,6 +137,7 @@ export default function ProfilePage() {
       sports:        p.sports.length > 0 ? p.sports : null,
       notes:         p.notes         || null,
       theme_color:   p.theme_color,
+      training_profile: tp as unknown as Json,
       updated_at:    new Date().toISOString(),
     }
     if (pid) await supabase.from('user_profile').update(payload).eq('id', pid)
@@ -123,6 +149,7 @@ export default function ProfilePage() {
     }
     document.documentElement.style.setProperty('--theme-primary', p.theme_color)
     setSaved(p)
+    setTpSaved(tp)
     setS(false)
     localStorage.setItem('theme-color', p.theme_color)
     toast.success('Profil enregistré ✓')
@@ -335,13 +362,82 @@ export default function ProfilePage() {
           <ThemeToggle />
         </div>
 
-        {/* Notes */}
+        {/* Profil d'entraînement (alimente les recommandations IA) */}
         <div className={section}>
-          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-4">Notes</p>
-          <textarea rows={3} value={p.notes} onChange={e => upd('notes', e.target.value)}
-            placeholder="Contexte, contraintes, historique blessures..."
-            className={inputCls + ' resize-none'} />
-          <p className="text-xs text-[var(--muted)] mt-2">Alimentera les recommandations IA.</p>
+          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-1">Profil d’entraînement</p>
+          <p className="text-xs text-[var(--muted)] mb-4">Ces infos alimenteront les recommandations IA.</p>
+
+          <div className="space-y-5">
+            {/* Blessures */}
+            <div>
+              <label className={labelCls}>Blessures / limitations</label>
+              <textarea rows={2} value={tp.injuries} onChange={e => updTp({ injuries: e.target.value })}
+                placeholder="Ex : épaule droite fragile, éviter le rachis chargé…"
+                className={inputCls + ' resize-none'} />
+            </div>
+
+            {/* Disponibilités */}
+            <div>
+              <label className={labelCls}>Jours dispo</label>
+              <div className="flex flex-wrap gap-1.5">
+                {DAYS.map(([v, l]) => {
+                  const on = tp.available_days.includes(v)
+                  return (
+                    <button key={v} type="button" onClick={() => updTp({ available_days: toggleIn(tp.available_days, v) })}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition"
+                      style={on ? { background: p.theme_color, color:'#fff', borderColor:'transparent' } : { color:'var(--sub)', borderColor:'var(--border)' }}>
+                      {l}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>Moment préféré</label>
+              <Select value={tp.preferred_times} onChange={v => updTp({ preferred_times: v })} options={TIMES} placeholder="Choisir" />
+            </div>
+
+            {/* Matériel */}
+            <div>
+              <label className={labelCls}>Matériel accessible</label>
+              <div className="flex flex-wrap gap-1.5">
+                {EQUIPMENT.map(e => {
+                  const on = tp.equipment.includes(e)
+                  return (
+                    <button key={e} type="button" onClick={() => updTp({ equipment: toggleIn(tp.equipment, e) })}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition"
+                      style={on ? { background: p.theme_color, color:'#fff', borderColor:'transparent' } : { color:'var(--sub)', borderColor:'var(--border)' }}>
+                      {e}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Objectif détaillé */}
+            <div>
+              <label className={labelCls}>Objectif détaillé</label>
+              <textarea rows={2} value={tp.goal_detail} onChange={e => updTp({ goal_detail: e.target.value })}
+                placeholder="Ex : enchaîner 10 muscle-ups, courir 5 km sous 25 min…"
+                className={inputCls + ' resize-none'} />
+            </div>
+
+            {/* Niveau par mouvement */}
+            <div>
+              <label className={labelCls}>Niveau par mouvement</label>
+              <div className="space-y-2">
+                {MOVEMENTS.map(([v, l]) => (
+                  <div key={v} className="flex items-center gap-3">
+                    <span className="text-sm text-[var(--ink-soft)] flex-1 min-w-0">{l}</span>
+                    <div className="w-40 flex-shrink-0">
+                      <Select value={tp.experience[v] ?? ''} onChange={lvl => updTp({ experience: { ...tp.experience, [v]: lvl } })}
+                        options={XP_LEVELS} placeholder="—" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         <StickyBar>

@@ -1,6 +1,21 @@
 'use client'
 import Link from 'next/link'
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
+
+/** Close a popover when the user points down anywhere outside `ref`. Works in
+ *  any stacking context (incl. modals), unlike a fixed overlay. */
+function useOutsideClose(open: boolean, onClose: () => void) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [open, onClose])
+  return ref
+}
 
 // ── Trainlog design system (ST-28 / ST-39) ──────────────────────────
 // Reusable presentational primitives + tokens. Prefer these over ad-hoc
@@ -146,15 +161,15 @@ export function Select<T extends string>({ value, onChange, options, placeholder
   value: T | ''; onChange: (v: T) => void; options: Option<T>[]; placeholder?: string; disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const ref = useOutsideClose(open, () => setOpen(false))
   const current = options.find(o => o.value === value)
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button type="button" disabled={disabled} onClick={() => setOpen(o => !o)}
         className={`${ui.field} flex items-center justify-between gap-2 cursor-pointer ${!current ? 'text-[var(--muted)]' : ''}`}>
         <span className="truncate">{current?.label ?? placeholder}</span>
         <span className="text-[var(--muted)] text-xs flex-shrink-0">▾</span>
       </button>
-      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-xl border border-[color:var(--border)] bg-[var(--card)] shadow-lg max-h-60 overflow-y-auto py-1">
           {options.map(o => (
@@ -188,6 +203,7 @@ export function DatePicker({ value, onChange, placeholder = 'Choisir une date', 
   value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const ref = useOutsideClose(open, () => setOpen(false))
   const sel = value ? new Date(value + 'T00:00:00') : null
   const init = sel ?? new Date()
   const [ym, setYm] = useState({ y: init.getFullYear(), m: init.getMonth() })
@@ -195,13 +211,12 @@ export function DatePicker({ value, onChange, placeholder = 'Choisir une date', 
   const shift = (d: number) => setYm(s => { const x = new Date(s.y, s.m + d, 1); return { y: x.getFullYear(), m: x.getMonth() } })
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button type="button" disabled={disabled} onClick={() => setOpen(o => !o)}
         className={`${ui.field} flex items-center justify-between gap-2 cursor-pointer ${!sel ? 'text-[var(--muted)]' : ''}`}>
         <span className="truncate">📅 {label}</span>
         <span className="text-[var(--muted)] text-xs flex-shrink-0">▾</span>
       </button>
-      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
       {open && (
         <div className="absolute z-50 mt-1 w-72 max-w-[90vw] rounded-2xl border border-[color:var(--border)] bg-[var(--card)] shadow-lg p-3">
           <div className="flex items-center justify-between mb-2">

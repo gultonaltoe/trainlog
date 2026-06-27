@@ -22,14 +22,18 @@ const AppContext = createContext<AppContextValue | null>(null)
 const ACTIVE_KEY = 'trainlog_active_ctx'
 const PERSONAL: ActiveContext = { type: 'personal' }
 
-export function AppProvider({ children }: { children: ReactNode }) {
+// `initialActive` comes from the server (cookie) so the bottom nav SSRs with the
+// correct menu — no personal-menu flash on reload.
+export function AppProvider({ children, initialActive }: { children: ReactNode; initialActive?: ActiveContext | null }) {
   const [memberships, setMemberships] = useState<Membership[]>([])
-  const [active, setActiveState] = useState<ActiveContext>(PERSONAL)
+  const [active, setActiveState] = useState<ActiveContext>(initialActive ?? PERSONAL)
   const [loading, setLoading] = useState(true)
 
   const setActive = useCallback((ctx: ActiveContext) => {
     setActiveState(ctx)
     try { localStorage.setItem(ACTIVE_KEY, JSON.stringify(ctx)) } catch {}
+    // Mirror to a cookie so the next server render knows the active view.
+    try { document.cookie = `${ACTIVE_KEY}=${encodeURIComponent(JSON.stringify(ctx))}; path=/; max-age=31536000; samesite=lax` } catch {}
   }, [])
 
   const refresh = useCallback(async () => {
