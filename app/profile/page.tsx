@@ -10,7 +10,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { StickyBar, Select } from '@/components/ui'
 import { useUnsavedGuard } from '@/components/useUnsavedGuard'
 import { uploadAvatar } from '@/lib/storage'
-import { useRef } from 'react'
+import ImagePicker from '@/components/ImagePicker'
 import type { Json } from '@/lib/database.types'
 
 const ROLE_LABEL: Record<string, string> = {
@@ -81,10 +81,8 @@ export default function ProfilePage() {
   const updTp = (patch: Partial<TrainingProfile>) => setTp(prev => ({ ...prev, ...patch }))
   const toggleIn = (arr: string[], v: string) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
 
-  const avatarRef = useRef<HTMLInputElement>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
-  const onPickAvatar = async (file: File | undefined) => {
-    if (!file) return
+  const onPickAvatar = async (file: File) => {
     const uid = await getSessionUserId()
     if (!uid) { toast.error('Session expirée'); return }
     setAvatarUploading(true)
@@ -190,18 +188,21 @@ export default function ProfilePage() {
       <div className="max-w-lg mx-auto px-4 pb-4">
 
         <div className="pt-8 pb-5 flex items-center gap-4">
-          <button onClick={() => avatarRef.current?.click()} disabled={avatarUploading}
-            className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 cursor-pointer border border-[color:var(--border)]"
-            aria-label="Changer la photo">
-            {p.avatar_url
-              ? /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-              : <span className="w-full h-full flex items-center justify-center text-2xl bg-[var(--track)]">👤</span>}
-            <span className="absolute inset-x-0 bottom-0 text-[9px] font-bold text-white text-center bg-black/45 py-0.5">
-              {avatarUploading ? '…' : 'Modifier'}
-            </span>
-          </button>
-          <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={e => onPickAvatar(e.target.files?.[0])} />
+          <ImagePicker onPick={onPickAvatar} disabled={avatarUploading} capture="user">
+            {open => (
+              <button onClick={open} disabled={avatarUploading}
+                className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 cursor-pointer border border-[color:var(--border)]"
+                aria-label="Changer la photo">
+                {p.avatar_url
+                  ? /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                  : <span className="w-full h-full flex items-center justify-center text-2xl bg-[var(--track)]">👤</span>}
+                <span className="absolute inset-x-0 bottom-0 text-[9px] font-bold text-white text-center bg-black/45 py-0.5">
+                  {avatarUploading ? '…' : 'Modifier'}
+                </span>
+              </button>
+            )}
+          </ImagePicker>
           <div className="min-w-0">
             <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Mon profil</h1>
             <p className="text-sm text-[var(--muted)] mt-0.5">Infos personnelles et préférences</p>

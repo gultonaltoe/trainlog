@@ -1,11 +1,12 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, removeMembership, setMemberAvatar, type OrgMember, type Role } from '@/lib/orgs'
 import { getPlans, formatPrice, PLAN_KIND_LABEL, type MembershipPlan } from '@/lib/plans'
 import { getMemberPlans, assignPlan, cancelMemberPlan, type MemberPlan } from '@/lib/memberPlans'
 import { uploadAvatar } from '@/lib/storage'
+import ImagePicker from '@/components/ImagePicker'
 import { PageHeader, Card, SectionTitle, Field, Select, Button, Badge } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
@@ -27,7 +28,6 @@ export default function MemberDetailPage() {
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [loading, setLoading] = useState(true)
   const [photoBusy, setPhotoBusy] = useState(false)
-  const photoRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     if (!orgId) return
@@ -52,8 +52,8 @@ export default function MemberDetailPage() {
     try { await cancelMemberPlan(mp.id); toast.success('Plan annulé'); await load() }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
   }
-  const onPickPhoto = async (file: File | undefined) => {
-    if (!file || !member) return
+  const onPickPhoto = async (file: File) => {
+    if (!member) return
     setPhotoBusy(true)
     try {
       const url = await uploadAvatar(member.userId, file)   // coach writes to avatars/{memberId}/
@@ -101,13 +101,14 @@ export default function MemberDetailPage() {
                 </div>
               </div>
               {canEdit && (
-                <>
-                  <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={e => onPickPhoto(e.target.files?.[0])} />
-                  <button onClick={() => photoRef.current?.click()} disabled={photoBusy}
-                    className="ds-hover text-[11px] font-bold text-[var(--accent-text)] px-2 py-1 rounded-lg flex-shrink-0">
-                    {photoBusy ? '…' : member.avatarUrl ? 'Changer photo' : 'Ajouter photo'}
-                  </button>
-                </>
+                <ImagePicker onPick={onPickPhoto} disabled={photoBusy} capture="environment">
+                  {open => (
+                    <button onClick={open} disabled={photoBusy}
+                      className="ds-hover text-[11px] font-bold text-[var(--accent-text)] px-2 py-1 rounded-lg flex-shrink-0">
+                      {photoBusy ? '…' : member.avatarUrl ? 'Changer photo' : 'Ajouter photo'}
+                    </button>
+                  )}
+                </ImagePicker>
               )}
             </Card>
 
