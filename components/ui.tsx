@@ -10,6 +10,7 @@ import { useState, type ReactNode } from 'react'
 
 export const ui = {
   primary: 'var(--theme-primary, #F97316)',
+  secondary: '#111827',   // ink — secondary buttons
   field: 'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-50 disabled:text-gray-400',
   label: 'block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5',
   card: 'bg-white rounded-2xl border border-gray-200',
@@ -82,14 +83,16 @@ export function Toggle({ label, hint, checked, disabled, onChange }: {
   )
 }
 
-/** Primary / ghost button. */
+/** Button — primary (orange), secondary (ink fill) or ghost (outline). */
 export function Button({ children, onClick, disabled, variant = 'primary', type = 'button', full }: {
   children: ReactNode; onClick?: () => void; disabled?: boolean
-  variant?: 'primary' | 'ghost'; type?: 'button' | 'submit'; full?: boolean
+  variant?: 'primary' | 'secondary' | 'ghost'; type?: 'button' | 'submit'; full?: boolean
 }) {
   const base = `${full ? 'w-full ' : ''}rounded-2xl font-black text-sm py-3 px-4 transition disabled:opacity-50 cursor-pointer`
   if (variant === 'ghost')
     return <button type={type} onClick={onClick} disabled={disabled} className={`${base} border border-gray-200 text-gray-600`}>{children}</button>
+  if (variant === 'secondary')
+    return <button type={type} onClick={onClick} disabled={disabled} className={`${base} text-white`} style={{ background: ui.secondary }}>{children}</button>
   return <button type={type} onClick={onClick} disabled={disabled} className={`${base} text-white`} style={{ background: ui.primary }}>{children}</button>
 }
 
