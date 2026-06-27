@@ -17,7 +17,7 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 export default function CoachDashboard({ orgId, orgName, role }: { orgId: string; orgName: string; role: Role }) {
   const [memberCount, setMemberCount] = useState<number | null>(null)
   // This-week occupancy: booked seats vs capacity across the week's classes.
-  const [week, setWeek] = useState<{ occupancy: number; avgRate: number; classes: number } | null>(null)
+  const [week, setWeek] = useState<{ occupancy: number; bookings: number; classes: number } | null>(null)
 
   useEffect(() => {
     supabase.from('memberships')
@@ -35,19 +35,18 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
       .then(([sch, bk]) => {
         if (!alive) return
         const occ = occurrencesInRange(sch, fromISO, toISO)
-        let booked = 0, cap = 0; const rates: number[] = []
+        let booked = 0, cap = 0
         for (const o of occ) {
-          const b = bk.get(bookingKey(o.id, o.date))?.bookedCount ?? 0
-          booked += b; cap += o.capacity
-          if (o.capacity > 0) rates.push(b / o.capacity)
+          booked += bk.get(bookingKey(o.id, o.date))?.bookedCount ?? 0
+          cap += o.capacity
         }
         setWeek({
           occupancy: cap > 0 ? Math.round((booked / cap) * 100) : 0,
-          avgRate: rates.length ? Math.round((rates.reduce((a, c) => a + c, 0) / rates.length) * 100) : 0,
+          bookings: booked,
           classes: occ.length,
         })
       })
-      .catch(() => { if (alive) setWeek({ occupancy: 0, avgRate: 0, classes: 0 }) })
+      .catch(() => { if (alive) setWeek({ occupancy: 0, bookings: 0, classes: 0 }) })
     return () => { alive = false }
   }, [orgId])
 
@@ -70,20 +69,6 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
           <p className="text-sm text-[var(--muted)] mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
         </Link>
 
-        {/* Réserver une séance — owners/coaches train at their box too */}
-        <Link href="/box/book"
-          className="flex items-center justify-between rounded-2xl p-4 mb-4 text-white"
-          style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">📅</span>
-            <div>
-              <p className="text-sm font-black">Réserver une séance</p>
-              <p className="text-xs text-white/80">M’inscrire à un cours</p>
-            </div>
-          </div>
-          <span className="text-white/80">›</span>
-        </Link>
-
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 text-center">
             <p className="text-2xl font-black text-[var(--ink)]">{memberCount ?? '—'}</p>
@@ -94,8 +79,8 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
             <p className="text-[11px] text-[var(--muted)] mt-0.5">Occupation</p>
           </div>
           <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 text-center">
-            <p className="text-2xl font-black text-[var(--ink)]">{week ? `${week.avgRate}%` : '—'}</p>
-            <p className="text-[11px] text-[var(--muted)] mt-0.5">Résa moy.</p>
+            <p className="text-2xl font-black text-[var(--ink)]">{week ? week.bookings : '—'}</p>
+            <p className="text-[11px] text-[var(--muted)] mt-0.5">Réservations</p>
           </div>
         </div>
         {week && <p className="text-[11px] text-[var(--muted)] -mt-2 mb-4 text-center">Cette semaine · {week.classes} cours</p>}

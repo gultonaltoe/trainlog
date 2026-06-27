@@ -5,7 +5,7 @@ import {
   getOrgMembers, setEmploymentStatus, removeMembership,
   type OrgMember, type Role, type EmploymentStatus,
 } from '@/lib/orgs'
-import { createInvite, getOrgInvites, revokeInvite, type Invite, type InviteRole } from '@/lib/invites'
+import { createInvite, getOrgInvites, revokeInvite, type Invite } from '@/lib/invites'
 import { getSchedules, endTime, type ClassSchedule } from '@/lib/classes'
 import { toast } from '@/lib/toast'
 
@@ -219,7 +219,6 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
 
 function InviteForm({ orgId, onClose, onSaved }: { orgId: string; onClose: () => void; onSaved: () => void }) {
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<InviteRole>('coach')
   const [saving, setSaving] = useState(false)
 
   const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
@@ -229,7 +228,7 @@ function InviteForm({ orgId, onClose, onSaved }: { orgId: string; onClose: () =>
     if (!email.trim()) { toast.error('Email requis'); return }
     setSaving(true)
     try {
-      await createInvite(orgId, email, role)
+      await createInvite(orgId, email, 'coach')
       toast.success('Invitation créée')
       onSaved()
     } catch (e) {
@@ -251,13 +250,7 @@ function InviteForm({ orgId, onClose, onSaved }: { orgId: string; onClose: () =>
               placeholder="coach@email.com" onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && submit()} />
           </div>
-          <div>
-            <label className={labelCls}>Rôle</label>
-            <select className={fieldCls} value={role} onChange={e => setRole(e.target.value as InviteRole)}>
-              <option value="coach">Coach</option>
-              <option value="member">Membre</option>
-            </select>
-          </div>
+          <p className="text-xs text-[var(--muted)]">Invité comme <span className="font-bold text-[var(--ink-soft)]">Coach</span>.</p>
         </div>
 
         <button onClick={submit} disabled={saving}
