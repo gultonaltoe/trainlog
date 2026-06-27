@@ -18,7 +18,8 @@ export default function UserInit() {
   const doneRef = useRef(false)
 
   useEffect(() => {
-    if (pathname.startsWith('/auth')) return
+    // Public routes (no auth gate) — e.g. the design reference, viewable on previews.
+    if (pathname.startsWith('/auth') || pathname === '/design') return
     if (doneRef.current) return
     doneRef.current = true
 

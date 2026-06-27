@@ -80,7 +80,7 @@ const MEMBER_BOX_NAV: NavItem[] = [ATHLETE_NAV[0], COURS_ITEM, ...ATHLETE_NAV.sl
 export default function BottomNav() {
   const path = usePathname()
   const { active, memberships } = useAppContext()
-  if (path === '/welcome') return null
+  if (path === '/welcome' || path === '/design') return null
 
   // Owner/coach in a box get the management menu. The athlete menu gains a
   // "Cours" booking tab whenever the user belongs to a box — whether they're a
