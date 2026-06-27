@@ -94,7 +94,10 @@ export default function StaffPage() {
                 <div key={m.membershipId} className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <button onClick={() => setDetailFor(m)} className="flex items-center gap-3 min-w-0 text-left cursor-pointer flex-1">
-                      <div className="w-9 h-9 rounded-full bg-[var(--track)] flex items-center justify-center flex-shrink-0">🧑‍🏫</div>
+                      {m.avatarUrl
+                        ? /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={m.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                        : <div className="w-9 h-9 rounded-full bg-[var(--track)] flex items-center justify-center flex-shrink-0">🧑‍🏫</div>}
                       <p className="text-sm font-bold text-[var(--ink)] truncate">{m.firstName ?? ROLE_LABEL[m.role]}</p>
                     </button>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -157,7 +160,10 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
       <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl flex-shrink-0">🧑‍🏫</div>
+          {coach.avatarUrl
+            ? /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={coach.avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+            : <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl flex-shrink-0">🧑‍🏫</div>}
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-black text-[var(--ink)] truncate">{coach.firstName ?? ROLE_LABEL[coach.role]}</h2>
             <p className="text-xs text-[var(--muted)]">

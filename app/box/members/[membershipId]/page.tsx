@@ -71,7 +71,10 @@ export default function MemberDetailPage() {
           <div className="space-y-4">
             {/* Identity */}
             <Card className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl">👤</div>
+              {member.avatarUrl
+                ? /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={member.avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                : <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl flex-shrink-0">👤</div>}
               <div className="min-w-0">
                 <p className="text-base font-black text-[var(--ink)] truncate">{member.firstName ?? 'Membre'}</p>
                 <div className="flex items-center gap-1.5 mt-1">

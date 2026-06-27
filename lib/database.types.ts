@@ -1056,6 +1056,7 @@ export type Database = {
       }
       user_profile: {
         Row: {
+          avatar_url: string | null
           birth_date: string | null
           box_name: string | null
           created_at: string | null
@@ -1075,6 +1076,7 @@ export type Database = {
           weight_kg: number | null
         }
         Insert: {
+          avatar_url?: string | null
           birth_date?: string | null
           box_name?: string | null
           created_at?: string | null
@@ -1094,6 +1096,7 @@ export type Database = {
           weight_kg?: number | null
         }
         Update: {
+          avatar_url?: string | null
           birth_date?: string | null
           box_name?: string | null
           created_at?: string | null

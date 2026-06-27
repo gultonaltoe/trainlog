@@ -70,6 +70,7 @@ export type OrgMember = {
   employmentStatus: EmploymentStatus | null
   leaveStart: string | null     // YYYY-MM-DD when employmentStatus = on_leave
   leaveEnd: string | null
+  avatarUrl: string | null
 }
 
 /**
@@ -89,6 +90,7 @@ export async function getOrgMembers(orgId: string): Promise<OrgMember[]> {
     employmentStatus: (m.employment_status as EmploymentStatus | null) ?? null,
     leaveStart:       (m.leave_start as string | null) ?? null,
     leaveEnd:         (m.leave_end as string | null) ?? null,
+    avatarUrl:        ((m as { avatar_url?: string | null }).avatar_url) ?? null,
   }))
 }
 

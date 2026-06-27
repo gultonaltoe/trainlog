@@ -110,7 +110,10 @@ export default function MembersPage() {
                 <Link key={m.membershipId} href={`/box/members/${m.membershipId}`}
                   className="ds-hover w-full text-left bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 flex items-center justify-between hover:shadow-sm">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-[var(--track)] flex items-center justify-center flex-shrink-0">👤</div>
+                    {m.avatarUrl
+                      ? /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={m.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                      : <div className="w-9 h-9 rounded-full bg-[var(--track)] flex items-center justify-center flex-shrink-0">👤</div>}
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-[var(--ink)] truncate">{m.firstName ?? 'Membre'}</p>
                       <p className="text-[11px] truncate">

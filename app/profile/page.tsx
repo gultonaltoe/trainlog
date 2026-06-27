@@ -9,6 +9,8 @@ import { useAppContext } from '@/components/AppContext'
 import ThemeToggle from '@/components/ThemeToggle'
 import { StickyBar, Select } from '@/components/ui'
 import { useUnsavedGuard } from '@/components/useUnsavedGuard'
+import { uploadAvatar } from '@/lib/storage'
+import { useRef } from 'react'
 import type { Json } from '@/lib/database.types'
 
 const ROLE_LABEL: Record<string, string> = {
@@ -19,11 +21,11 @@ type Profile = {
   first_name: string; email: string; birth_date: string
   weight_kg: string; height_cm: string; level: string; goal: string
   weekly_target: string; box_name: string; sports: string[]
-  notes: string; theme_color: string
+  notes: string; theme_color: string; avatar_url: string
 }
 const EMPTY: Profile = {
   first_name:'', email:'', birth_date:'', weight_kg:'', height_cm:'',
-  level:'', goal:'', weekly_target:'', box_name:'', sports:[], notes:'', theme_color:'#F97316'
+  level:'', goal:'', weekly_target:'', box_name:'', sports:[], notes:'', theme_color:'#F97316', avatar_url:''
 }
 const LEVELS = [
   {v:'débutant',l:'Débutant',d:'Moins de 1 an'},{v:'intermédiaire',l:'Intermédiaire',d:'1 à 3 ans'},
@@ -79,6 +81,21 @@ export default function ProfilePage() {
   const updTp = (patch: Partial<TrainingProfile>) => setTp(prev => ({ ...prev, ...patch }))
   const toggleIn = (arr: string[], v: string) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
 
+  const avatarRef = useRef<HTMLInputElement>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const onPickAvatar = async (file: File | undefined) => {
+    if (!file) return
+    const uid = await getSessionUserId()
+    if (!uid) { toast.error('Session expirée'); return }
+    setAvatarUploading(true)
+    try {
+      const url = await uploadAvatar(uid, file)
+      setP(prev => ({ ...prev, avatar_url: url }))
+      toast.success('Photo mise à jour — pense à enregistrer')
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setAvatarUploading(false)
+  }
+
   useEffect(() => {
     const run = async () => {
       const uid = await getSessionUserId()
@@ -102,6 +119,7 @@ export default function ProfilePage() {
           sports:        data.sports        ?? [],
           notes:         data.notes         ?? '',
           theme_color:   data.theme_color   ?? '#F97316',
+          avatar_url:    data.avatar_url    ?? '',
         }
         setP(prof); setSaved(prof)
         const tpLoaded = { ...EMPTY_TP, ...(data.training_profile as Partial<TrainingProfile> | null ?? {}) }
@@ -137,6 +155,7 @@ export default function ProfilePage() {
       sports:        p.sports.length > 0 ? p.sports : null,
       notes:         p.notes         || null,
       theme_color:   p.theme_color,
+      avatar_url:    p.avatar_url    || null,
       training_profile: tp as unknown as Json,
       updated_at:    new Date().toISOString(),
     }
@@ -170,9 +189,23 @@ export default function ProfilePage() {
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
-        <div className="pt-8 pb-5">
-          <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Mon profil</h1>
-          <p className="text-sm text-[var(--muted)] mt-0.5">Infos personnelles et préférences</p>
+        <div className="pt-8 pb-5 flex items-center gap-4">
+          <button onClick={() => avatarRef.current?.click()} disabled={avatarUploading}
+            className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 cursor-pointer border border-[color:var(--border)]"
+            aria-label="Changer la photo">
+            {p.avatar_url
+              ? /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+              : <span className="w-full h-full flex items-center justify-center text-2xl bg-[var(--track)]">👤</span>}
+            <span className="absolute inset-x-0 bottom-0 text-[9px] font-bold text-white text-center bg-black/45 py-0.5">
+              {avatarUploading ? '…' : 'Modifier'}
+            </span>
+          </button>
+          <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={e => onPickAvatar(e.target.files?.[0])} />
+          <div className="min-w-0">
+            <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Mon profil</h1>
+            <p className="text-sm text-[var(--muted)] mt-0.5">Infos personnelles et préférences</p>
+          </div>
         </div>
 
         {/* Mes box — active memberships are tappable, pending show their state */}
