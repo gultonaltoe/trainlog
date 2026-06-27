@@ -43,6 +43,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-title" content="Trainlog" />
         {/* PWA Android */}
         <link rel="manifest" href="/manifest.json" />
+        {/* Dark mode no-flash: apply saved theme before first paint (ST-39). */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme-mode')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
       </head>
       <body>
         <AppProvider>
@@ -50,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeLoader />
           <ToastContainer />
           <GlobalContextBar />
-          <div className="pb-20" style={{ background: '#F9FAFB' }}>
+          <div className="pb-20" style={{ background: 'var(--bg)' }}>
             {children}
           </div>
           <ClientShell />

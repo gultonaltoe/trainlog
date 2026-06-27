@@ -1,8 +1,40 @@
 @import "tailwindcss";
 
+/* ── Design tokens (ST-28 / ST-39) ───────────────────────────────────────────
+   --theme-primary is the ACCENT (per user/box brand, set by ThemeLoader).
+   The surface tokens below flip light↔dark. Add `.dark` on <html> (global
+   toggle) or on any wrapper (scoped preview, e.g. /design) to switch. */
 :root {
   --foreground: #171717;
   --theme-primary: #F97316;
+
+  --bg:            #F9FAFB;  /* page background          */
+  --card:          #FFFFFF;  /* cards / fields / popovers */
+  --ink:           #111827;  /* primary text             */
+  --ink-soft:      #374151;  /* slightly softer text     */
+  --sub:           #6B7280;  /* secondary text / labels  */
+  --muted:         #9CA3AF;  /* hints / placeholders     */
+  --border:        #E5E7EB;  /* card borders             */
+  --border-strong: #D1D5DB;  /* field borders            */
+  --track:         #F3F4F6;  /* neutral fills            */
+  --hover:         #F3F4F6;  /* hover surface            */
+  --secondary-bg:  #111827;  /* secondary button fill    */
+  --secondary-fg:  #FFFFFF;
+}
+
+.dark {
+  --bg:            #0E0F12;
+  --card:          #17181C;
+  --ink:           #F5F5F7;
+  --ink-soft:      #E5E7EB;
+  --sub:           #A1A1AA;
+  --muted:         #71717A;
+  --border:        #2A2B30;
+  --border-strong: #3A3B40;
+  --track:         #26272C;
+  --hover:         #1F2024;
+  --secondary-bg:  #E5E7EB;
+  --secondary-fg:  #0E0F12;
 }
 
 html {
@@ -10,12 +42,26 @@ html {
 }
 
 body {
-  background-color: #F9FAFB;
+  background-color: var(--bg);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   min-height: 100dvh;
   overscroll-behavior-y: none;
 }
+
+/* ── Design-system semantic classes (used by components/ui.tsx) ───────────────
+   Hover convention: every interactive element gets `cursor-pointer` + a subtle
+   hover — filled buttons dim (opacity), surfaces tint to var(--hover). */
+.ds-card  { background: var(--card); border: 1px solid var(--border); }
+.ds-field {
+  width: 100%; border: 1px solid var(--border-strong); background: var(--card);
+  color: var(--ink); border-radius: .75rem; padding: .625rem .75rem; font-size: .875rem;
+}
+.ds-field::placeholder { color: var(--muted); }
+.ds-field:focus { outline: none; box-shadow: 0 0 0 2px var(--theme-primary); }
+.ds-field:disabled { opacity: .55; cursor: not-allowed; }
+.ds-hover { cursor: pointer; transition: background-color .12s, opacity .12s, box-shadow .12s; }
+.ds-hover:hover { background: var(--hover); }
 
 /* Toast animation */
 @keyframes fade-in {
