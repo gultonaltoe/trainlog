@@ -74,7 +74,7 @@ export default function ReservationSettingsPage() {
                     </p>
                   </div>
                   <Field label="Places en liste d’attente (défaut)" hint="Ajustable par cours dans le planning.">
-                    <input type="number" min={0} className={ui.field} value={resa.waitlistCapacity} disabled={!canEdit}
+                    <input type="number" min={0} className={ui.field} value={resa.waitlistCapacity || ''} disabled={!canEdit}
                       onChange={e => upd({ waitlistCapacity: parseInt(e.target.value) || 0 })} />
                   </Field>
                 </>
@@ -83,7 +83,7 @@ export default function ReservationSettingsPage() {
 
             <Card className="p-4 space-y-4">
               <Field label="Délai limite d’annulation (min avant le cours)" hint="0 = annulation possible jusqu’au début du cours.">
-                <input type="number" min={0} step={15} className={ui.field} value={resa.cancelCutoffMin} disabled={!canEdit}
+                <input type="number" min={0} step={15} className={ui.field} value={resa.cancelCutoffMin || ''} disabled={!canEdit}
                   onChange={e => upd({ cancelCutoffMin: parseInt(e.target.value) || 0 })} />
               </Field>
               <Toggle label="Exiger un abonnement pour réserver" checked={resa.requirePlan} disabled={!canEdit}
@@ -92,8 +92,8 @@ export default function ReservationSettingsPage() {
                   ? 'Un membre doit avoir un abonnement actif (ou des crédits) pour réserver. Coachs/propriétaire exemptés.'
                   : 'N’importe quel membre peut réserver, abonnement ou non.'} />
               <Field label="Réservations actives max par membre" hint="0 = illimité. Compte les cours à venir réservés ou en liste d’attente.">
-                <input type="number" min={0} className={ui.field} value={resa.maxActiveBookings} disabled={!canEdit}
-                  onChange={e => upd({ maxActiveBookings: parseInt(e.target.value) || 0 })} />
+                <input type="number" min={0} className={ui.field} value={resa.maxActiveBookings || ''} disabled={!canEdit}
+                  placeholder="0" onChange={e => upd({ maxActiveBookings: parseInt(e.target.value) || 0 })} />
               </Field>
             </Card>
 
@@ -101,12 +101,12 @@ export default function ReservationSettingsPage() {
               <SectionTitle>Fenêtre de réservation</SectionTitle>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Ouverture (jours avant)" hint="0 = aucune limite.">
-                  <input type="number" min={0} className={ui.field} value={resa.bookAheadDays} disabled={!canEdit}
-                    onChange={e => upd({ bookAheadDays: parseInt(e.target.value) || 0 })} />
+                  <input type="number" min={0} className={ui.field} value={resa.bookAheadDays || ''} disabled={!canEdit}
+                    placeholder="0" onChange={e => upd({ bookAheadDays: parseInt(e.target.value) || 0 })} />
                 </Field>
                 <Field label="Fermeture (min avant)" hint="0 = jusqu’au début.">
-                  <input type="number" min={0} step={15} className={ui.field} value={resa.bookCutoffMin} disabled={!canEdit}
-                    onChange={e => upd({ bookCutoffMin: parseInt(e.target.value) || 0 })} />
+                  <input type="number" min={0} step={15} className={ui.field} value={resa.bookCutoffMin || ''} disabled={!canEdit}
+                    placeholder="0" onChange={e => upd({ bookCutoffMin: parseInt(e.target.value) || 0 })} />
                 </Field>
               </div>
             </Card>

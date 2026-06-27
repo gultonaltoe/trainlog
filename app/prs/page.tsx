@@ -273,8 +273,9 @@ export default function PRsPage() {
                   <p className="text-xs text-[var(--muted)]">{p.count} entrée{p.count > 1 ? 's' : ''} · {daysAgo(p.date)}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xl font-black text-[var(--ink)]">{formatValue(p.best, p.unit)}</p>
-                  <p className="text-xs text-[var(--muted)]">{unitLabel(p.unit)}</p>
+                  <p className="text-xl font-black text-[var(--ink)]">
+                    {formatValue(p.best, p.unit)} <span className="text-xs font-semibold text-[var(--muted)]">{unitLabel(p.unit)}</span>
+                  </p>
                 </div>
                 <span className="text-[var(--border-strong)] ml-1">›</span>
               </Link>

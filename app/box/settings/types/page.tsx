@@ -58,11 +58,11 @@ export default function SessionTypesPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Durée (min)">
-                    <input type="number" min={15} step={15} className={ui.field} value={t.defaultDurationMin} disabled={!canEdit}
+                    <input type="number" min={15} step={15} className={ui.field} value={t.defaultDurationMin || ''} disabled={!canEdit}
                       onChange={e => updType(i, { defaultDurationMin: parseInt(e.target.value) || 0 })} />
                   </Field>
                   <Field label="Places">
-                    <input type="number" min={1} className={ui.field} value={t.defaultCapacity} disabled={!canEdit}
+                    <input type="number" min={1} className={ui.field} value={t.defaultCapacity || ''} disabled={!canEdit}
                       onChange={e => updType(i, { defaultCapacity: parseInt(e.target.value) || 0 })} />
                   </Field>
                 </div>
