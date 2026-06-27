@@ -29,13 +29,13 @@ export default function ContextSwitcher() {
   return (
     <div className="relative">
       <button onClick={() => setOpen(o => !o)}
-        className="ds-hover w-full h-10 flex items-center justify-between rounded-2xl border border-[color:var(--border)] bg-[var(--card)] px-3">
+        className="ds-hover w-full h-10 flex items-center justify-between rounded-2xl border-2 border-[color:var(--border-strong)] bg-[var(--card)] px-3 shadow-sm">
         <span className="flex items-center gap-2 min-w-0">
           <span className="text-base flex-shrink-0">{active.type === 'personal' ? '🏋️' : '🏢'}</span>
-          <span className="text-sm font-bold text-[var(--ink)] truncate">{label}</span>
-          <span className="text-[11px] text-[var(--muted)] flex-shrink-0">· {sub}</span>
+          <span className="text-sm font-black text-[var(--ink)] truncate">{label}</span>
+          <span className="text-[10px] font-bold text-[var(--sub)] bg-[var(--track)] rounded-full px-1.5 py-0.5 flex-shrink-0">{sub}</span>
         </span>
-        <span className="text-[var(--muted)] text-xs flex-shrink-0 ml-2">▾</span>
+        <span className="text-[var(--ink-soft)] text-xs flex-shrink-0 ml-2">▾</span>
       </button>
 
       {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}

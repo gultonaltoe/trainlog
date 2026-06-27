@@ -75,11 +75,11 @@ export default function PlanningPage() {
 
   const coachName = (id: string | null) => id ? (coaches.find(c => c.userId === id)?.firstName ?? 'Coach') : null
   const onDay = (ds: string) => occurrences.filter(c => c.date === ds)
-  // Is the assigned coach on leave for an occurrence on this date?
+  // Is the assigned coach unavailable (congé / maladie) on this date?
   const coachOnLeave = (coachUserId: string | null, dateISO: string) => {
     if (!coachUserId) return false
     const c = coaches.find(x => x.userId === coachUserId)
-    if (!c || c.employmentStatus !== 'on_leave') return false
+    if (!c || (c.employmentStatus !== 'on_leave' && c.employmentStatus !== 'sick')) return false
     if (c.leaveStart && dateISO < c.leaveStart) return false
     if (c.leaveEnd && dateISO > c.leaveEnd) return false
     return true
@@ -254,7 +254,7 @@ function OccRow({ c, coachName, onDelete, booking, onOpen, onLeave }: {
       <button onClick={onOpen} className="min-w-0 text-left flex-1">
         <p className="text-sm font-bold text-[var(--ink)] truncate">
           {c.title}
-          {onLeave && <span className="ml-1.5 text-[10px] font-bold text-amber-600">⚠️ coach en congé</span>}
+          {onLeave && <span className="ml-1.5 text-[10px] font-bold text-amber-600">⚠️ coach indisponible</span>}
         </p>
         <p className="text-xs text-[var(--muted)]">
           {c.startTime}–{endTime(c.startTime, c.durationMin)} · {c.durationMin} min

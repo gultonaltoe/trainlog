@@ -59,6 +59,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Optimistic: restore the saved view immediately on mount so the bottom nav
+  // doesn't flash the personal menu while memberships load (refresh() validates
+  // it once memberships arrive). Speeds up reloads + view switches.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ACTIVE_KEY)
+      if (raw) setActiveState(JSON.parse(raw) as ActiveContext)
+    } catch {}
+  }, [])
+
   useEffect(() => { void refresh() }, [refresh])
 
   return (

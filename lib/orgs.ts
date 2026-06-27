@@ -53,7 +53,7 @@ export async function createOrganization(name: string): Promise<string> {
   return id
 }
 
-export type EmploymentStatus = 'active' | 'on_leave' | 'inactive'
+export type EmploymentStatus = 'active' | 'on_leave' | 'sick' | 'inactive'
 
 export type OrgMember = {
   membershipId: string

@@ -11,7 +11,7 @@ import { Select, DatePicker, Field } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Propriétaire', coach: 'Coach', member: 'Membre' }
-const EMP_LABEL: Record<EmploymentStatus, string> = { active: 'Actif', on_leave: 'Congé', inactive: 'Inactif' }
+const EMP_LABEL: Record<EmploymentStatus, string> = { active: 'Actif', on_leave: 'Congé', sick: 'Maladie', inactive: 'Inactif' }
 const COACH_ROLES: Role[] = ['owner', 'coach']
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
@@ -157,15 +157,17 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
       <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[85dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl">🧑‍🏫</div>
-          <div>
-            <h2 className="text-lg font-black text-[var(--ink)]">{coach.firstName ?? ROLE_LABEL[coach.role]}</h2>
+          <div className="w-12 h-12 rounded-full bg-[var(--track)] flex items-center justify-center text-2xl flex-shrink-0">🧑‍🏫</div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-black text-[var(--ink)] truncate">{coach.firstName ?? ROLE_LABEL[coach.role]}</h2>
             <p className="text-xs text-[var(--muted)]">
               {ROLE_LABEL[coach.role]}
               {coach.employmentStatus && coach.employmentStatus !== 'active' && ` · ${EMP_LABEL[coach.employmentStatus]}`}
-              {coach.employmentStatus === 'on_leave' && coach.leaveStart && ` (${coach.leaveStart} → ${coach.leaveEnd ?? '…'})`}
+              {(coach.employmentStatus === 'on_leave' || coach.employmentStatus === 'sick') && coach.leaveStart && ` (${coach.leaveStart} → ${coach.leaveEnd ?? '…'})`}
             </p>
           </div>
+          <button onClick={onClose} aria-label="Fermer"
+            className="ds-hover w-8 h-8 rounded-full text-[var(--muted)] text-2xl leading-none flex items-center justify-center flex-shrink-0">×</button>
         </div>
 
         {canManage && (
@@ -174,7 +176,7 @@ function CoachDetailSheet({ coach, classes, canManage, onChanged, onClose }: {
               <Select<EmploymentStatus> value={emp} onChange={setEmp}
                 options={(Object.keys(EMP_LABEL) as EmploymentStatus[]).map(k => ({ value: k, label: EMP_LABEL[k] }))} />
             </Field>
-            {emp === 'on_leave' && (
+            {(emp === 'on_leave' || emp === 'sick') && (
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Début"><DatePicker value={start} onChange={setStart} /></Field>
                 <Field label="Fin (option.)"><DatePicker value={end} onChange={setEnd} /></Field>
