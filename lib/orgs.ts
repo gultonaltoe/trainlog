@@ -16,6 +16,7 @@ export type Membership = {
   role: Role
   status: MembershipStatus
   dataSharing: boolean
+  logoUrl: string | null
 }
 
 /** The current user's memberships (active + pending) — their boxes + role/status. */
@@ -23,19 +24,23 @@ export async function getMyMemberships(): Promise<Membership[]> {
   const uid = await requireUserId()
   const { data, error } = await supabase
     .from('memberships')
-    .select('id, organization_id, role, status, data_sharing, organizations(name)')
+    .select('id, organization_id, role, status, data_sharing, organizations(name, settings)')
     .eq('user_id', uid)
     .in('status', ['active', 'pending'])
     .order('created_at', { ascending: true })
   if (error) throw new Error(`getMyMemberships: ${error.message}`)
-  return (data ?? []).map(m => ({
-    id:               m.id,
-    organizationId:   m.organization_id,
-    organizationName: m.organizations?.name ?? 'Box',
-    role:             m.role as Role,
-    status:           m.status as MembershipStatus,
-    dataSharing:      m.data_sharing,
-  }))
+  return (data ?? []).map(m => {
+    const s = (m.organizations?.settings ?? {}) as { brand?: { logoUrl?: string } }
+    return {
+      id:               m.id,
+      organizationId:   m.organization_id,
+      organizationName: m.organizations?.name ?? 'Box',
+      role:             m.role as Role,
+      status:           m.status as MembershipStatus,
+      dataSharing:      m.data_sharing,
+      logoUrl:          s.brand?.logoUrl?.trim() || null,
+    }
+  })
 }
 
 /** Create a box. A DB trigger makes the current user its owner. Returns the new org id. */

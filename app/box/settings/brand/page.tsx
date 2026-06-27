@@ -59,7 +59,9 @@ export default function BrandSettingsPage() {
         ) : (
           <div className="space-y-4">
             <Card className="p-4 space-y-4">
-              <Field label="Logo">
+              {/* Plain div (not a <label>) so only the CTA opens the picker. */}
+              <div>
+                <p className={ui.label}>Logo</p>
                 <div className="flex items-center gap-3">
                   {brand.logoUrl.trim() ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
@@ -81,14 +83,7 @@ export default function BrandSettingsPage() {
                     </div>
                   )}
                 </div>
-              </Field>
-              {canEdit && (
-                <Field label="… ou par URL" hint="Optionnel, si tu héberges déjà ton logo ailleurs.">
-                  <input type="url" className={ui.field} value={brand.logoUrl} disabled={!canEdit}
-                    placeholder="https://…/logo.png"
-                    onChange={e => setBrand(b => ({ ...b, logoUrl: e.target.value }))} />
-                </Field>
-              )}
+              </div>
               <Field label="Couleur de marque">
                 <div className="flex items-center gap-2">
                   <input type="color" disabled={!canEdit} value={brand.brandColor || '#F97316'}

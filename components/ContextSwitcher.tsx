@@ -23,6 +23,14 @@ export default function ContextSwitcher() {
   const switchable = memberships.filter(m => m.status === 'active')
   const label = active.type === 'personal' ? PERSONAL_LABEL : active.orgName
   const sub   = active.type === 'personal' ? 'Athlète' : ROLE_LABEL[active.role]
+  const activeLogo = active.type === 'org'
+    ? (memberships.find(m => m.organizationId === active.orgId)?.logoUrl ?? null) : null
+
+  // Box icon: the logo if set, else a generic emoji.
+  const boxIcon = (logo: string | null) => logo
+    ? /* eslint-disable-next-line @next/next/no-img-element */
+      <img src={logo} alt="" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
+    : <span className="text-base flex-shrink-0">🏢</span>
 
   const choose = (ctx: ActiveContext) => { setActive(ctx); setOpen(false); router.push('/') }
 
@@ -31,7 +39,7 @@ export default function ContextSwitcher() {
       <button onClick={() => setOpen(o => !o)}
         className="ds-hover w-full h-10 flex items-center justify-between rounded-2xl border-2 border-[color:var(--border-strong)] bg-[var(--card)] px-3 shadow-sm">
         <span className="flex items-center gap-2 min-w-0">
-          <span className="text-base flex-shrink-0">{active.type === 'personal' ? '🏋️' : '🏢'}</span>
+          {active.type === 'personal' ? <span className="text-base flex-shrink-0">🏋️</span> : boxIcon(activeLogo)}
           <span className="text-sm font-black text-[var(--ink)] truncate">{label}</span>
           <span className="text-[10px] font-bold text-[var(--sub)] bg-[var(--track)] rounded-full px-1.5 py-0.5 flex-shrink-0">{sub}</span>
         </span>
@@ -52,7 +60,7 @@ export default function ContextSwitcher() {
               onClick={() => choose({ type: 'org', orgId: m.organizationId, orgName: m.organizationName, role: m.role })}
               className="w-full text-left px-4 py-3 hover:bg-[var(--hover)] flex items-center justify-between gap-2 cursor-pointer">
               <span className="flex items-center gap-2 min-w-0">
-                <span>🏢</span>
+                {boxIcon(m.logoUrl)}
                 <span className="text-sm font-semibold text-[var(--ink)] truncate">{m.organizationName}</span>
               </span>
               <span className="text-[11px] text-[var(--muted)] flex-shrink-0">{ROLE_LABEL[m.role]}</span>
