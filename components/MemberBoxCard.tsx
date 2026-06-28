@@ -35,9 +35,9 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
       </div>
 
       {upcoming.length === 0 ? (
-        <p className="text-sm text-[var(--border-strong)] mb-3">Aucune réservation à venir.</p>
+        <p className="text-sm text-[var(--border-strong)]">Aucune réservation à venir.</p>
       ) : (
-        <div className="space-y-1.5 mb-3">
+        <div className="space-y-1.5">
           {upcoming.map(r => (
             <div key={`${r.scheduleId}|${r.date}`} className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold text-[var(--ink)] truncate">{r.title}</span>
@@ -49,12 +49,6 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
           ))}
         </div>
       )}
-
-      <Link href={`/box/book?org=${orgId}`}
-        className="block text-center py-3 rounded-2xl text-white font-black text-sm"
-        style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)' }}>
-        Réserver un cours
-      </Link>
     </div>
   )
 }

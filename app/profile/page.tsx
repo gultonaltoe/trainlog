@@ -278,7 +278,7 @@ export default function ProfilePage() {
             <span className="text-2xl">➕</span>
             <div>
               <p className="text-sm font-bold text-[var(--ink)]">Rejoindre une box</p>
-              <p className="text-xs text-[var(--muted)]">Entre le code de ta salle</p>
+              <p className="text-xs text-[var(--muted)]">Cherche ta salle par son nom</p>
             </div>
           </div>
           <span className="text-[var(--border-strong)]">›</span>

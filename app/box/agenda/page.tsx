@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getSessionUserId } from '@/lib/auth'
 import { getOrgMembers, type OrgMember } from '@/lib/orgs'
-import { getSchedules, occurrencesInRange, endTime, type ClassSchedule, type ClassOccurrence } from '@/lib/classes'
+import { getSchedules, occurrencesInRange, endTime, KIND_META, type ClassSchedule, type ClassOccurrence } from '@/lib/classes'
 import { PageHeader, Card, Segmented } from '@/components/ui'
 
 // ST-50 — shared coach agenda. Week/month view of all classes, colour-coded by
@@ -92,8 +92,8 @@ export default function AgendaPage() {
     <div className="flex items-stretch gap-2.5 bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3">
       <span className="w-1.5 rounded-full flex-shrink-0" style={{ background: coachColor(o.coachUserId) }} />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-[var(--ink)] truncate">{o.title}</p>
-        <p className="text-xs text-[var(--muted)]">{o.startTime}–{endTime(o.startTime, o.durationMin)} · {o.bookable ? `${o.capacity} pl.` : 'Événement'}</p>
+        <p className="text-sm font-bold text-[var(--ink)] truncate">{!o.bookable && `${KIND_META[o.kind]?.emoji ?? '📌'} `}{o.title}</p>
+        <p className="text-xs text-[var(--muted)]">{o.startTime}–{endTime(o.startTime, o.durationMin)} · {o.bookable ? `${o.capacity} pl.` : (KIND_META[o.kind]?.label ?? 'Événement')}</p>
       </div>
       <span className="text-[11px] font-bold flex-shrink-0 self-center" style={{ color: coachColor(o.coachUserId) }}>{coachName(o.coachUserId)}</span>
     </div>

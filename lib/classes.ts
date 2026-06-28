@@ -18,6 +18,17 @@ export type ClassSchedule = {
 // A concrete occurrence of a schedule on a given date (for display / future booking).
 export type ClassOccurrence = ClassSchedule & { date: string }
 
+// ST-51 — event kinds (label + emoji) for non-class calendar entries.
+export const KIND_META: Record<string, { label: string; emoji: string }> = {
+  class:    { label: 'Cours',           emoji: '🏋️' },
+  event:    { label: 'Événement',       emoji: '📌' },
+  course:   { label: 'Formation',       emoji: '🎓' },
+  kids:     { label: 'Ados / pré-ados', emoji: '🧒' },
+  cleaning: { label: 'Ménage',          emoji: '🧹' },
+}
+// Selectable kinds for a non-bookable event.
+export const EVENT_KINDS = ['event', 'course', 'kids', 'cleaning'] as const
+
 type SchedRow = {
   id: string; title: string; session_type: string | null; weekday: number; start_time: string
   duration_min: number; capacity: number; coach_user_id: string | null; start_date: string

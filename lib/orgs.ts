@@ -232,6 +232,24 @@ export async function requestToJoinBox(code: string): Promise<string> {
   return data
 }
 
+// ── Join by search (ST-54) — RPCs not yet in generated types, so cast. ──
+type RpcFn = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+
+/** Search boxes by name (min 2 chars). Returns id + name only. */
+export async function searchBoxes(query: string): Promise<{ id: string; name: string }[]> {
+  if (query.trim().length < 2) return []
+  const { data, error } = await (supabase.rpc as unknown as RpcFn)('search_boxes', { p_query: query.trim() })
+  if (error) throw new Error(error.message)
+  return (data as { id: string; name: string }[] | null) ?? []
+}
+
+/** Request to join a box by id → pending membership (owner approves). Returns name. */
+export async function requestToJoinBoxById(orgId: string): Promise<string> {
+  const { data, error } = await (supabase.rpc as unknown as RpcFn)('request_to_join_box_by_id', { p_org_id: orgId })
+  if (error) throw new Error(error.message)
+  return (data as string) ?? 'Box'
+}
+
 /** Owner/coach/staff approve (active) or reject (inactive) a membership. */
 export async function setMembershipStatus(membershipId: string, status: MembershipStatus): Promise<void> {
   const { error } = await supabase.from('memberships').update({ status }).eq('id', membershipId)

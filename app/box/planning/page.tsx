@@ -2,9 +2,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, getOrganization, DEFAULT_SESSION_TYPES, DEFAULT_CAPACITY, DEFAULT_DURATION_MIN, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
-import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, endTime, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
+import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, endTime, KIND_META, EVENT_KINDS, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
 import { getBookingsInRange, getOccurrenceAttendees, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
-import { BackButton, Toggle } from '@/components/ui'
+import { BackButton, Toggle, Select } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -217,7 +217,7 @@ export default function PlanningPage() {
                         return (
                           <button key={c.id + c.date} onClick={() => setAttendeesFor(c)}
                             className="rounded-xl border border-[color:var(--border)] bg-[var(--card)] p-2.5 text-left">
-                            <p className="text-xs font-bold text-[var(--ink)] truncate">{c.title}</p>
+                            <p className="text-xs font-bold text-[var(--ink)] truncate">{!c.bookable && `${KIND_META[c.kind]?.emoji ?? '📌'} `}{c.title}</p>
                             <p className="text-[10px] text-[var(--muted)]">{c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
                             <p className={`text-[10px] font-bold ${full ? 'text-red-500' : 'text-[var(--sub)]'}`}>{c.bookable ? `${booked}/${c.capacity}` : 'Événement'}</p>
                           </button>
@@ -255,7 +255,7 @@ function OccRow({ c, coachName, onDelete, booking, onOpen, onLeave }: {
     <div className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 flex items-center justify-between gap-2">
       <button onClick={onOpen} className="min-w-0 text-left flex-1">
         <p className="text-sm font-bold text-[var(--ink)] truncate">
-          {c.title}
+          {!c.bookable && `${KIND_META[c.kind]?.emoji ?? '📌'} `}{c.title}
           {onLeave && <span className="ml-1.5 text-[10px] font-bold text-amber-600">⚠️ coach indisponible</span>}
         </p>
         <p className="text-xs text-[var(--muted)]">
@@ -270,7 +270,7 @@ function OccRow({ c, coachName, onDelete, booking, onOpen, onLeave }: {
               {waiting > 0 && <span className="text-amber-600 font-semibold"> · {waiting} en attente</span>}
             </>
           ) : (
-            <span className="font-bold text-[var(--sub)]">Événement (non réservable)</span>
+            <span className="font-bold text-[var(--sub)]">{KIND_META[c.kind]?.label ?? 'Événement'} · non réservable</span>
           )}
         </p>
       </button>
@@ -347,6 +347,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
   const [waitlist, setWaitlist] = useState('')   // empty = use the box default
   const [slots, setSlots] = useState<WeeklySlot[]>([{ weekday: 0, time: '18:00' }])
   const [bookable, setBookable] = useState(true)   // ST-51: off → calendar-only event
+  const [eventKind, setEventKind] = useState<string>('event')   // when not bookable
   const [saving, setSaving] = useState(false)
 
   const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
@@ -372,7 +373,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
         orgId, title, sessionType: bookable ? (type || null) : null, coachUserId: coach || null,
         capacity: bookable ? cap : 0, durationMin: duration, waitlistCapacity: bookable ? wl : null,
         slots, startDateISO: iso(new Date()),
-        kind: bookable ? 'class' : 'event', bookable,
+        kind: bookable ? 'class' : eventKind, bookable,
       })
       toast.success(`${n} créneau${n > 1 ? 'x' : ''} ajouté${n > 1 ? 's' : ''}`)
       onSaved()
@@ -396,13 +397,21 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
         </div>
 
         <div className="space-y-3">
-          <div>
-            <label className={labelCls}>Type de séance</label>
-            <select className={fieldCls} value={type} onChange={e => pickType(e.target.value)}>
-              <option value="">— Choisir —</option>
-              {types.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
-            </select>
-          </div>
+          {bookable ? (
+            <div>
+              <label className={labelCls}>Type de séance</label>
+              <select className={fieldCls} value={type} onChange={e => pickType(e.target.value)}>
+                <option value="">— Choisir —</option>
+                {types.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label className={labelCls}>Type d’événement</label>
+              <Select value={eventKind} onChange={setEventKind}
+                options={EVENT_KINDS.map(k => ({ value: k, label: `${KIND_META[k].emoji} ${KIND_META[k].label}` }))} />
+            </div>
+          )}
           <div>
             <label className={labelCls}>Titre</label>
             <input className={fieldCls} value={title} placeholder="WOD, Haltéro, Open gym…" onChange={e => setTitle(e.target.value)} />
