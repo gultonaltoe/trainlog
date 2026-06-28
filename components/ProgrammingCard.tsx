@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { getProgramming, hasContent, type Programming } from '@/lib/programming'
 
 const todayISO = () => {
@@ -9,7 +10,19 @@ const todayISO = () => {
 
 // ST-34 P1 — member-facing "WOD du jour" for a box (today's programming).
 export default function ProgrammingCard({ orgId, orgName }: { orgId: string; orgName: string }) {
+  const router = useRouter()
   const [p, setP] = useState<Programming | null>(null)
+
+  const logThisWod = () => {
+    if (!p) return
+    try {
+      sessionStorage.setItem('log_prefill', JSON.stringify({
+        warmup: p.warmup, strength: p.strength, wodFormat: p.wodFormat,
+        wodTimeCap: p.timeCapMin, wodDescription: p.wodDescription,
+      }))
+    } catch {}
+    router.push('/log')
+  }
   useEffect(() => {
     let alive = true
     getProgramming(orgId, todayISO()).then(r => { if (alive) setP(r) }).catch(() => {})
@@ -42,6 +55,11 @@ export default function ProgrammingCard({ orgId, orgName }: { orgId: string; org
         )}
         <Row label="Notes" value={prog.notes} />
       </div>
+      <button onClick={logThisWod}
+        className="mt-3 w-full py-2.5 rounded-xl text-white font-black text-sm cursor-pointer"
+        style={{ background: 'var(--theme-primary, #F97316)' }}>
+        Logger ce WOD
+      </button>
     </div>
   )
 }

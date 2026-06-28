@@ -209,6 +209,25 @@ export default function LogPage() {
   const [wodResult, setWodResult]   = useState('')
   const [wodRx, setWodRx]           = useState(true)
 
+  // ST-34 P2 — prefill the log from a box programming ("Logger ce WOD").
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('log_prefill')
+      if (!raw) return
+      sessionStorage.removeItem('log_prefill')
+      const pf = JSON.parse(raw) as { warmup?: string; strength?: string; wodFormat?: string; wodTimeCap?: number | string | null; wodDescription?: string }
+      if (pf.warmup) setWarmupNotes(pf.warmup)
+      if (pf.strength) setPrepItems(ps => [{ id: Date.now(), kind: 'note' as const, text: pf.strength! }, ...ps])
+      if (pf.wodFormat || pf.wodDescription) {
+        setHasWod(true)
+        if (pf.wodFormat) setWodFormat(pf.wodFormat)
+        if (pf.wodTimeCap != null && pf.wodTimeCap !== '') setWodTimeCap(String(pf.wodTimeCap))
+        if (pf.wodDescription) setWodDesc(pf.wodDescription)
+      }
+      toast.success('Séance pré-remplie depuis le WOD du jour')
+    } catch { /* ignore */ }
+  }, [])
+
   // Step 4 — Post
   const [rpe, setRpe]                 = useState(7)
   const [showRpeInfo, setShowRpeInfo] = useState(false)
