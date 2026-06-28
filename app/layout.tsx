@@ -9,17 +9,17 @@ import { AppProvider } from '@/components/AppContext'
 import GlobalContextBar from '@/components/GlobalContextBar'
 
 export const metadata: Metadata = {
-  title: 'Trainlog',
+  title: 'Trainlift',
   description: 'Ton journal d\'entraînement intelligent pour CrossFit et sports fonctionnels.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Trainlog',
+    title: 'Trainlift',
   },
   formatDetection: { telephone: false },
   openGraph: {
-    title: 'Trainlog',
+    title: 'Trainlift',
     description: 'Journal d\'entraînement CrossFit intelligent',
     type: 'website',
   },
@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Trainlog" />
+        <meta name="apple-mobile-web-app-title" content="Trainlift" />
         {/* PWA Android */}
         <link rel="manifest" href="/manifest.json" />
         {/* Dark mode no-flash: apply saved theme before first paint (ST-39). */}

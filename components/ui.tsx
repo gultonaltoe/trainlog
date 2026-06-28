@@ -17,7 +17,7 @@ function useOutsideClose(open: boolean, onClose: () => void) {
   return ref
 }
 
-// ── Trainlog design system (ST-28 / ST-39) ──────────────────────────
+// ── Trainlift design system (ST-28 / ST-39) ──────────────────────────
 // Reusable presentational primitives + tokens. Prefer these over ad-hoc
 // Tailwind so every screen is consistent and dark-mode ready.
 //   • Accent: --theme-primary (per user/box brand, orange fallback).

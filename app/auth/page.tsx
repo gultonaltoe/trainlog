@@ -3,6 +3,7 @@ import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { normalizeEmail } from '@/lib/auth'
+import Wordmark from '@/components/Wordmark'
 
 function AuthForm() {
   const searchParams = useSearchParams()
@@ -33,7 +34,7 @@ function AuthForm() {
         <h1 className="text-2xl font-black text-[var(--ink)] mb-3">Vérifie tes emails</h1>
         <p className="text-sm text-[var(--sub)] leading-relaxed">
           On a envoyé un lien à <strong className="text-[var(--ink)]">{email}</strong>.<br />
-          Clique dessus pour accéder à Trainlog.
+          Clique dessus pour accéder à Trainlift.
         </p>
         <p className="text-xs text-[var(--muted)] mt-4">Le lien expire dans 1 heure · Vérifie tes spams</p>
         <button
@@ -49,8 +50,7 @@ function AuthForm() {
   return (
     <div className="flex-1 flex flex-col px-6 pt-16 pb-8 max-w-sm mx-auto w-full">
       <div className="text-center mb-10">
-        <div className="text-7xl mb-4">🏋️</div>
-        <h1 className="text-4xl font-black text-[var(--ink)] tracking-tight mb-3">Trainlog</h1>
+        <Wordmark size={44} className="text-4xl mb-4" />
         <p className="text-base text-[var(--sub)] leading-relaxed">Entre ton email pour accéder à ton compte.</p>
       </div>
 

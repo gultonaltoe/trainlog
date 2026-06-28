@@ -1,6 +1,6 @@
 {
-  "name": "Trainlog",
-  "short_name": "Trainlog",
+  "name": "Trainlift",
+  "short_name": "Trainlift",
   "description": "Ton journal d'entraînement intelligent",
   "start_url": "/",
   "display": "standalone",

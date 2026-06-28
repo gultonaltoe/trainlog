@@ -64,7 +64,7 @@ export default function FeedbackButton() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-base font-black text-[var(--ink)]">Laisser un retour</h3>
-                  <p className="text-xs text-[var(--muted)] mt-0.5">Aide-nous à améliorer Trainlog</p>
+                  <p className="text-xs text-[var(--muted)] mt-0.5">Aide-nous à améliorer Trainlift</p>
                 </div>
                 <button onClick={() => setOpen(false)}
                   className="w-8 h-8 rounded-full bg-[var(--track)] flex items-center justify-center text-[var(--sub)] text-lg font-bold">

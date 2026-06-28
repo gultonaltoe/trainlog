@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { seedDemoData } from '@/lib/seedDemoData'
+import Wordmark from '@/components/Wordmark'
 
 const SPORTS = [
   { id: 'crossfit',      label: 'CrossFit',       icon: '🏋️', desc: 'WOD, AMRAP, For Time' },
@@ -91,8 +92,7 @@ export default function WelcomePage() {
       <div className="flex-1 flex flex-col px-6 pt-16 pb-8 max-w-sm mx-auto w-full">
 
         <div className="text-center mb-10">
-          <div className="text-7xl mb-4">🏋️</div>
-          <h1 className="text-4xl font-black text-[var(--ink)] tracking-tight mb-3">Trainlog</h1>
+          <Wordmark size={44} className="text-4xl mb-4" />
           <p className="text-base text-[var(--sub)] leading-relaxed">
             Le journal d'entraînement intelligent pour CrossFit, Haltérophilie, Run et Hyrox.
           </p>
