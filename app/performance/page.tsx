@@ -6,7 +6,10 @@ import { getSessionUserId } from '@/lib/auth'
 import { toast } from '@/lib/toast'
 import { getGoals, upsertGoal, deleteGoal, type Goal } from '@/lib/goals'
 import MovementSearch from '@/components/MovementSearch'
-import { PageHeader, Card, SectionTitle, NavRow, Button, Field } from '@/components/ui'
+import { PageHeader, Card, SectionTitle, NavRow, Button, Field, Select } from '@/components/ui'
+import { getTrainingProfile, saveTrainingProfile, EMPTY_TP, TP_DAYS, TP_TIMES, TP_EQUIPMENT, TP_MOVEMENTS, TP_XP_LEVELS, type TrainingProfile } from '@/lib/trainingProfile'
+
+const toggleIn = (arr: string[], v: string) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
 
 // ST-35 P1 — Performance hub overview. Aggregates records (personal_records) +
 // sessions into cross-movement stats + category balance, links to the detailed
@@ -29,6 +32,10 @@ export default function PerformancePage() {
   const [prs, setPrs] = useState<PR[] | null>(null)
   const [sessMonth, setSessMonth] = useState(0)
   const [profile, setProfile] = useState<{ training_profile?: unknown; weight_kg?: number | null } | null>(null)
+  const [tp, setTp] = useState<TrainingProfile>(EMPTY_TP)
+  const [tpSaved, setTpSaved] = useState<TrainingProfile>(EMPTY_TP)
+  const [tpOpen, setTpOpen] = useState(false)
+  const [tpSaving, setTpSaving] = useState(false)
   const [tips, setTips] = useState<string[] | null>(null)
   const [tipsAt, setTipsAt] = useState<number | null>(null)
   const [tipsLoading, setTipsLoading] = useState(false)
@@ -55,6 +62,8 @@ export default function PerformancePage() {
       setPrs((prRes.data ?? []) as PR[])
       setSessMonth(((sRes.data ?? []) as { date: string }[]).filter(s => s.date?.startsWith(ym)).length)
       setProfile(pRes.data ?? null)
+      const tpLoaded = { ...EMPTY_TP, ...((pRes.data?.training_profile as Partial<TrainingProfile> | null) ?? {}) }
+      setTp(tpLoaded); setTpSaved(tpLoaded)
     }
     void run()
   }, [])
@@ -94,6 +103,15 @@ export default function PerformancePage() {
     try { await deleteGoal(id); loadGoals() } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
   }
 
+  const updTp = (patch: Partial<TrainingProfile>) => setTp(prev => ({ ...prev, ...patch }))
+  const tpDirty = JSON.stringify(tp) !== JSON.stringify(tpSaved)
+  const saveTp = async () => {
+    setTpSaving(true)
+    try { await saveTrainingProfile(tp); setTpSaved(tp); toast.success('Profil sportif enregistré') }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setTpSaving(false)
+  }
+
   const buildSummary = () => {
     const byMov = new Map<string, { name: string; best: number; count: number; last: string; unit: string; cat: string }>()
     prs.forEach(p => {
@@ -103,7 +121,7 @@ export default function PerformancePage() {
     })
     const movements = [...byMov.values()].sort((a, b) => b.count - a.count).slice(0, 20)
     return { sessionsThisMonth: sessMonth, prsThisMonth: prsMonth, categoryCounts: catCount, movements,
-      bodyweightKg: profile?.weight_kg ?? null, trainingProfile: profile?.training_profile ?? null }
+      bodyweightKg: profile?.weight_kg ?? null, trainingProfile: tpSaved }
   }
 
   const generateTips = async () => {
@@ -190,6 +208,89 @@ export default function PerformancePage() {
               <p className="text-sm text-[var(--muted)] mb-3">Reçois 3–5 conseils personnalisés basés sur tes perfs et ton profil.</p>
               <Button onClick={generateTips} disabled={tipsLoading || prs.length === 0}>
                 {tipsLoading ? 'Génération…' : 'Voir mes conseils'}
+              </Button>
+            </div>
+          )}
+        </Card>
+
+        <SectionTitle>Profil sportif</SectionTitle>
+        <Card className="p-2 mb-5">
+          <button onClick={() => setTpOpen(o => !o)} className="ds-hover w-full flex items-center justify-between gap-2 p-2.5 rounded-xl cursor-pointer">
+            <span className="min-w-0 text-left">
+              <span className="block text-sm font-bold text-[var(--ink)]">Blessures, dispos, matériel, niveau…</span>
+              <span className="block text-[11px] text-[var(--muted)]">Alimente tes recommandations IA</span>
+            </span>
+            <span className="text-[var(--muted)] text-sm flex-shrink-0">{tpOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {tpOpen && (
+            <div className="px-2.5 pb-2.5 pt-1 space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-[var(--sub)] mb-1.5">Blessures / limitations</label>
+                <textarea rows={2} value={tp.injuries} onChange={e => updTp({ injuries: e.target.value })}
+                  placeholder="Ex : épaule droite fragile, éviter le rachis chargé…" className="ds-field resize-none" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--sub)] mb-1.5">Jours dispo</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {TP_DAYS.map(([v, l]) => {
+                    const on = tp.available_days.includes(v)
+                    return (
+                      <button key={v} type="button" onClick={() => updTp({ available_days: toggleIn(tp.available_days, v) })}
+                        className="px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition"
+                        style={on ? { background: 'var(--theme-primary, #F97316)', color: '#fff', borderColor: 'transparent' } : { color: 'var(--sub)', borderColor: 'var(--border)' }}>
+                        {l}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--sub)] mb-1.5">Moment préféré</label>
+                <Select value={tp.preferred_times} onChange={v => updTp({ preferred_times: v })} options={TP_TIMES} placeholder="Choisir" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--sub)] mb-1.5">Matériel accessible</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {TP_EQUIPMENT.map(e => {
+                    const on = tp.equipment.includes(e)
+                    return (
+                      <button key={e} type="button" onClick={() => updTp({ equipment: toggleIn(tp.equipment, e) })}
+                        className="px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition"
+                        style={on ? { background: 'var(--theme-primary, #F97316)', color: '#fff', borderColor: 'transparent' } : { color: 'var(--sub)', borderColor: 'var(--border)' }}>
+                        {e}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--sub)] mb-1.5">Objectif détaillé</label>
+                <textarea rows={2} value={tp.goal_detail} onChange={e => updTp({ goal_detail: e.target.value })}
+                  placeholder="Ex : enchaîner 10 muscle-ups, courir 5 km sous 25 min…" className="ds-field resize-none" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--sub)] mb-1.5">Niveau par mouvement</label>
+                <div className="space-y-2">
+                  {TP_MOVEMENTS.map(([v, l]) => (
+                    <div key={v} className="flex items-center gap-3">
+                      <span className="text-sm text-[var(--ink-soft)] flex-1 min-w-0">{l}</span>
+                      <div className="w-40 flex-shrink-0">
+                        <Select value={tp.experience[v] ?? ''} onChange={lvl => updTp({ experience: { ...tp.experience, [v]: lvl } })}
+                          options={TP_XP_LEVELS} placeholder="—" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Button onClick={saveTp} disabled={tpSaving || !tpDirty} full>
+                {tpSaving ? 'Enregistrement…' : tpDirty ? 'Enregistrer le profil sportif' : 'Profil à jour ✓'}
               </Button>
             </div>
           )}
