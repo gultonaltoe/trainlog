@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { getSessionUserId } from '@/lib/auth'
-import { PageHeader, Card, SectionTitle, NavRow } from '@/components/ui'
+import { toast } from '@/lib/toast'
+import { PageHeader, Card, SectionTitle, NavRow, Button } from '@/components/ui'
 
 // ST-35 P1 — Performance hub overview. Aggregates records (personal_records) +
 // sessions into cross-movement stats + category balance, links to the detailed
@@ -25,20 +26,31 @@ const fmtDay = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('
 export default function PerformancePage() {
   const [prs, setPrs] = useState<PR[] | null>(null)
   const [sessMonth, setSessMonth] = useState(0)
+  const [profile, setProfile] = useState<{ training_profile?: unknown; weight_kg?: number | null } | null>(null)
+  const [tips, setTips] = useState<string[] | null>(null)
+  const [tipsAt, setTipsAt] = useState<number | null>(null)
+  const [tipsLoading, setTipsLoading] = useState(false)
 
   useEffect(() => {
     const run = async () => {
       const uid = await getSessionUserId()
       if (!uid) { setPrs([]); return }
       const ym = new Date().toISOString().slice(0, 7)
-      const [prRes, sRes] = await Promise.all([
+      const [prRes, sRes, pRes] = await Promise.all([
         supabase.from('personal_records').select('id, movement_id, movement_name, value, unit, date').eq('user_id', uid).order('date', { ascending: true }),
         supabase.from('sessions').select('id, date').eq('user_id', uid),
+        supabase.from('user_profile').select('training_profile, weight_kg').eq('user_id', uid).maybeSingle(),
       ])
       setPrs((prRes.data ?? []) as PR[])
       setSessMonth(((sRes.data ?? []) as { date: string }[]).filter(s => s.date?.startsWith(ym)).length)
+      setProfile(pRes.data ?? null)
     }
     void run()
+  }, [])
+
+  // Restore cached tips (on-demand only — keeps AI cost negligible).
+  useEffect(() => {
+    try { const c = JSON.parse(localStorage.getItem('perf_tips') || 'null'); if (c?.tips) { setTips(c.tips); setTipsAt(c.at) } } catch {}
   }, [])
 
   if (prs === null) return (
@@ -53,6 +65,33 @@ export default function PerformancePage() {
   const recent = [...prs].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')).slice(0, 6)
   const catCount: Record<string, number> = {}
   prs.forEach(p => { const k = catOf(p.movement_name); catCount[k] = (catCount[k] ?? 0) + 1 })
+
+  const buildSummary = () => {
+    const byMov = new Map<string, { name: string; best: number; count: number; last: string; unit: string; cat: string }>()
+    prs.forEach(p => {
+      const e = byMov.get(p.movement_id)
+      if (!e) byMov.set(p.movement_id, { name: p.movement_name, best: p.value, count: 1, last: p.date, unit: p.unit, cat: catOf(p.movement_name) })
+      else { e.count++; if (p.value > e.best) e.best = p.value; if ((p.date ?? '') > e.last) e.last = p.date }
+    })
+    const movements = [...byMov.values()].sort((a, b) => b.count - a.count).slice(0, 20)
+    return { sessionsThisMonth: sessMonth, prsThisMonth: prsMonth, categoryCounts: catCount, movements,
+      bodyweightKg: profile?.weight_kg ?? null, trainingProfile: profile?.training_profile ?? null }
+  }
+
+  const generateTips = async () => {
+    setTipsLoading(true)
+    try {
+      const res = await fetch('/api/performance-tips', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: buildSummary() }),
+      })
+      const data = await res.json()
+      if (!res.ok || !Array.isArray(data.tips)) throw new Error(data.message || 'Erreur')
+      setTips(data.tips); const at = Date.now(); setTipsAt(at)
+      try { localStorage.setItem('perf_tips', JSON.stringify({ at, tips: data.tips })) } catch {}
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setTipsLoading(false)
+  }
 
   return (
     <div className="bg-[var(--bg)] min-h-screen">
@@ -98,6 +137,36 @@ export default function PerformancePage() {
           </Card>
         )}
 
+        <SectionTitle>Conseils personnalisés</SectionTitle>
+        <Card className="p-4 mb-5">
+          {tips && tips.length > 0 ? (
+            <>
+              <ul className="space-y-2">
+                {tips.map((t, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-[var(--ink-soft)]">
+                    <span className="flex-shrink-0" style={{ color: 'var(--theme-primary, #F97316)' }}>•</span>
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-[color:var(--track)]">
+                <span className="text-[10px] text-[var(--muted)]">IA · indicatif{tipsAt ? ` · ${new Date(tipsAt).toLocaleDateString('fr-FR')}` : ''}</span>
+                <button onClick={generateTips} disabled={tipsLoading}
+                  className="text-xs font-bold cursor-pointer disabled:opacity-50" style={{ color: 'var(--theme-primary, #F97316)' }}>
+                  {tipsLoading ? '…' : 'Rafraîchir'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-1">
+              <p className="text-sm text-[var(--muted)] mb-3">Reçois 3–5 conseils personnalisés basés sur tes perfs et ton profil.</p>
+              <Button onClick={generateTips} disabled={tipsLoading || prs.length === 0}>
+                {tipsLoading ? 'Génération…' : 'Voir mes conseils'}
+              </Button>
+            </div>
+          )}
+        </Card>
+
         <SectionTitle>Explorer</SectionTitle>
         <div className="space-y-2 mb-5">
           <NavRow href="/prs" icon="🏆" title="Records (PRs)" hint="Tous tes mouvements + analyses détaillées" />
@@ -108,7 +177,7 @@ export default function PerformancePage() {
           <p className="text-sm font-bold text-[var(--ink)]">🧪 Bêta — ton avis compte</p>
           <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">
             On construit un vrai suivi de performance : tendances, <span className="font-semibold text-[var(--ink-soft)]">recommandations personnalisées</span> et objectifs.
-            Dis-nous ce qui te serait le plus utile via le bouton retour 💬 en bas à droite.
+            Dis-nous ce qui te serait le plus utile via le bouton Feedback 💬 en bas à droite.
           </p>
         </Card>
       </div>
