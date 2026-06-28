@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getProgramming, upsertProgramming, emptyProgramming, type Programming } from '@/lib/programming'
 import { getOrganization, updateProgrammingSettings, DEFAULT_PROGRAMMING_SETTINGS, type ProgrammingSettings } from '@/lib/orgs'
+import ImagePicker from '@/components/ImagePicker'
 import { toast } from '@/lib/toast'
 import { PageHeader, Card, Field, Button, DatePicker, TimePicker, Segmented, ui } from '@/components/ui'
 
@@ -40,6 +41,33 @@ export default function ProgrammingPage() {
 
   const upd = (patch: Partial<Programming>) => setP(prev => ({ ...prev, ...patch }))
 
+  // P1.5 — prefill the form by analysing a whiteboard photo (reuses /api/analyze-wod).
+  const [analyzing, setAnalyzing] = useState(false)
+  const analyzePhoto = async (file: File) => {
+    setAnalyzing(true)
+    try {
+      const dataUrl = await new Promise<string>((res, rej) => {
+        const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(file)
+      })
+      const resp = await fetch('/api/analyze-wod', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl.split(',')[1], mediaType: file.type || 'image/jpeg' }),
+      })
+      const data = await resp.json()
+      if (!resp.ok || data.error) throw new Error('Analyse impossible — réessaie ou saisis à la main')
+      setP(prev => ({
+        ...prev,
+        warmup: data.warmup ?? prev.warmup,
+        strength: data.strength_notes ?? prev.strength,
+        wodFormat: data.format ?? prev.wodFormat,
+        timeCapMin: data.time_cap ?? prev.timeCapMin,
+        wodDescription: data.description ?? prev.wodDescription,
+      }))
+      toast.success('Programmation pré-remplie depuis la photo')
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setAnalyzing(false)
+  }
+
   const save = async () => {
     if (!orgId) return
     setSaving(true)
@@ -74,6 +102,19 @@ export default function ProgrammingPage() {
         <div className="mb-4">
           <Field label="Jour"><DatePicker value={date} onChange={setDate} /></Field>
         </div>
+
+        {canEdit && (
+          <div className="mb-4">
+            <ImagePicker onPick={analyzePhoto} disabled={analyzing} capture="environment">
+              {open => (
+                <button onClick={open} disabled={analyzing}
+                  className="ds-hover w-full py-3 rounded-2xl border border-dashed border-[color:var(--border-strong)] text-sm font-bold text-[var(--ink-soft)] disabled:opacity-50">
+                  {analyzing ? 'Analyse…' : '📷 Pré-remplir depuis une photo du tableau'}
+                </button>
+              )}
+            </ImagePicker>
+          </div>
+        )}
 
         {loading ? (
           <p className="text-sm text-[var(--muted)] text-center py-10">Chargement…</p>
