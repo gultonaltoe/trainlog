@@ -222,6 +222,54 @@ export type Database = {
           },
         ]
       }
+      box_programming: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date: string
+          id: string
+          notes: string | null
+          organization_id: string
+          strength: string | null
+          time_cap_min: number | null
+          title: string | null
+          updated_at: string | null
+          warmup: string | null
+          wod_description: string | null
+          wod_format: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          strength?: string | null
+          time_cap_min?: number | null
+          title?: string | null
+          updated_at?: string | null
+          warmup?: string | null
+          wod_description?: string | null
+          wod_format?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          strength?: string | null
+          time_cap_min?: number | null
+          title?: string | null
+          updated_at?: string | null
+          warmup?: string | null
+          wod_description?: string | null
+          wod_format?: string | null
+        }
+        Relationships: []
+      }
       class_schedules: {
         Row: {
           active: boolean

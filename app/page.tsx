@@ -6,6 +6,7 @@ import type { SessionSummary, UserProfile } from '@/lib/api'
 import { useAppContext } from '@/components/AppContext'
 import CoachDashboard from '@/components/CoachDashboard'
 import MemberBoxCard from '@/components/MemberBoxCard'
+import ProgrammingCard from '@/components/ProgrammingCard'
 
 // ── Helpers ───────────────────────────────────────────────
 function toDateStr(d: Date) {
@@ -192,9 +193,12 @@ export default function Dashboard() {
         {/* Réservations de cours — dans le contexte d'une box, ou dans l'espace
             athlète pour chaque box dont on est membre (owner/coach/membre). */}
         {active.type === 'org'
-          ? <MemberBoxCard orgId={active.orgId} orgName={active.orgName} />
+          ? <><ProgrammingCard orgId={active.orgId} orgName={active.orgName} /><MemberBoxCard orgId={active.orgId} orgName={active.orgName} /></>
           : memberships.filter(m => m.status === 'active').map(m => (
-              <MemberBoxCard key={m.organizationId} orgId={m.organizationId} orgName={m.organizationName} />
+              <div key={m.organizationId}>
+                <ProgrammingCard orgId={m.organizationId} orgName={m.organizationName} />
+                <MemberBoxCard orgId={m.organizationId} orgName={m.organizationName} />
+              </div>
             ))}
 
         {/* Bannière données démo */}
