@@ -15,7 +15,14 @@ export default function ProgrammingCard({ orgId, orgName }: { orgId: string; org
   const router = useRouter()
   const [p, setP] = useState<Programming | null>(null)
   const [vis, setVis] = useState<ProgrammingSettings | null>(null)
-  useEffect(() => { getOrganization(orgId).then(o => setVis(o.programming)).catch(() => {}) }, [orgId])
+  // Only fetch the org visibility setting when there's actually a WOD to gate
+  // (avoids an extra round-trip on the home when nothing is published).
+  useEffect(() => {
+    if (!hasContent(p)) return
+    let alive = true
+    getOrganization(orgId).then(o => { if (alive) setVis(o.programming) }).catch(() => {})
+    return () => { alive = false }
+  }, [orgId, p])
 
   const logThisWod = () => {
     if (!p) return

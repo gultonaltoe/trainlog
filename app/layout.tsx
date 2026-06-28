@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { cookies } from 'next/headers'
 import './globals.css'
 import ToastContainer from '@/components/ToastContainer'
 import ThemeLoader    from '@/components/ThemeLoader'
@@ -33,11 +32,7 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Read the saved view from the cookie so the bottom nav SSRs the right menu.
-  const rawCtx = (await cookies()).get('trainlog_active_ctx')?.value
-  let initialActive = null
-  if (rawCtx) { try { initialActive = JSON.parse(decodeURIComponent(rawCtx)) } catch {} }
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
       <head>
@@ -52,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem('theme-mode')||'system';if(m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}` }} />
       </head>
       <body>
-        <AppProvider initialActive={initialActive}>
+        <AppProvider>
           <UserInit />
           <ThemeLoader />
           <ToastContainer />
