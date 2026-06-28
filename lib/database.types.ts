@@ -225,11 +225,13 @@ export type Database = {
       class_schedules: {
         Row: {
           active: boolean
+          bookable: boolean
           capacity: number
           coach_user_id: string | null
           created_at: string
           duration_min: number
           id: string
+          kind: string
           organization_id: string
           session_type: string | null
           start_date: string
@@ -240,11 +242,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          bookable?: boolean
           capacity: number
           coach_user_id?: string | null
           created_at?: string
           duration_min?: number
           id?: string
+          kind?: string
           organization_id: string
           session_type?: string | null
           start_date?: string
@@ -255,11 +259,13 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          bookable?: boolean
           capacity?: number
           coach_user_id?: string | null
           created_at?: string
           duration_min?: number
           id?: string
+          kind?: string
           organization_id?: string
           session_type?: string | null
           start_date?: string

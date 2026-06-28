@@ -73,7 +73,8 @@ export default function BookPage() {
   const loadSchedules = useCallback(async () => {
     if (!orgId) return
     setLoading(true)
-    try { setSchedules(await getSchedules(orgId)) } catch { setSchedules([]) }
+    // Members only book bookable classes — calendar-only events (ST-51) are hidden here.
+    try { setSchedules((await getSchedules(orgId)).filter(s => s.bookable)) } catch { setSchedules([]) }
     setLoading(false)
   }, [orgId])
   useEffect(() => { void loadSchedules() }, [loadSchedules])

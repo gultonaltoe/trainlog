@@ -11,6 +11,8 @@ export type ClassSchedule = {
   coachUserId: string | null
   startDate: string     // YYYY-MM-DD
   waitlistCapacity: number | null   // per-class override; null = use the box default
+  kind: string          // 'class' (réservable) | 'event' | 'course' | 'kids' | 'cleaning' (ST-51)
+  bookable: boolean     // false → calendar-only (no member booking)
 }
 
 // A concrete occurrence of a schedule on a given date (for display / future booking).
@@ -19,7 +21,7 @@ export type ClassOccurrence = ClassSchedule & { date: string }
 type SchedRow = {
   id: string; title: string; session_type: string | null; weekday: number; start_time: string
   duration_min: number; capacity: number; coach_user_id: string | null; start_date: string
-  waitlist_capacity: number | null
+  waitlist_capacity: number | null; kind: string; bookable: boolean
 }
 
 function toSchedule(r: SchedRow): ClassSchedule {
@@ -27,7 +29,7 @@ function toSchedule(r: SchedRow): ClassSchedule {
     id: r.id, title: r.title, sessionType: r.session_type, weekday: r.weekday,
     startTime: (r.start_time ?? '').slice(0, 5), durationMin: r.duration_min,
     capacity: r.capacity, coachUserId: r.coach_user_id, startDate: r.start_date,
-    waitlistCapacity: r.waitlist_capacity,
+    waitlistCapacity: r.waitlist_capacity, kind: r.kind ?? 'class', bookable: r.bookable ?? true,
   }
 }
 
@@ -43,7 +45,7 @@ export function endTime(start: string, durationMin: number): string {
 /** Active recurring schedules of a box. */
 export async function getSchedules(orgId: string): Promise<ClassSchedule[]> {
   const { data, error } = await supabase.from('class_schedules')
-    .select('id, title, session_type, weekday, start_time, duration_min, capacity, coach_user_id, start_date, waitlist_capacity')
+    .select('id, title, session_type, weekday, start_time, duration_min, capacity, coach_user_id, start_date, waitlist_capacity, kind, bookable')
     .eq('organization_id', orgId).eq('active', true)
   if (error) throw new Error(`getSchedules: ${error.message}`)
   return ((data ?? []) as SchedRow[]).map(toSchedule)
@@ -80,6 +82,8 @@ export type NewSchedule = {
   waitlistCapacity: number | null   // per-class override; null = use the box default
   slots: WeeklySlot[]      // each slot becomes its own recurring schedule
   startDateISO: string     // recurs weekly from here, forever
+  kind?: string            // default 'class'
+  bookable?: boolean       // default true; false → calendar-only event
 }
 
 /** Create one recurring schedule per slot (recurs weekly until removed). */
@@ -95,6 +99,8 @@ export async function createSchedules(input: NewSchedule): Promise<number> {
     coach_user_id: input.coachUserId,
     start_date: input.startDateISO,
     waitlist_capacity: input.waitlistCapacity,
+    kind: input.kind ?? 'class',
+    bookable: input.bookable ?? true,
   }))
   if (rows.length === 0) return 0
   const { error } = await supabase.from('class_schedules').insert(rows)

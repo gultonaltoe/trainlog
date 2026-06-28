@@ -4,7 +4,7 @@ import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, getOrganization, DEFAULT_SESSION_TYPES, DEFAULT_CAPACITY, DEFAULT_DURATION_MIN, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
 import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, endTime, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
 import { getBookingsInRange, getOccurrenceAttendees, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
-import { BackButton } from '@/components/ui'
+import { BackButton, Toggle } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -219,7 +219,7 @@ export default function PlanningPage() {
                             className="rounded-xl border border-[color:var(--border)] bg-[var(--card)] p-2.5 text-left">
                             <p className="text-xs font-bold text-[var(--ink)] truncate">{c.title}</p>
                             <p className="text-[10px] text-[var(--muted)]">{c.startTime}–{endTime(c.startTime, c.durationMin)}</p>
-                            <p className={`text-[10px] font-bold ${full ? 'text-red-500' : 'text-[var(--sub)]'}`}>{booked}/{c.capacity}</p>
+                            <p className={`text-[10px] font-bold ${full ? 'text-red-500' : 'text-[var(--sub)]'}`}>{c.bookable ? `${booked}/${c.capacity}` : 'Événement'}</p>
                           </button>
                         )
                       })}
@@ -263,9 +263,15 @@ function OccRow({ c, coachName, onDelete, booking, onOpen, onLeave }: {
           {coachName(c.coachUserId) && ` · ${coachName(c.coachUserId)}`}
         </p>
         <p className="text-xs mt-0.5">
-          <span className={`font-bold ${full ? 'text-red-500' : 'text-[var(--ink-soft)]'}`}>{booked}/{c.capacity}</span>
-          <span className="text-[var(--muted)]"> réservés</span>
-          {waiting > 0 && <span className="text-amber-600 font-semibold"> · {waiting} en attente</span>}
+          {c.bookable ? (
+            <>
+              <span className={`font-bold ${full ? 'text-red-500' : 'text-[var(--ink-soft)]'}`}>{booked}/{c.capacity}</span>
+              <span className="text-[var(--muted)]"> réservés</span>
+              {waiting > 0 && <span className="text-amber-600 font-semibold"> · {waiting} en attente</span>}
+            </>
+          ) : (
+            <span className="font-bold text-[var(--sub)]">Événement (non réservable)</span>
+          )}
         </p>
       </button>
       <button onClick={() => onDelete(c)} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-2 flex-shrink-0">×</button>
@@ -340,6 +346,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
   const [duration, setDuration] = useState(DEFAULT_DURATION_MIN)
   const [waitlist, setWaitlist] = useState('')   // empty = use the box default
   const [slots, setSlots] = useState<WeeklySlot[]>([{ weekday: 0, time: '18:00' }])
+  const [bookable, setBookable] = useState(true)   // ST-51: off → calendar-only event
   const [saving, setSaving] = useState(false)
 
   const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
@@ -356,14 +363,16 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
   const submit = async () => {
     if (!title.trim()) { toast.error('Titre requis'); return }
     const cap = parseInt(capacity)
-    if (!cap || cap < 1) { toast.error('Nombre de places requis'); return }
+    if (bookable && (!cap || cap < 1)) { toast.error('Nombre de places requis'); return }
     if (slots.length === 0) { toast.error('Ajoute au moins un créneau'); return }
     setSaving(true)
     try {
       const wl = waitlist.trim() === '' ? null : Math.max(0, parseInt(waitlist) || 0)
       const n = await createSchedules({
-        orgId, title, sessionType: type || null, coachUserId: coach || null,
-        capacity: cap, durationMin: duration, waitlistCapacity: wl, slots, startDateISO: iso(new Date()),
+        orgId, title, sessionType: bookable ? (type || null) : null, coachUserId: coach || null,
+        capacity: bookable ? cap : 0, durationMin: duration, waitlistCapacity: bookable ? wl : null,
+        slots, startDateISO: iso(new Date()),
+        kind: bookable ? 'class' : 'event', bookable,
       })
       toast.success(`${n} créneau${n > 1 ? 'x' : ''} ajouté${n > 1 ? 's' : ''}`)
       onSaved()
@@ -376,8 +385,15 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
       <div className="bg-[var(--card)] w-full max-w-lg rounded-t-3xl p-5 pb-8 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-4" />
-        <h2 className="text-lg font-black text-[var(--ink)] mb-1">Cours récurrent</h2>
-        <p className="text-xs text-[var(--muted)] mb-4">Se répète chaque semaine, jusqu’à ce que tu le supprimes.</p>
+        <h2 className="text-lg font-black text-[var(--ink)] mb-1">Cours / événement récurrent</h2>
+        <p className="text-xs text-[var(--muted)] mb-3">Se répète chaque semaine, jusqu’à ce que tu le supprimes.</p>
+
+        <div className="mb-3 bg-[var(--bg)] rounded-xl p-3">
+          <Toggle label="Réservable par les membres" checked={bookable} onChange={setBookable}
+            hint={bookable
+              ? 'Cours normal : les membres peuvent réserver.'
+              : 'Événement calendrier (formation/BPJEPS, ados, ménage…) — visible au planning et à l’agenda, non réservable.'} />
+        </div>
 
         <div className="space-y-3">
           <div>
@@ -391,11 +407,13 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
             <label className={labelCls}>Titre</label>
             <input className={fieldCls} value={title} placeholder="WOD, Haltéro, Open gym…" onChange={e => setTitle(e.target.value)} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>Places *</label>
-              <input type="number" min={1} className={fieldCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
-            </div>
+          <div className={bookable ? 'grid grid-cols-2 gap-3' : ''}>
+            {bookable && (
+              <div>
+                <label className={labelCls}>Places *</label>
+                <input type="number" min={1} className={fieldCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
+              </div>
+            )}
             <div>
               <label className={labelCls}>Durée (min)</label>
               <input type="number" min={15} step={15} className={fieldCls} value={duration} onChange={e => setDuration(parseInt(e.target.value) || 60)} />

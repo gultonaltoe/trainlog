@@ -93,7 +93,7 @@ export default function AgendaPage() {
       <span className="w-1.5 rounded-full flex-shrink-0" style={{ background: coachColor(o.coachUserId) }} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-[var(--ink)] truncate">{o.title}</p>
-        <p className="text-xs text-[var(--muted)]">{o.startTime}–{endTime(o.startTime, o.durationMin)} · {o.capacity} pl.</p>
+        <p className="text-xs text-[var(--muted)]">{o.startTime}–{endTime(o.startTime, o.durationMin)} · {o.bookable ? `${o.capacity} pl.` : 'Événement'}</p>
       </div>
       <span className="text-[11px] font-bold flex-shrink-0 self-center" style={{ color: coachColor(o.coachUserId) }}>{coachName(o.coachUserId)}</span>
     </div>
