@@ -170,11 +170,22 @@ export default function Dashboard() {
             }
             <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
           </div>
-          <Link href="/log"
-            className="text-white text-sm font-black px-5 py-3 rounded-2xl whitespace-nowrap flex items-center gap-1.5"
-            style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.4)' }}>
-            <span className="text-base leading-none">+</span> Séance
-          </Link>
+          {(() => {
+            const hasBox = active.type === 'org' || memberships.some(m => m.status === 'active')
+            return hasBox ? (
+              // Box member: booking (Réserver) is the primary CTA (MemberBoxCard); logging is secondary.
+              <Link href="/log"
+                className="text-sm font-bold px-4 py-3 rounded-2xl whitespace-nowrap flex items-center gap-1.5 border border-[color:var(--border-strong)] text-[var(--ink-soft)]">
+                <span className="text-base leading-none">+</span> Séance
+              </Link>
+            ) : (
+              <Link href="/log"
+                className="text-white text-sm font-black px-5 py-3 rounded-2xl whitespace-nowrap flex items-center gap-1.5"
+                style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.4)' }}>
+                <span className="text-base leading-none">+</span> Séance
+              </Link>
+            )
+          })()}
         </div>
 
 

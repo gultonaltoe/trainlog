@@ -39,8 +39,9 @@ export function PageHeader({ title, subtitle, backHref }: { title: string; subti
   return (
     <div className="pt-8 pb-4">
       {backHref && (
-        <Link href={backHref} className="text-sm font-bold text-[var(--muted)] hover:text-[var(--sub)] mb-2 inline-flex items-center gap-1">
-          ‹ Retour
+        <Link href={backHref}
+          className="ds-hover mb-3 inline-flex items-center gap-1 text-sm font-bold text-[var(--ink-soft)] border border-[color:var(--border)] rounded-full pl-2 pr-3.5 py-1.5">
+          <span className="text-lg leading-none -mt-0.5">‹</span> Retour
         </Link>
       )}
       <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">{title}</h1>

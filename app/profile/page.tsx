@@ -6,8 +6,9 @@ import { supabase } from '@/lib/supabase'
 import { toast } from '@/lib/toast'
 import { getSessionUserId } from '@/lib/auth'
 import { useAppContext } from '@/components/AppContext'
+import { setDataSharing } from '@/lib/orgs'
 import ThemeToggle from '@/components/ThemeToggle'
-import { StickyBar, Select } from '@/components/ui'
+import { StickyBar, Select, Toggle } from '@/components/ui'
 import { useUnsavedGuard } from '@/components/useUnsavedGuard'
 import { uploadAvatar } from '@/lib/storage'
 import ImagePicker from '@/components/ImagePicker'
@@ -28,9 +29,11 @@ const EMPTY: Profile = {
   level:'', goal:'', weekly_target:'', box_name:'', sports:[], notes:'', theme_color:'#F97316', avatar_url:''
 }
 const LEVELS = [
-  {v:'débutant',l:'Débutant',d:'Moins de 1 an'},{v:'intermédiaire',l:'Intermédiaire',d:'1 à 3 ans'},
-  {v:'avancé',l:'Avancé',d:'3 à 5 ans'},{v:'élite',l:'Élite',d:'5 ans et +'},
-  {v:'compétiteur',l:'Compétiteur',d:'Competition ready'},
+  {v:'débutant',     l:'Débutant',     d:'Je découvre les mouvements'},
+  {v:'intermédiaire',l:'Intermédiaire',d:'Technique en place, je progresse'},
+  {v:'avancé',       l:'Avancé',       d:'Mouvements maîtrisés, bonnes charges'},
+  {v:'élite',        l:'Élite',        d:'Très haut niveau (RX+)'},
+  {v:'compétiteur',  l:'Compétiteur',  d:'Je participe à des compétitions'},
 ]
 const GOALS = [
   {v:'santé',l:'🌿 Santé',d:'Bien-être général'},
@@ -67,7 +70,8 @@ const labelCls = "block text-xs font-bold text-[var(--sub)] uppercase tracking-w
 const section  = "bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4"
 
 export default function ProfilePage() {
-  const { memberships } = useAppContext()
+  const { memberships, refresh } = useAppContext()
+  const [sharing, setSharing] = useState<Record<string, boolean>>({})
   const [p, setP]     = useState<Profile>(EMPTY)
   const [saved, setSaved] = useState<Profile>(EMPTY)   // last-persisted snapshot
   const [tp, setTp] = useState<TrainingProfile>(EMPTY_TP)
@@ -77,6 +81,21 @@ export default function ProfilePage() {
   const [pid, setPid]   = useState<string|null>(null)
   const dirty = JSON.stringify(p) !== JSON.stringify(saved) || JSON.stringify(tp) !== JSON.stringify(tpSaved)
   useUnsavedGuard(dirty)
+
+  // Prefill Box/Club from the user's active membership when empty (display only,
+  // not marked dirty) so it's filled once they've joined a box.
+  useEffect(() => {
+    const act = memberships.find(m => m.status === 'active')
+    if (!act) return
+    setP(prev => prev.box_name ? prev : { ...prev, box_name: act.organizationName })
+    setSaved(prev => prev.box_name ? prev : { ...prev, box_name: act.organizationName })
+  }, [memberships])
+
+  const toggleShare = async (orgId: string, val: boolean) => {
+    setSharing(s => ({ ...s, [orgId]: val }))
+    try { await setDataSharing(orgId, val); refresh() }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur'); setSharing(s => ({ ...s, [orgId]: !val })) }
+  }
 
   const updTp = (patch: Partial<TrainingProfile>) => setTp(prev => ({ ...prev, ...patch }))
   const toggleIn = (arr: string[], v: string) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
@@ -236,6 +255,21 @@ export default function ProfilePage() {
                 ? <div key={m.organizationId}>{card}</div>
                 : <Link key={m.organizationId} href={`/box/profile?org=${m.organizationId}`}>{card}</Link>
             })}
+          </div>
+        )}
+
+        {/* Partage des données avec chaque box */}
+        {memberships.some(m => m.status === 'active') && (
+          <div className={section}>
+            <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-1">Partage des données</p>
+            <p className="text-xs text-[var(--muted)] mb-4">Autorise une box à voir tes séances et performances. Tu peux le désactiver à tout moment.</p>
+            <div className="space-y-3">
+              {memberships.filter(m => m.status === 'active').map(m => (
+                <Toggle key={m.organizationId} label={m.organizationName}
+                  checked={sharing[m.organizationId] ?? m.dataSharing}
+                  onChange={v => toggleShare(m.organizationId, v)} />
+              ))}
+            </div>
           </div>
         )}
 

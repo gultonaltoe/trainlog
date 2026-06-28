@@ -167,15 +167,18 @@ export default function MemberDetailPage() {
                     <div className="flex items-center gap-2">
                       <button onClick={removeMember} disabled={busy}
                         className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-black text-sm disabled:opacity-50 cursor-pointer">
-                        {busy ? '…' : 'Confirmer le retrait'}
+                        {busy ? '…' : `Oui, retirer ${member.firstName ?? 'ce membre'}`}
                       </button>
                       <button onClick={() => setConfirmRemove(false)} className="text-sm font-bold text-[var(--muted)] px-3 cursor-pointer">Annuler</button>
                     </div>
                   ) : (
-                    <button onClick={() => setConfirmRemove(true)}
-                      className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 font-bold text-sm cursor-pointer">
-                      Retirer de la box
-                    </button>
+                    <>
+                      <button onClick={() => setConfirmRemove(true)}
+                        className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 font-bold text-sm cursor-pointer">
+                        Retirer ce membre de la box
+                      </button>
+                      <p className="text-[11px] text-[var(--muted)] mt-2">Il perdra l’accès à la box et à ses réservations. Réversible en le réinvitant.</p>
+                    </>
                   )}
                 </Card>
               </div>

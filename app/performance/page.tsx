@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { getSessionUserId } from '@/lib/auth'
 import { toast } from '@/lib/toast'
 import { getGoals, upsertGoal, deleteGoal, type Goal } from '@/lib/goals'
-import { PageHeader, Card, SectionTitle, NavRow, Button, Select, Field } from '@/components/ui'
+import MovementSearch from '@/components/MovementSearch'
+import { PageHeader, Card, SectionTitle, NavRow, Button, Field } from '@/components/ui'
 
 // ST-35 P1 — Performance hub overview. Aggregates records (personal_records) +
 // sessions into cross-movement stats + category balance, links to the detailed
@@ -32,7 +33,8 @@ export default function PerformancePage() {
   const [tipsAt, setTipsAt] = useState<number | null>(null)
   const [tipsLoading, setTipsLoading] = useState(false)
   const [goals, setGoals] = useState<Goal[]>([])
-  const [goalMov, setGoalMov] = useState<string | ''>('')
+  const [goalMovId, setGoalMovId] = useState('')
+  const [goalMovName, setGoalMovName] = useState('')
   const [goalTarget, setGoalTarget] = useState('')
   const [goalBusy, setGoalBusy] = useState(false)
   const [showAddGoal, setShowAddGoal] = useState(false)
@@ -75,17 +77,16 @@ export default function PerformancePage() {
   const catCount: Record<string, number> = {}
   prs.forEach(p => { const k = catOf(p.movement_name); catCount[k] = (catCount[k] ?? 0) + 1 })
 
-  // Best per movement (for goal progress + the movement picker).
+  // Best per movement (for goal progress).
   const bestByMov = new Map<string, { name: string; best: number; unit: string }>()
   prs.forEach(p => { const e = bestByMov.get(p.movement_id); if (!e) bestByMov.set(p.movement_id, { name: p.movement_name, best: p.value, unit: p.unit }); else if (p.value > e.best) e.best = p.value })
-  const movementOptions = [...bestByMov.entries()].map(([id, v]) => ({ value: id, label: v.name }))
 
   const saveGoal = async () => {
-    const mv = goalMov ? bestByMov.get(goalMov) : null
     const target = parseFloat(goalTarget)
-    if (!goalMov || !mv || isNaN(target) || target <= 0) { toast.error('Choisis un mouvement et un objectif valide'); return }
+    if (!goalMovId || !goalMovName || isNaN(target) || target <= 0) { toast.error('Choisis un mouvement et un objectif valide'); return }
+    const unit = bestByMov.get(goalMovId)?.unit ?? 'kg'
     setGoalBusy(true)
-    try { await upsertGoal(goalMov, mv.name, target, mv.unit); toast.success('Objectif enregistré'); setShowAddGoal(false); setGoalMov(''); setGoalTarget(''); loadGoals() }
+    try { await upsertGoal(goalMovId, goalMovName, target, unit); toast.success('Objectif enregistré'); setShowAddGoal(false); setGoalMovId(''); setGoalMovName(''); setGoalTarget(''); loadGoals() }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
     setGoalBusy(false)
   }
@@ -153,9 +154,9 @@ export default function PerformancePage() {
         ) : (
           <Card className="p-2 mb-5">
             {recent.map(p => (
-              <Link key={p.id} href={`/prs/${encodeURIComponent(p.movement_id)}`} className="ds-hover flex items-center justify-between p-2.5 rounded-xl">
-                <span className="text-sm font-semibold text-[var(--ink)] truncate pr-2">{p.movement_name}</span>
-                <span className="flex items-center gap-2 flex-shrink-0">
+              <Link key={p.id} href={`/prs/${encodeURIComponent(p.movement_id)}`} className="ds-hover flex items-center justify-between gap-2 p-2.5 rounded-xl">
+                <span className="text-sm font-semibold text-[var(--ink)] truncate min-w-0">{p.movement_name}</span>
+                <span className="flex flex-col items-end leading-tight flex-shrink-0">
                   <span className="text-sm font-black text-[var(--ink)]">{fmtVal(p.value, p.unit)} <span className="text-xs font-semibold text-[var(--muted)]">{unitLbl(p.unit)}</span></span>
                   <span className="text-[11px] text-[var(--muted)]">{fmtDay(p.date)}</span>
                 </span>
@@ -224,16 +225,18 @@ export default function PerformancePage() {
 
           {showAddGoal ? (
             <div className="space-y-2 pt-1">
-              <Field label="Mouvement"><Select value={goalMov} onChange={setGoalMov} options={movementOptions} placeholder="Choisir un mouvement" /></Field>
+              <Field label="Mouvement">
+                <MovementSearch value={goalMovName} onChange={m => { setGoalMovId(m.id); setGoalMovName(m.name) }} />
+              </Field>
               <Field label="Objectif"><input type="number" className="ds-field" value={goalTarget} onChange={e => setGoalTarget(e.target.value)} placeholder="ex. 120" /></Field>
               <div className="flex items-center gap-2">
                 <Button onClick={saveGoal} disabled={goalBusy}>{goalBusy ? '…' : 'Enregistrer'}</Button>
-                <button onClick={() => setShowAddGoal(false)} className="text-sm font-bold text-[var(--muted)] px-3 cursor-pointer">Annuler</button>
+                <button onClick={() => { setShowAddGoal(false); setGoalMovId(''); setGoalMovName('') }} className="text-sm font-bold text-[var(--muted)] px-3 cursor-pointer">Annuler</button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setShowAddGoal(true)} disabled={movementOptions.length === 0}
-              className="text-sm font-bold cursor-pointer disabled:opacity-50" style={{ color: 'var(--theme-primary, #F97316)' }}>+ Ajouter un objectif</button>
+            <button onClick={() => setShowAddGoal(true)}
+              className="text-sm font-bold cursor-pointer" style={{ color: 'var(--theme-primary, #F97316)' }}>+ Ajouter un objectif</button>
           )}
         </Card>
 

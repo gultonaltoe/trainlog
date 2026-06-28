@@ -18,19 +18,16 @@ export async function POST(req: NextRequest) {
   }
 
   const client = new Anthropic({ apiKey })
-  const PROMPT = `Tu es un coach CrossFit / préparation physique expérimenté et bienveillant.
-Voici les données de performance d'un athlète (JSON) :
+  const PROMPT = `Tu es un coach CrossFit / préparation physique, bref et bienveillant.
+Données de performance d'un athlète (JSON) :
 
 ${JSON.stringify(summary).slice(0, 6000)}
 
-Donne 3 à 5 conseils COURTS (une phrase chacun), concrets et actionnables, en français, en tutoyant l'athlète, STRICTEMENT ancrés sur ces données :
-- repère une stagnation → propose un deload ou une variation
-- identifie une catégorie faible (Force / Haltéro / Gymnastique / Engine) et quoi y travailler
-- propose un prochain palier réaliste sur un mouvement précis
-- tiens compte des blessures/limitations, du matériel et des dispos si fournis
-- reste motivant.
+IMPORTANT sur les chiffres : "best" est la **meilleure charge (1RM/record) en kg** pour un mouvement — NE multiplie JAMAIS par les répétitions, n'additionne pas les séries. Le tonnage n'est pas fourni ici.
 
-Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks : {"tips":["...","..."]}`
+Donne **2 à 3** conseils TRÈS COURTS (une phrase simple chacun), concrets, en français, en tutoyant, strictement ancrés sur ces données (catégorie faible à travailler, prochain palier réaliste sur un mouvement, ou deload si stagnation ; tiens compte des blessures/matériel si fournis). Reste simple et motivant.
+
+Réponds UNIQUEMENT en JSON valide, sans markdown : {"tips":["...","..."]}`
 
   try {
     const msg = await client.messages.create({
@@ -42,7 +39,7 @@ Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks : {"tips":["...",
     let tips: unknown = []
     try { tips = JSON.parse(raw).tips }
     catch { const m = raw.match(/\{[\s\S]*\}/); if (m) { try { tips = JSON.parse(m[0]).tips } catch {} } }
-    const clean = Array.isArray(tips) ? (tips as unknown[]).filter(t => typeof t === 'string').slice(0, 5) : []
+    const clean = Array.isArray(tips) ? (tips as unknown[]).filter(t => typeof t === 'string').slice(0, 3) : []
     return NextResponse.json({ tips: clean })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Erreur inconnue'
