@@ -2,16 +2,20 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getProgramming, hasContent, type Programming } from '@/lib/programming'
+import { getOrganization, type ProgrammingSettings } from '@/lib/orgs'
 
 const todayISO = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
+const nowHHMM = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` }
 
 // ST-34 P1 — member-facing "WOD du jour" for a box (today's programming).
 export default function ProgrammingCard({ orgId, orgName }: { orgId: string; orgName: string }) {
   const router = useRouter()
   const [p, setP] = useState<Programming | null>(null)
+  const [vis, setVis] = useState<ProgrammingSettings | null>(null)
+  useEffect(() => { getOrganization(orgId).then(o => setVis(o.programming)).catch(() => {}) }, [orgId])
 
   const logThisWod = () => {
     if (!p) return
@@ -30,6 +34,15 @@ export default function ProgrammingCard({ orgId, orgName }: { orgId: string; org
   }, [orgId])
 
   if (!hasContent(p)) return null
+  // Respect the box's reveal setting (ST-34): hide content until revealTime when 'after'.
+  if (vis?.wodVisibility === 'after' && nowHHMM() < (vis.revealTime || '00:00')) {
+    return (
+      <div className="rounded-2xl border border-[color:var(--border)] bg-[var(--card)] p-4 mb-4">
+        <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">🔒 WOD du jour · {orgName}</p>
+        <p className="text-sm text-[var(--muted)] mt-1">Dévoilé à {vis.revealTime}.</p>
+      </div>
+    )
+  }
   const prog = p!
   const Row = ({ label, value }: { label: string; value: string }) => value ? (
     <div>

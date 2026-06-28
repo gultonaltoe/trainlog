@@ -125,6 +125,13 @@ export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
 export type OrgBrand = { logoUrl: string; brandColor: string }
 export const DEFAULT_BRAND: OrgBrand = { logoUrl: '', brandColor: '' }
 
+// When members can see the day's programming (ST-34).
+export type ProgrammingSettings = {
+  wodVisibility: 'before' | 'after'   // 'before' = visible all day; 'after' = only from revealTime
+  revealTime: string                  // HH:MM, used when 'after'
+}
+export const DEFAULT_PROGRAMMING_SETTINGS: ProgrammingSettings = { wodVisibility: 'before', revealTime: '12:00' }
+
 export type OrgProfile = {
   id: string
   name: string
@@ -137,6 +144,7 @@ export type OrgProfile = {
   reservations: ReservationSettings
   brand: OrgBrand
   cancellationPolicy: string    // no-show / late-cancel policy text shown on booking
+  programming: ProgrammingSettings
 }
 
 export const DEFAULT_DURATION_MIN = 60
@@ -160,6 +168,7 @@ export async function getOrganization(orgId: string): Promise<OrgProfile> {
   const s = (data.settings ?? {}) as Record<string, unknown>
   const r = (s.reservations ?? {}) as Partial<ReservationSettings>
   const b = (s.brand ?? {}) as Partial<OrgBrand>
+  const pr = (s.programming ?? {}) as Partial<ProgrammingSettings>
   return {
     id:           data.id,
     name:         data.name,
@@ -172,7 +181,16 @@ export async function getOrganization(orgId: string): Promise<OrgProfile> {
     reservations: { ...DEFAULT_RESERVATION_SETTINGS, ...r },
     brand:        { ...DEFAULT_BRAND, ...b },
     cancellationPolicy: (s.cancellationPolicy as string) ?? '',
+    programming:  { ...DEFAULT_PROGRAMMING_SETTINGS, ...pr },
   }
+}
+
+/** Owner/coach sets when members can see the day's programming. Merges into settings. */
+export async function updateProgrammingSettings(orgId: string, p: ProgrammingSettings): Promise<void> {
+  const s = await readSettings(orgId)
+  const settings = { ...s, programming: p } as unknown as Json
+  const { error } = await supabase.from('organizations').update({ settings }).eq('id', orgId)
+  if (error) throw new Error(`updateProgrammingSettings: ${error.message}`)
 }
 
 // Read the raw settings object so updates can merge instead of clobbering.
