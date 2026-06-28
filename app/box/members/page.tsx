@@ -3,14 +3,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { BackButton } from '@/components/ui'
 import Link from 'next/link'
-import { getOrgMembers, getBoxJoinCode, setMembershipStatus, type OrgMember } from '@/lib/orgs'
+import { getOrgMembers, setMembershipStatus, type OrgMember } from '@/lib/orgs'
 import { getOrgActivePlans, type MemberPlanSummary } from '@/lib/memberPlans'
 import { toast } from '@/lib/toast'
 
 export default function MembersPage() {
   const org = useBoxGuard()
   const [members, setMembers] = useState<OrgMember[]>([])
-  const [joinCode, setJoinCode] = useState<string | null>(null)
   const [planByUser, setPlanByUser] = useState<Map<string, MemberPlanSummary>>(new Map())
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -18,9 +17,8 @@ export default function MembersPage() {
 
   const load = useCallback(async () => {
     if (!orgId) return
-    const [all, code, mp] = await Promise.all([getOrgMembers(orgId), getBoxJoinCode(orgId), getOrgActivePlans(orgId)])
+    const [all, mp] = await Promise.all([getOrgMembers(orgId), getOrgActivePlans(orgId)])
     setMembers(all)
-    setJoinCode(code)
     setPlanByUser(mp)
     setLoading(false)
   }, [orgId])
@@ -49,20 +47,8 @@ export default function MembersPage() {
           <p className="text-sm text-[var(--muted)] mt-0.5">{org.orgName}</p>
         </div>
 
-        {/* Join code to share */}
-        {joinCode && (
-          <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 mb-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-1">Code de la box</p>
-              <p className="text-2xl font-black tracking-widest text-[var(--ink)]">{joinCode}</p>
-            </div>
-            <button
-              onClick={() => { navigator.clipboard?.writeText(joinCode); toast.success('Code copié') }}
-              className="text-xs font-bold text-[var(--accent-text)]">Copier</button>
-          </div>
-        )}
         <p className="text-xs text-[var(--muted)] mb-4 leading-relaxed">
-          Partage ce code : un athlète l’entre dans « Rejoindre une box » et tu valides sa demande ici.
+          Les athlètes te trouvent en cherchant le nom de la box ; valide leurs demandes ici.
         </p>
 
         {/* Pending requests */}

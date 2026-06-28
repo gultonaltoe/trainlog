@@ -72,7 +72,7 @@ export default function Dashboard() {
   const [period, setPeriod]           = useState<Period>('30j')
   const [dashCalY, setDashCalY] = useState(new Date().getFullYear())
   const [dashCalM, setDashCalM] = useState(new Date().getMonth())
-  const { active, memberships } = useAppContext()
+  const { active, memberships, loading: ctxLoading } = useAppContext()
 
   const load = useCallback(async () => {
     let p = await getProfile()
@@ -151,6 +151,14 @@ export default function Dashboard() {
 
   const today  = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
+  // Wait for the active context before choosing a view — avoids flashing the
+  // athlete dashboard before the box/coach view resolves on reload.
+  if (ctxLoading) return (
+    <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
+      <div className="w-8 h-8 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+    </div>
+  )
+
   // Role-aware: in a box as owner/coach/staff → coaching view. Members and
   // solo athletes get the athlete dashboard below.
   if (active.type === 'org' && active.role !== 'member')
@@ -181,9 +189,11 @@ export default function Dashboard() {
                 </Link>
               )}
               <Link href="/log"
-                className={`${hasBox ? 'px-5' : 'flex-1 text-center'} py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-1.5 ${hasBox ? 'border border-[color:var(--border-strong)] text-[var(--ink-soft)]' : 'text-white'}`}
-                style={hasBox ? undefined : { background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
-                <span className="text-base leading-none">+</span> Séance
+                className={`${hasBox ? 'flex-1' : 'flex-1'} text-center py-3.5 rounded-2xl text-sm font-black ${hasBox ? '' : 'text-white'}`}
+                style={hasBox
+                  ? { background: 'var(--secondary-bg)', color: 'var(--secondary-fg)' }
+                  : { background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+                Enregistrer une séance
               </Link>
             </div>
           )
