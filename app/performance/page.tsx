@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { getSessionUserId } from '@/lib/auth'
 import { toast } from '@/lib/toast'
-import { PageHeader, Card, SectionTitle, NavRow, Button } from '@/components/ui'
+import { getGoals, upsertGoal, deleteGoal, type Goal } from '@/lib/goals'
+import { PageHeader, Card, SectionTitle, NavRow, Button, Select, Field } from '@/components/ui'
 
 // ST-35 P1 — Performance hub overview. Aggregates records (personal_records) +
 // sessions into cross-movement stats + category balance, links to the detailed
@@ -30,6 +31,14 @@ export default function PerformancePage() {
   const [tips, setTips] = useState<string[] | null>(null)
   const [tipsAt, setTipsAt] = useState<number | null>(null)
   const [tipsLoading, setTipsLoading] = useState(false)
+  const [goals, setGoals] = useState<Goal[]>([])
+  const [goalMov, setGoalMov] = useState<string | ''>('')
+  const [goalTarget, setGoalTarget] = useState('')
+  const [goalBusy, setGoalBusy] = useState(false)
+  const [showAddGoal, setShowAddGoal] = useState(false)
+
+  const loadGoals = () => { getGoals().then(setGoals).catch(() => {}) }
+  useEffect(() => { loadGoals() }, [])
 
   useEffect(() => {
     const run = async () => {
@@ -65,6 +74,24 @@ export default function PerformancePage() {
   const recent = [...prs].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')).slice(0, 6)
   const catCount: Record<string, number> = {}
   prs.forEach(p => { const k = catOf(p.movement_name); catCount[k] = (catCount[k] ?? 0) + 1 })
+
+  // Best per movement (for goal progress + the movement picker).
+  const bestByMov = new Map<string, { name: string; best: number; unit: string }>()
+  prs.forEach(p => { const e = bestByMov.get(p.movement_id); if (!e) bestByMov.set(p.movement_id, { name: p.movement_name, best: p.value, unit: p.unit }); else if (p.value > e.best) e.best = p.value })
+  const movementOptions = [...bestByMov.entries()].map(([id, v]) => ({ value: id, label: v.name }))
+
+  const saveGoal = async () => {
+    const mv = goalMov ? bestByMov.get(goalMov) : null
+    const target = parseFloat(goalTarget)
+    if (!goalMov || !mv || isNaN(target) || target <= 0) { toast.error('Choisis un mouvement et un objectif valide'); return }
+    setGoalBusy(true)
+    try { await upsertGoal(goalMov, mv.name, target, mv.unit); toast.success('Objectif enregistré'); setShowAddGoal(false); setGoalMov(''); setGoalTarget(''); loadGoals() }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setGoalBusy(false)
+  }
+  const removeGoal = async (id: string) => {
+    try { await deleteGoal(id); loadGoals() } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+  }
 
   const buildSummary = () => {
     const byMov = new Map<string, { name: string; best: number; count: number; last: string; unit: string; cat: string }>()
@@ -164,6 +191,49 @@ export default function PerformancePage() {
                 {tipsLoading ? 'Génération…' : 'Voir mes conseils'}
               </Button>
             </div>
+          )}
+        </Card>
+
+        <SectionTitle>Objectifs</SectionTitle>
+        <Card className="p-4 mb-5 space-y-3">
+          {goals.length === 0 && !showAddGoal && (
+            <p className="text-sm text-[var(--muted)] leading-relaxed">
+              Fixe un objectif par mouvement et suis ta progression.{' '}
+              <span className="text-[var(--ink-soft)]">Bêta — dis-nous via Feedback ce que tu aimerais ici (échéances, rappels, suggestions IA…).</span>
+            </p>
+          )}
+          {goals.map(g => {
+            const cur = bestByMov.get(g.movementId)?.best ?? 0
+            const pct = g.target > 0 ? Math.min(100, Math.round((cur / g.target) * 100)) : 0
+            const done = cur >= g.target
+            return (
+              <div key={g.id}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-bold text-[var(--ink)] truncate pr-2">{g.movementName}{done && ' ✅'}</span>
+                  <span className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-[var(--sub)]">{fmtVal(cur, g.unit)} / {fmtVal(g.target, g.unit)} {unitLbl(g.unit)}</span>
+                    <button onClick={() => removeGoal(g.id)} className="text-[var(--border-strong)] hover:text-red-500 text-lg leading-none cursor-pointer">×</button>
+                  </span>
+                </div>
+                <div className="h-2 rounded-full overflow-hidden bg-[var(--track)]">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: done ? '#22C55E' : 'var(--theme-primary, #F97316)' }} />
+                </div>
+              </div>
+            )
+          })}
+
+          {showAddGoal ? (
+            <div className="space-y-2 pt-1">
+              <Field label="Mouvement"><Select value={goalMov} onChange={setGoalMov} options={movementOptions} placeholder="Choisir un mouvement" /></Field>
+              <Field label="Objectif"><input type="number" className="ds-field" value={goalTarget} onChange={e => setGoalTarget(e.target.value)} placeholder="ex. 120" /></Field>
+              <div className="flex items-center gap-2">
+                <Button onClick={saveGoal} disabled={goalBusy}>{goalBusy ? '…' : 'Enregistrer'}</Button>
+                <button onClick={() => setShowAddGoal(false)} className="text-sm font-bold text-[var(--muted)] px-3 cursor-pointer">Annuler</button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setShowAddGoal(true)} disabled={movementOptions.length === 0}
+              className="text-sm font-bold cursor-pointer disabled:opacity-50" style={{ color: 'var(--theme-primary, #F97316)' }}>+ Ajouter un objectif</button>
           )}
         </Card>
 

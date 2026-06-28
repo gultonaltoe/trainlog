@@ -1054,6 +1054,36 @@ export type Database = {
           },
         ]
       }
+      performance_goals: {
+        Row: {
+          created_at: string | null
+          id: string
+          movement_id: string
+          movement_name: string
+          target_value: number
+          unit: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          movement_id: string
+          movement_name: string
+          target_value: number
+          unit?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          movement_id?: string
+          movement_name?: string
+          target_value?: number
+          unit?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profile: {
         Row: {
           avatar_url: string | null
