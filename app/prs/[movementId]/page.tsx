@@ -38,6 +38,25 @@ function formatDateLong(str: string) {
   return new Date(str + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// Indicative bodyweight-ratio standards for the main barbell lifts (ST-35).
+// Entry ratio (1RM ÷ poids de corps) for each level: Débutant/Intermédiaire/Avancé/Élite.
+// Repères indicatifs, non genrés — affichés comme tels.
+const BENCH_LEVELS = ['Débutant', 'Intermédiaire', 'Avancé', 'Élite']
+const BENCH: { match: string[]; t: [number, number, number, number] }[] = [
+  { match: ['back squat'],                                          t: [0.75, 1.25, 1.75, 2.25] },
+  { match: ['front squat'],                                         t: [0.60, 1.00, 1.40, 1.85] },
+  { match: ['overhead squat', 'ohs'],                               t: [0.40, 0.70, 1.00, 1.30] },
+  { match: ['deadlift', 'soulevé de terre'],                        t: [1.00, 1.50, 2.00, 2.50] },
+  { match: ['bench'],                                               t: [0.50, 0.85, 1.25, 1.65] },
+  { match: ['push press'],                                          t: [0.45, 0.70, 1.00, 1.30] },
+  { match: ['strict press', 'shoulder press', 'overhead press', 'développé militaire', 'military'], t: [0.35, 0.55, 0.80, 1.05] },
+  { match: ['clean & jerk', 'clean and jerk', 'épaulé-jeté', 'épaulé jeté'], t: [0.60, 0.95, 1.30, 1.65] },
+  { match: ['snatch', 'arraché'],                                   t: [0.45, 0.70, 1.00, 1.30] },
+  { match: ['clean', 'épaulé'],                                     t: [0.60, 0.95, 1.30, 1.60] },
+  { match: ['jerk'],                                                t: [0.60, 0.95, 1.30, 1.60] },
+]
+function benchFor(name: string) { const n = name.toLowerCase(); return BENCH.find(b => b.match.some(m => n.includes(m))) ?? null }
+
 export default function MovementPRPage() {
   const params     = useParams()
   const movementId = decodeURIComponent(Array.isArray(params.movementId) ? params.movementId[0] : params.movementId as string)
@@ -51,11 +70,12 @@ export default function MovementPRPage() {
   const [editVal,  setEditVal]  = useState('')
   const [editDate, setEditDate] = useState('')
   const [busy,     setBusy]     = useState(false)
+  const [bodyweight, setBodyweight] = useState<number | null>(null)
 
   const load = useCallback(async () => {
     const uid = await getSessionUserId()
     if (!uid) { setLoading(false); return }
-    const [prRes, setsRes] = await Promise.all([
+    const [prRes, setsRes, profRes] = await Promise.all([
       supabase.from('personal_records')
         .select('id, value, unit, date, session_id, movement_name')
         .eq('movement_id', movementId)
@@ -66,7 +86,9 @@ export default function MovementPRPage() {
         .eq('movement_id', movementId)
         .not('weight_kg', 'is', null)
         .order('session_blocks(sessions(date))', { ascending: true }),
+      supabase.from('user_profile').select('weight_kg').eq('user_id', uid).maybeSingle(),
     ])
+    setBodyweight(profRes.data?.weight_kg ?? null)
     setPrs((prRes.data ?? []) as PR[])
     const rawSets = (setsRes.data ?? []) as unknown as {
       weight_kg: number; reps: number | null
@@ -114,6 +136,27 @@ export default function MovementPRPage() {
   const name     = prs[0]?.movement_name ?? 'Mouvement'
   const unit     = prs[0]?.unit ?? 'kg'
   const recent   = [...prs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 15)
+
+  // ── Benchmark (indicatif) ────────────────────────────────
+  const bench = unit === 'kg' ? benchFor(name) : null
+  let benchInfo: { level: string; ratio: number; nextLabel: string | null; nextRatio: number | null; nextKg: number | null; pct: number } | null = null
+  if (bench && bodyweight && bodyweight > 0 && best > 0) {
+    const t = bench.t
+    const ratio = best / bodyweight
+    let L = -1; for (let i = 0; i < 4; i++) if (ratio >= t[i]) L = i        // -1 = sous le 1er palier
+    const level = L < 0 ? 'Débutant' : BENCH_LEVELS[L]
+    const nextIdx = L < 0 ? 0 : (L + 1 <= 3 ? L + 1 : null)
+    const lower = L < 0 ? 0 : t[L]
+    const upper = nextIdx != null ? t[nextIdx] : t[3]
+    const pct = Math.max(0, Math.min(100, Math.round(((ratio - lower) / ((upper - lower) || 1)) * 100)))
+    benchInfo = {
+      level, ratio,
+      nextLabel: nextIdx != null ? BENCH_LEVELS[nextIdx] : null,
+      nextRatio: nextIdx != null ? t[nextIdx] : null,
+      nextKg: nextIdx != null ? Math.round(t[nextIdx] * bodyweight) : null,
+      pct,
+    }
+  }
 
   // ── Estimated 1RM per session ────────────────────────────
   const e1rmBySess: Record<string, number> = {}
@@ -268,6 +311,35 @@ export default function MovementPRPage() {
             )}
           </div>
         </div>
+
+        {/* Niveau indicatif (benchmark poids de corps) */}
+        {bench && (
+          benchInfo ? (
+            <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">Niveau (indicatif)</p>
+                <span className="text-sm font-black" style={{ color: 'var(--theme-primary, #F97316)' }}>{benchInfo.level}</span>
+              </div>
+              <p className="text-sm text-[var(--ink-soft)] mb-2">{benchInfo.ratio.toFixed(2)}× poids de corps</p>
+              <div className="h-2 rounded-full bg-[var(--track)] overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${benchInfo.pct}%`, background: 'var(--theme-primary, #F97316)' }} />
+              </div>
+              {benchInfo.nextLabel ? (
+                <p className="text-xs text-[var(--muted)] mt-2">
+                  Prochain palier — <span className="font-bold text-[var(--ink-soft)]">{benchInfo.nextLabel}</span> : {benchInfo.nextRatio}× (≈ {benchInfo.nextKg} kg)
+                </p>
+              ) : (
+                <p className="text-xs text-[var(--muted)] mt-2">Niveau max atteint 💪</p>
+              )}
+              <p className="text-[10px] text-[var(--muted)] mt-1.5">Repères indicatifs (non genrés), basés sur des ratios poids de corps courants.</p>
+            </div>
+          ) : !bodyweight ? (
+            <a href="/profile" className="block bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 mb-4 ds-hover">
+              <p className="text-sm font-bold text-[var(--ink)]">Niveau (indicatif)</p>
+              <p className="text-xs text-[var(--muted)] mt-0.5">Renseigne ton poids de corps dans le profil pour situer ce lift (débutant → élite).</p>
+            </a>
+          ) : null
+        )}
 
         {/* Stagnation alert */}
         {isStagnant && (
