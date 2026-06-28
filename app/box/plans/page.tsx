@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
+import { BackButton } from '@/components/ui'
 import { getPlans, createPlan, updatePlan, deletePlan, formatPrice, PLAN_KIND_LABEL, type MembershipPlan, type NewPlan, type PlanKind } from '@/lib/plans'
 import { toast } from '@/lib/toast'
 
@@ -32,7 +33,8 @@ export default function PlansPage() {
   return (
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
-        <div className="pt-8 pb-4">
+        <div className="pt-5"><BackButton /></div>
+        <div className="pt-2 pb-4">
           <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Abonnements</h1>
           <p className="text-sm text-[var(--muted)] mt-0.5">{org.orgName}</p>
         </div>

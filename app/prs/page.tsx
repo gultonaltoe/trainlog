@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { getSessionUserId } from '@/lib/auth'
 import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
+import { BackButton } from '@/components/ui'
 
 type PR = { id: string; movement_id: string; movement_name: string; value: number; unit: string; date: string }
 type MovementPR = {
@@ -205,7 +206,8 @@ export default function PRsPage() {
       <div className="max-w-lg mx-auto px-4">
 
         {/* Header */}
-        <div className="pt-8 pb-5 flex items-start justify-between">
+        <div className="pt-5"><BackButton /></div>
+        <div className="pt-2 pb-5 flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Personal Records</h1>
             <p className="text-sm text-[var(--muted)] mt-0.5">{prs.length} performance{prs.length > 1 ? 's' : ''} trackée{prs.length > 1 ? 's' : ''}</p>

@@ -23,7 +23,10 @@ Données de performance d'un athlète (JSON) :
 
 ${JSON.stringify(summary).slice(0, 6000)}
 
-IMPORTANT sur les chiffres : "best" est la **meilleure charge (1RM/record) en kg** pour un mouvement — NE multiplie JAMAIS par les répétitions, n'additionne pas les séries. Le tonnage n'est pas fourni ici.
+RÈGLES sur les chiffres (strict) :
+- "best" = meilleur record du mouvement, dans **son unité** (champ "unit" : kg, reps ou sec). Utilise l'unité fournie, n'assume pas "kg".
+- NE multiplie JAMAIS par les répétitions, n'additionne pas les séries (le tonnage n'est pas fourni).
+- N'invente AUCUN chiffre : ne cite que les valeurs "best" présentes dans les données. Si une valeur paraît irréaliste/aberrante, ne la cite pas et reste général.
 
 Donne **2 à 3** conseils TRÈS COURTS (une phrase simple chacun), concrets, en français, en tutoyant, strictement ancrés sur ces données (catégorie faible à travailler, prochain palier réaliste sur un mouvement, ou deload si stagnation ; tiens compte des blessures/matériel si fournis). Reste simple et motivant.
 

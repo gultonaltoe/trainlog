@@ -4,6 +4,7 @@ import { useBoxGuard } from '@/components/useBoxGuard'
 import { getOrgMembers, getOrganization, DEFAULT_SESSION_TYPES, DEFAULT_CAPACITY, DEFAULT_DURATION_MIN, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
 import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, endTime, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
 import { getBookingsInRange, getOccurrenceAttendees, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
+import { BackButton } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -105,7 +106,8 @@ export default function PlanningPage() {
   return (
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
-        <div className="pt-8 pb-4 flex items-end justify-between">
+        <div className="pt-5"><BackButton /></div>
+        <div className="pt-2 pb-4 flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Planning</h1>
             <p className="text-sm text-[var(--muted)] mt-0.5">{org.orgName}</p>

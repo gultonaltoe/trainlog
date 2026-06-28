@@ -3,6 +3,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAppContext } from '@/components/AppContext'
 import { getOrganization, updateOrgInfo, type OrgProfile } from '@/lib/orgs'
+import { BackButton } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3 text-[var(--ink)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400'
@@ -62,7 +63,7 @@ function BoxProfile() {
             <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Infos de la box</h1>
             <p className="text-sm text-[var(--muted)] mt-0.5">{canEdit ? 'Modifiable' : 'Lecture seule'}</p>
           </div>
-          <button onClick={() => router.back()} className="text-sm font-semibold text-[var(--muted)]">Retour</button>
+          <BackButton />
         </div>
 
         <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 space-y-4">

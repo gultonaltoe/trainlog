@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { BackButton } from '@/components/ui'
 
 type Session = {
   id: string; date: string; rpe: number | null; duration_min: number | null
@@ -106,15 +107,7 @@ export default function SessionsPage() {
       <div className="max-w-lg mx-auto px-4">
 
         {/* Back button */}
-        <div className="pt-5">
-          <button onClick={() => router.push('/')}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)] hover:text-[var(--ink-soft)] transition">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Accueil
-          </button>
-        </div>
+        <div className="pt-5"><BackButton /></div>
 
         {/* Header */}
         <div className="pt-2 pb-4 flex items-center justify-between">

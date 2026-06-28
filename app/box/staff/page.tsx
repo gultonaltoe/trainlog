@@ -7,7 +7,7 @@ import {
 } from '@/lib/orgs'
 import { createInvite, getOrgInvites, revokeInvite, type Invite } from '@/lib/invites'
 import { getSchedules, endTime, type ClassSchedule } from '@/lib/classes'
-import { Select, DatePicker, Field } from '@/components/ui'
+import { Select, DatePicker, Field, BackButton } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Propriétaire', coach: 'Coach', member: 'Membre' }
@@ -51,7 +51,8 @@ export default function StaffPage() {
   return (
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
-        <div className="pt-8 pb-4">
+        <div className="pt-5"><BackButton /></div>
+        <div className="pt-2 pb-4">
           <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Coachs</h1>
           <p className="text-sm text-[var(--muted)] mt-0.5">{org.orgName}</p>
         </div>

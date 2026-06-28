@@ -160,33 +160,33 @@ export default function Dashboard() {
       <div className="max-w-lg mx-auto px-4 pb-4">
 
         {/* Header */}
-        <div className="pt-8 pb-5 flex items-start justify-between">
-          <div>
-            {loading
-              ? <Skeleton className="h-7 w-40 mb-1.5" />
-              : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">
-                  Bonjour {profile?.first_name} 👋
-                </h1>
-            }
-            <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
-          </div>
-          {(() => {
-            const hasBox = active.type === 'org' || memberships.some(m => m.status === 'active')
-            return hasBox ? (
-              // Box member: booking (Réserver) is the primary CTA (MemberBoxCard); logging is secondary.
-              <Link href="/log"
-                className="text-sm font-bold px-4 py-3 rounded-2xl whitespace-nowrap flex items-center gap-1.5 border border-[color:var(--border-strong)] text-[var(--ink-soft)]">
-                <span className="text-base leading-none">+</span> Séance
-              </Link>
-            ) : (
-              <Link href="/log"
-                className="text-white text-sm font-black px-5 py-3 rounded-2xl whitespace-nowrap flex items-center gap-1.5"
-                style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.4)' }}>
-                <span className="text-base leading-none">+</span> Séance
-              </Link>
-            )
-          })()}
+        <div className="pt-8 pb-4">
+          {loading
+            ? <Skeleton className="h-7 w-40 mb-1.5" />
+            : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Bonjour {profile?.first_name} 👋</h1>}
+          <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
         </div>
+
+        {/* Quick actions: Réserver (primary) + Séance (secondary), same line */}
+        {(() => {
+          const hasBox = active.type === 'org' || memberships.some(m => m.status === 'active')
+          return (
+            <div className="flex gap-2 mb-4">
+              {hasBox && (
+                <Link href="/box/book"
+                  className="flex-1 text-center text-white text-sm font-black py-3.5 rounded-2xl"
+                  style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+                  Réserver un cours
+                </Link>
+              )}
+              <Link href="/log"
+                className={`${hasBox ? 'px-5' : 'flex-1 text-center'} py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-1.5 ${hasBox ? 'border border-[color:var(--border-strong)] text-[var(--ink-soft)]' : 'text-white'}`}
+                style={hasBox ? undefined : { background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+                <span className="text-base leading-none">+</span> Séance
+              </Link>
+            </div>
+          )
+        })()}
 
 
         {/* Réservations de cours — dans le contexte d'une box, ou dans l'espace

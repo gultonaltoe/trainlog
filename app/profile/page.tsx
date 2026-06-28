@@ -32,8 +32,7 @@ const LEVELS = [
   {v:'débutant',     l:'Débutant',     d:'Je découvre les mouvements'},
   {v:'intermédiaire',l:'Intermédiaire',d:'Technique en place, je progresse'},
   {v:'avancé',       l:'Avancé',       d:'Mouvements maîtrisés, bonnes charges'},
-  {v:'élite',        l:'Élite',        d:'Très haut niveau (RX+)'},
-  {v:'compétiteur',  l:'Compétiteur',  d:'Je participe à des compétitions'},
+  {v:'compétiteur',  l:'Compétiteur',  d:'Je m’entraîne pour la compétition (RX+)'},
 ]
 const GOALS = [
   {v:'santé',l:'🌿 Santé',d:'Bien-être général'},

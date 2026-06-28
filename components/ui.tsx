@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 
 /** Close a popover when the user points down anywhere outside `ref`. Works in
@@ -47,6 +48,18 @@ export function PageHeader({ title, subtitle, backHref }: { title: string; subti
       <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">{title}</h1>
       {subtitle && <p className="text-sm text-[var(--muted)] mt-0.5">{subtitle}</p>}
     </div>
+  )
+}
+
+/** Standalone back button (router.back, or a fixed href). Use on sub-pages that
+ *  don't have a PageHeader backHref. */
+export function BackButton({ href, className = '' }: { href?: string; className?: string }) {
+  const router = useRouter()
+  return (
+    <button onClick={() => (href ? router.push(href) : router.back())}
+      className={`ds-hover inline-flex items-center gap-1 text-sm font-bold text-[var(--ink-soft)] border border-[color:var(--border)] rounded-full pl-2 pr-3.5 py-1.5 ${className}`}>
+      <span className="text-lg leading-none -mt-0.5">‹</span> Retour
+    </button>
   )
 }
 
