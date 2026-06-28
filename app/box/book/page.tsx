@@ -156,7 +156,7 @@ export default function BookPage() {
             <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-xs font-bold flex-shrink-0">
               {(['week', 'month'] as const).map(v => (
                 <button key={v} onClick={() => { setView(v); setSelectedDay(null) }} className="px-3 py-2 cursor-pointer"
-                  style={view === v ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
+                  style={view === v ? { background: 'var(--ink)', color: 'var(--card)' } : { color: 'var(--sub)' }}>
                   {v === 'week' ? 'Semaine' : 'Mois'}
                 </button>
               ))}
@@ -168,7 +168,7 @@ export default function BookPage() {
         <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-sm font-bold mb-4">
           {([['browse', 'Réserver'], ['mine', 'Mes réservations']] as const).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)} className="flex-1 py-2.5 cursor-pointer"
-              style={tab === t ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
+              style={tab === t ? { background: 'var(--ink)', color: 'var(--card)' } : { color: 'var(--sub)' }}>
               {label}
             </button>
           ))}
@@ -231,10 +231,10 @@ export default function BookPage() {
                     return (
                       <button key={i} onClick={() => setSelectedDay(ds)}
                         className="min-h-16 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer"
-                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
-                        <span className={`text-[10px] font-bold ${sel ? 'text-white' : 'text-[var(--muted)]'}`}>{DAY_WK[i]}</span>
-                        <span className={`text-sm font-black ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{d.getDate()}</span>
-                        {count > 0 && <span className={`text-[8px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
+                        style={{ background: sel ? 'var(--ink)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
+                        <span className={`text-[10px] font-bold ${sel ? 'text-[var(--card)]' : 'text-[var(--muted)]'}`}>{DAY_WK[i]}</span>
+                        <span className={`text-sm font-black ${sel ? 'text-[var(--card)]' : 'text-[var(--ink-soft)]'}`}>{d.getDate()}</span>
+                        {count > 0 && <span className={`text-[8px] font-bold ${sel ? 'text-[var(--card)]' : 'text-[var(--accent-text)]'}`}>{count}</span>}
                       </button>
                     )
                   })}
@@ -252,9 +252,9 @@ export default function BookPage() {
                     const count = onDay(ds).length; const sel = activeDay === ds
                     return (
                       <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center cursor-pointer"
-                        style={{ background: sel ? 'var(--theme-primary, #F97316)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
-                        <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{day}</span>
-                        {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-white' : 'text-orange-500'}`}>{count}</span>}
+                        style={{ background: sel ? 'var(--ink)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
+                        <span className={`text-xs font-bold ${sel ? 'text-[var(--card)]' : 'text-[var(--ink-soft)]'}`}>{day}</span>
+                        {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-[var(--card)]' : 'text-[var(--accent-text)]'}`}>{count}</span>}
                       </button>
                     )
                   })}

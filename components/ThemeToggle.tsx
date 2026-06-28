@@ -40,7 +40,7 @@ export default function ThemeToggle() {
     <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-xs font-bold">
       {opts.map(([m, label]) => (
         <button key={m} type="button" onClick={() => choose(m)} className="flex-1 py-2 px-2 cursor-pointer transition"
-          style={mode === m ? { background: 'var(--theme-primary, #F97316)', color: '#fff' } : { color: 'var(--sub)' }}>
+          style={mode === m ? { background: 'var(--ink)', color: 'var(--card)' } : { color: 'var(--sub)' }}>
           {label}
         </button>
       ))}

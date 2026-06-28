@@ -160,7 +160,7 @@ export function Segmented<T extends string>({ options, value, onChange }: {
     <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-xs font-bold">
       {options.map(([v, label]) => (
         <button key={v} type="button" onClick={() => onChange(v)} className="flex-1 py-2 px-2 cursor-pointer transition"
-          style={value === v ? { background: ui.primary, color: '#fff' } : { color: 'var(--sub)' }}>
+          style={value === v ? { background: 'var(--ink)', color: 'var(--card)' } : { color: 'var(--sub)' }}>
           {label}
         </button>
       ))}

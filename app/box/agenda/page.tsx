@@ -113,13 +113,13 @@ export default function AgendaPage() {
         <div className="flex flex-wrap gap-1.5 mb-4">
           <button onClick={() => setSelected(null)}
             className="px-2.5 py-1 rounded-full text-xs font-bold cursor-pointer border"
-            style={!selected ? { background: 'var(--theme-primary,#F97316)', color: '#fff', borderColor: 'transparent' } : { color: 'var(--sub)', borderColor: 'var(--border)' }}>
+            style={!selected ? { background: 'var(--ink)', color: 'var(--card)', borderColor: 'transparent' } : { color: 'var(--sub)', borderColor: 'var(--border)' }}>
             Tous
           </button>
           {me && coaches.some(c => c.userId === me) && (
             <button onClick={() => setSelected(new Set([me]))}
               className="px-2.5 py-1 rounded-full text-xs font-bold cursor-pointer border"
-              style={selected && selected.size === 1 && selected.has(me) ? { background: 'var(--theme-primary,#F97316)', color: '#fff', borderColor: 'transparent' } : { color: 'var(--sub)', borderColor: 'var(--border)' }}>
+              style={selected && selected.size === 1 && selected.has(me) ? { background: 'var(--ink)', color: 'var(--card)', borderColor: 'transparent' } : { color: 'var(--sub)', borderColor: 'var(--border)' }}>
               Moi
             </button>
           )}
@@ -179,10 +179,10 @@ export default function AgendaPage() {
                   return (
                     <button key={i} onClick={() => setSelectedDay(ds)}
                       className="min-h-12 rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer border"
-                      style={sel ? { background: 'var(--theme-primary,#F97316)', borderColor: 'transparent' } : { borderColor: today ? 'var(--theme-primary,#F97316)' : 'transparent' }}>
-                      <span className={`text-xs font-bold ${sel ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{day}</span>
+                      style={sel ? { background: 'var(--ink)', borderColor: 'transparent' } : { borderColor: today ? 'var(--ink)' : 'transparent' }}>
+                      <span className={`text-xs font-bold ${sel ? 'text-[var(--card)]' : 'text-[var(--ink-soft)]'}`}>{day}</span>
                       <span className="flex gap-0.5 h-1.5">
-                        {colors.map((c, j) => <span key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: sel ? '#fff' : c }} />)}
+                        {colors.map((c, j) => <span key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: sel ? 'var(--card)' : c }} />)}
                       </span>
                     </button>
                   )
