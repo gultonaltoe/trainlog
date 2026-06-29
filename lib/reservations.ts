@@ -110,10 +110,11 @@ export type MyReservation = {
   startTime: string   // HH:MM
   durationMin: number
   status: ReservationStatus
+  notified: boolean    // waitlisted + a freed spot was offered → can claim
 }
 
 type MyRow = {
-  schedule_id: string; occurrence_date: string; status: ReservationStatus
+  schedule_id: string; occurrence_date: string; status: ReservationStatus; notified_at: string | null
   class_schedules: { title: string; start_time: string; duration_min: number } | null
 }
 
@@ -122,7 +123,7 @@ export async function getMyReservations(orgId: string): Promise<MyReservation[]>
   const uid = await getSessionUserId()
   if (!uid) return []
   const { data, error } = await supabase.from('class_reservations')
-    .select('schedule_id, occurrence_date, status, class_schedules(title, start_time, duration_min)')
+    .select('schedule_id, occurrence_date, status, notified_at, class_schedules(title, start_time, duration_min)')
     .eq('organization_id', orgId).eq('user_id', uid)
     .order('occurrence_date', { ascending: true })
   if (error) throw new Error(`getMyReservations: ${error.message}`)
@@ -133,5 +134,6 @@ export async function getMyReservations(orgId: string): Promise<MyReservation[]>
     startTime: (r.class_schedules?.start_time ?? '').slice(0, 5),
     durationMin: r.class_schedules?.duration_min ?? 60,
     status: r.status,
+    notified: r.notified_at != null,
   }))
 }

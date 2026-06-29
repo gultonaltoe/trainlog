@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { getMyReservations, cancelClass, type MyReservation } from '@/lib/reservations'
+import { getMyReservations, cancelClass, claimWaitlistSpot, type MyReservation } from '@/lib/reservations'
 import { endTime } from '@/lib/classes'
 import { toast } from '@/lib/toast'
 
@@ -33,6 +33,14 @@ export default function MyReservations({ orgId }: { orgId: string }) {
     setBusy(null)
   }
 
+  const claim = async (r: MyReservation) => {
+    const key = `${r.scheduleId}|${r.date}`
+    setBusy(key)
+    try { await claimWaitlistSpot(r.scheduleId, r.date); toast.success('Place confirmée 🎉'); await load() }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setBusy(null)
+  }
+
   if (items === null) return <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>
 
   return (
@@ -49,9 +57,18 @@ export default function MyReservations({ orgId }: { orgId: string }) {
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[var(--ink)] truncate">{r.title}</p>
                   <p className="text-xs text-[var(--muted)] capitalize">{fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}</p>
-                  {r.status === 'waitlisted' && <p className="text-[11px] font-bold text-amber-600">Liste d’attente</p>}
+                  {r.status === 'waitlisted' && (
+                    <p className={`text-[11px] font-bold ${r.notified ? 'text-green-600' : 'text-amber-600'}`}>
+                      {r.notified ? 'Place dispo — confirme !' : 'Liste d’attente'}
+                    </p>
+                  )}
                 </div>
-                {confirmKey === key ? (
+                {r.status === 'waitlisted' && r.notified ? (
+                  <button onClick={() => claim(r)} disabled={busy === key}
+                    className="text-xs font-black text-white bg-green-500 rounded-lg px-3 py-2 disabled:opacity-50 cursor-pointer whitespace-nowrap flex-shrink-0">
+                    {busy === key ? '…' : 'Confirmer ma place'}
+                  </button>
+                ) : confirmKey === key ? (
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button onClick={() => cancel(r)} disabled={busy === key}
                       className="text-xs font-black text-white bg-red-500 rounded-lg px-3 py-2 disabled:opacity-50 cursor-pointer whitespace-nowrap">
