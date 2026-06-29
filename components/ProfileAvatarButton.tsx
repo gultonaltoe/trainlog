@@ -12,9 +12,14 @@ export default function ProfileAvatarButton() {
   const [avatar, setAvatar] = useState('')
 
   useEffect(() => {
-    supabase.from('user_profile').select('first_name, avatar_url').limit(1).maybeSingle()
-      .then(({ data }) => { if (data) { setName(data.first_name ?? ''); setAvatar(data.avatar_url ?? '') } })
-      .catch(() => { /* non-fatal */ })
+    let alive = true
+    void (async () => {
+      try {
+        const { data } = await supabase.from('user_profile').select('first_name, avatar_url').limit(1).maybeSingle()
+        if (alive && data) { setName(data.first_name ?? ''); setAvatar(data.avatar_url ?? '') }
+      } catch { /* non-fatal */ }
+    })()
+    return () => { alive = false }
   }, [])
 
   const initial = name.trim().charAt(0).toUpperCase() || '?'
