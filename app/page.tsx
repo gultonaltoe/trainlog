@@ -8,6 +8,7 @@ import CoachDashboard from '@/components/CoachDashboard'
 import MemberBoxCard from '@/components/MemberBoxCard'
 import ProgrammingCard from '@/components/ProgrammingCard'
 import ApprovalBanner from '@/components/ApprovalBanner'
+import PendingBanner from '@/components/PendingBanner'
 
 // ── Helpers ───────────────────────────────────────────────
 function toDateStr(d: Date) {
@@ -177,7 +178,8 @@ export default function Dashboard() {
           <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
         </div>
 
-        {/* Box just approved the join request (ST-80) */}
+        {/* Join request: pending (ST-81) then approved (ST-80) */}
+        <PendingBanner />
         <ApprovalBanner />
 
         {/* Quick actions: Réserver (primary) + Séance (secondary), same line */}
