@@ -30,11 +30,21 @@ export default function FeedbackButton() {
   const submit = async () => {
     if (!message.trim()) return
     setSaving(true)
-    await supabase.from('feedback').insert({
-      user_name: name || null, type, message: message.trim(), page: path,
-    })
-    toast.success('Merci pour ton retour ! 🙏')
-    setOpen(false); setMessage(''); setType('suggestion'); setSaving(false)
+    try {
+      // Go through /api/feedback so the save + email + Confluence log happen together.
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ user_name: name || null, type, message: message.trim(), page: path }),
+      })
+      if (!res.ok) { toast.error('Échec de l’envoi, réessaie'); setSaving(false); return }
+      toast.success('Merci pour ton retour ! 🙏')
+      setOpen(false); setMessage(''); setType('suggestion')
+    } catch {
+      toast.error('Échec de l’envoi, réessaie')
+    }
+    setSaving(false)
   }
 
   return (
