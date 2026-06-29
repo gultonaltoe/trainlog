@@ -3,15 +3,6 @@ import { useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-const UID_KEY = 'trainlog_uid'
-
-async function migrateIfNeeded(authUid: string) {
-  const oldUid = localStorage.getItem(UID_KEY)
-  localStorage.setItem(UID_KEY, authUid)
-  if (!oldUid || oldUid === authUid) return
-  await supabase.rpc('migrate_user_data', { old_uid: oldUid })
-}
-
 export default function UserInit() {
   const pathname = usePathname()
   const router = useRouter()
@@ -37,7 +28,6 @@ export default function UserInit() {
       // to /welcome (the bug that flashed the welcome page over the dashboard).
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/auth'); return }
-      await migrateIfNeeded(user.id)
       if (pathname === '/welcome') return
       const { data: profile, error } = await supabase
         .from('user_profile').select('id')
