@@ -6,7 +6,7 @@ import { getOrganization, updateOrgInfo, type OrgProfile } from '@/lib/orgs'
 import { BackButton } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3 text-[var(--ink)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400'
+const inputCls = 'ds-field'
 const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2'
 
 function BoxProfile() {

@@ -6,6 +6,7 @@ import { getSessionTypes, saveSession, getProfile, detectAndSavePRs } from '@/li
 import type { SessionType, PainEntry } from '@/lib/api'
 import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
+import { DatePicker } from '@/components/ui'
 
 // ── Types ─────────────────────────────────────────────────
 type SetRow    = { reps: string; weight: string }
@@ -141,7 +142,7 @@ function ivPace(distance: string, timeMin: string, timeSec: string): string | nu
   return `${Math.floor(paceSecKm / 60)}'${String(Math.round(paceSecKm % 60)).padStart(2,'0')}"/km`
 }
 
-const inputCls = "w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400"
+const inputCls = "ds-field"
 const labelCls = "block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2"
 
 // ── Composant principal ────────────────────────────────────
@@ -587,7 +588,7 @@ export default function LogPage() {
                       </button>
                     </div>
                     {(showDatePicker || !isChip) && (
-                      <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls + ' mt-2'} />
+                      <div className="mt-2"><DatePicker value={date} onChange={setDate} /></div>
                     )}
                   </>
                 )

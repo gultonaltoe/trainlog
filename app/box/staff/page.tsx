@@ -222,7 +222,7 @@ function InviteForm({ orgId, onClose, onSaved }: { orgId: string; onClose: () =>
   const [email, setEmail] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
+  const fieldCls = 'ds-field'
   const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-1.5'
 
   const submit = async () => {

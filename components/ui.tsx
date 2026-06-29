@@ -234,9 +234,15 @@ export function DatePicker({ value, onChange, placeholder = 'Choisir une date', 
       {open && (
         <div className="absolute z-50 mt-1 w-72 max-w-[90vw] rounded-2xl border border-[color:var(--border)] bg-[var(--card)] shadow-lg p-3">
           <div className="flex items-center justify-between mb-2">
-            <button type="button" onClick={() => shift(-1)} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)]">‹</button>
+            <span className="flex items-center gap-0.5">
+              <button type="button" aria-label="Année précédente" onClick={() => setYm(s => ({ ...s, y: s.y - 1 }))} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)] text-xs font-bold">«</button>
+              <button type="button" aria-label="Mois précédent" onClick={() => shift(-1)} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)]">‹</button>
+            </span>
             <span className="text-sm font-bold text-[var(--ink)]">{MONTHS[ym.m]} {ym.y}</span>
-            <button type="button" onClick={() => shift(1)} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)]">›</button>
+            <span className="flex items-center gap-0.5">
+              <button type="button" aria-label="Mois suivant" onClick={() => shift(1)} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)]">›</button>
+              <button type="button" aria-label="Année suivante" onClick={() => setYm(s => ({ ...s, y: s.y + 1 }))} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)] text-xs font-bold">»</button>
+            </span>
           </div>
           <div className="grid grid-cols-7 mb-1">{DOW.map((d, i) => <span key={i} className="text-center text-[10px] font-bold text-[var(--muted)]">{d}</span>)}</div>
           <div className="grid grid-cols-7 gap-0.5">

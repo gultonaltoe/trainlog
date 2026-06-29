@@ -5,7 +5,7 @@ import { getSessionUserId } from '@/lib/auth'
 import { getOrgMembers, getOrganization, DEFAULT_SESSION_TYPES, DEFAULT_CAPACITY, DEFAULT_DURATION_MIN, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
 import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, endTime, KIND_META, EVENT_KINDS, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
 import { getBookingsInRange, getOccurrenceAttendees, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
-import { BackButton, Toggle, Select, Segmented } from '@/components/ui'
+import { BackButton, Toggle, Select, Segmented, TimePicker } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -476,7 +476,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
   const [eventKind, setEventKind] = useState<string>('event')   // when not bookable
   const [saving, setSaving] = useState(false)
 
-  const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
+  const fieldCls = 'ds-field'
   const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-1.5'
 
   const types = sessionTypes.length > 0 ? sessionTypes : DEFAULT_SESSION_TYPES
@@ -526,10 +526,8 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
           {bookable ? (
             <div>
               <label className={labelCls}>Type de séance</label>
-              <select className={fieldCls} value={type} onChange={e => pickType(e.target.value)}>
-                <option value="">— Choisir —</option>
-                {types.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
-              </select>
+              <Select value={type} onChange={pickType} placeholder="— Choisir —"
+                options={types.map(t => ({ value: t.name, label: t.name }))} />
             </div>
           ) : (
             <div>
@@ -562,10 +560,8 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
           </div>
           <div>
             <label className={labelCls}>Coach</label>
-            <select className={fieldCls} value={coach} onChange={e => setCoach(e.target.value)}>
-              <option value="">— Non assigné —</option>
-              {coaches.map(c => <option key={c.userId} value={c.userId}>{c.firstName ?? 'Coach'}</option>)}
-            </select>
+            <Select value={coach} onChange={setCoach} placeholder="— Non assigné —"
+              options={coaches.map(c => ({ value: c.userId, label: c.firstName ?? 'Coach' }))} />
           </div>
 
           <div>
@@ -583,7 +579,7 @@ function ScheduleForm({ orgId, coaches, sessionTypes, onClose, onSaved }: {
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    <input type="time" className={`${fieldCls} flex-1`} value={s.time} onChange={e => updSlot(i, { time: e.target.value })} />
+                    <div className="flex-1"><TimePicker value={s.time} onChange={t => updSlot(i, { time: t })} /></div>
                     <span className="text-xs text-[var(--muted)] whitespace-nowrap">→ {endTime(s.time, duration)}</span>
                     {slots.length > 1 && (
                       <button onClick={() => setSlots(arr => arr.filter((_, j) => j !== i))} className="text-[var(--border-strong)] hover:text-red-500 text-xl px-2">×</button>

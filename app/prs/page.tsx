@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { getSessionUserId } from '@/lib/auth'
 import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
-import { BackButton } from '@/components/ui'
+import { BackButton, DatePicker } from '@/components/ui'
 
 type PR = { id: string; movement_id: string; movement_name: string; value: number; unit: string; date: string }
 type MovementPR = {
@@ -446,9 +446,8 @@ export default function PRsPage() {
                 </button>
               </div>
               {showDatePicker && (
-                <input type="date" value={customDate || offsetStr(dateOffset)} max={todayStr()}
-                  onChange={e => setCustomDate(e.target.value)}
-                  className="w-full rounded-xl border border-orange-300 bg-[var(--accent-soft)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                <DatePicker value={customDate || offsetStr(dateOffset)}
+                  onChange={v => setCustomDate(v > todayStr() ? todayStr() : v)} />
               )}
               <p className="text-xs text-[var(--muted)] mt-1.5">
                 {showDatePicker && customDate

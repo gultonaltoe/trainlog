@@ -8,7 +8,7 @@ import { getSessionUserId } from '@/lib/auth'
 import { useAppContext } from '@/components/AppContext'
 import { setDataSharing } from '@/lib/orgs'
 import ThemeToggle from '@/components/ThemeToggle'
-import { StickyBar, Toggle, NavRow } from '@/components/ui'
+import { StickyBar, Toggle, NavRow, DatePicker } from '@/components/ui'
 import { useUnsavedGuard } from '@/components/useUnsavedGuard'
 import { uploadAvatar } from '@/lib/storage'
 import ImagePicker from '@/components/ImagePicker'
@@ -47,7 +47,7 @@ const THEMES = [
   {name:'Teal',hex:'#14B8A6'},{name:'Indigo',hex:'#6366F1'},
 ]
 
-const inputCls = "w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400"
+const inputCls = "ds-field"
 const labelCls = "block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2"
 const section  = "bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4"
 
@@ -276,9 +276,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Date de naissance</label>
-                <input type="date" value={p.birth_date}
-                  onChange={e => upd('birth_date', e.target.value)}
-                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                <DatePicker value={p.birth_date} onChange={v => upd('birth_date', v)} placeholder="Choisir" />
                 {age && <p className="text-xs text-[var(--muted)] mt-1">{age} ans</p>}
               </div>
               <div>

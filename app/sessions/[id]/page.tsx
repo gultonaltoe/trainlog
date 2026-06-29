@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { DatePicker } from '@/components/ui'
 
 type SessionDetail = {
   id: string
@@ -316,8 +317,7 @@ export default function SessionDetailPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Date</label>
-                <input type="date" value={draft.date} onChange={e => setDraft(d => d && ({ ...d, date: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                <div className="mt-1"><DatePicker value={draft.date} onChange={v => setDraft(d => d && ({ ...d, date: v }))} /></div>
               </div>
               <div>
                 <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Durée (min)</label>

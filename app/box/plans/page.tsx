@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import { BackButton } from '@/components/ui'
+import { BackButton, Select } from '@/components/ui'
 import { getPlans, createPlan, updatePlan, deletePlan, formatPrice, PLAN_KIND_LABEL, type MembershipPlan, type NewPlan, type PlanKind } from '@/lib/plans'
 import { toast } from '@/lib/toast'
 
@@ -98,7 +98,7 @@ function PlanForm({ orgId, initial, onClose, onSaved }: {
   const [priceEuros, setPriceEuros] = useState(((initial?.priceCents ?? 0) / 100).toString())
   const [saving, setSaving] = useState(false)
 
-  const fieldCls = 'w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-orange-400'
+  const fieldCls = 'ds-field'
   const labelCls = 'block text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-1.5'
   const upd = (patch: Partial<NewPlan>) => setP(v => ({ ...v, ...patch }))
 
@@ -128,9 +128,8 @@ function PlanForm({ orgId, initial, onClose, onSaved }: {
           </div>
           <div>
             <label className={labelCls}>Type</label>
-            <select className={fieldCls} value={p.kind} onChange={e => upd({ kind: e.target.value as PlanKind })}>
-              {KINDS.map(k => <option key={k} value={k}>{PLAN_KIND_LABEL[k]}</option>)}
-            </select>
+            <Select<PlanKind> value={p.kind} onChange={k => upd({ kind: k })}
+              options={KINDS.map(k => ({ value: k, label: PLAN_KIND_LABEL[k] }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
