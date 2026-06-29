@@ -34,6 +34,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      changelog_entries: {
+        Row: {
+          id: string
+          title: string
+          body: string
+          tag: string
+          published_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          body: string
+          tag?: string
+          published_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          body?: string
+          tag?: string
+          published_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       block_sets: {
         Row: {
           block_id: string
