@@ -13,10 +13,11 @@ export class NotAuthenticatedError extends Error {
 }
 
 /**
- * Canonical email for auth: lowercased + trimmed; for gmail/googlemail the dots
- * in the local part are stripped and the domain unified. Prevents dot-variant
- * duplicate accounts (Gmail ignores dots; Supabase treats them as distinct).
- * Mirrors the SQL normalize_email() used for invite matching.
+ * Dot-insensitive MATCHING KEY for gmail/googlemail (mirrors the SQL
+ * normalize_email() used for invite matching). NOTE: only for comparing two
+ * addresses — never use it for what we send or store. We persist/send the email
+ * exactly as typed (lowercased+trimmed) so it stays faithful and always
+ * delivers; only invite matching collapses gmail dot-variants, server-side.
  */
 export function normalizeEmail(email: string): string {
   const e = email.trim().toLowerCase()

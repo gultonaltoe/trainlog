@@ -3,7 +3,6 @@ import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { normalizeEmail } from '@/lib/auth'
 import Wordmark from '@/components/Wordmark'
 
 function AuthForm() {
@@ -27,7 +26,11 @@ function AuthForm() {
     setLoading(true)
     setError('')
     const { error: err } = await supabase.auth.signInWithOtp({
-      email: normalizeEmail(email),
+      // Send/store the email exactly as typed (lowercased + trimmed). We do NOT
+      // strip dots — the address must stay faithful so it always delivers and
+      // matches what the user sees. Dot-insensitive matching lives only in the
+      // server-side invite logic (normalize_email), which compares without mutating.
+      email: email.trim().toLowerCase(),
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
     setLoading(false)
