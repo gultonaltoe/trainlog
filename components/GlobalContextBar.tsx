@@ -4,6 +4,7 @@ import { useAppContext } from './AppContext'
 import ContextSwitcher from './ContextSwitcher'
 import NotificationBell from './NotificationBell'
 import ChangelogButton from './ChangelogButton'
+import ProfileAvatarButton from './ProfileAvatarButton'
 import Wordmark from './Wordmark'
 
 // Renders the context switcher at the top of every app page (in normal flow,
@@ -27,6 +28,7 @@ export default function GlobalContextBar() {
         <div className="flex-1 min-w-0">{hasActiveBox ? <ContextSwitcher /> : <Wordmark size={26} className="text-lg" />}</div>
         <ChangelogButton />
         {hasActiveBox && <NotificationBell />}
+        <ProfileAvatarButton />
       </div>
     </div>
   )
