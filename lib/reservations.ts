@@ -82,6 +82,15 @@ export async function getBookingsInRange(orgId: string, fromISO: string, toISO: 
 
 type AttendeeRow = { user_id: string; first_name: string | null; status: ReservationStatus; wl_position: number; notified: boolean }
 
+/** Owner/coach/staff removes a member from an occurrence (booked or waitlisted).
+ *  Frees the seat + handles the waitlist + refunds credits server-side. */
+export async function removeReservation(scheduleId: string, date: string, userId: string): Promise<void> {
+  // RPC not in generated types yet — cast (same pattern as syncWaitlist / lib/orgs).
+  const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
+  const { error } = await rpc('coach_remove_reservation', { p_schedule_id: scheduleId, p_date: date, p_user_id: userId })
+  if (error) throw new Error(error.message)
+}
+
 /** Attendee list for one occurrence (owner/coach only). */
 export async function getOccurrenceAttendees(scheduleId: string, date: string): Promise<Attendee[]> {
   const { data, error } = await supabase.rpc('get_occurrence_attendees', { p_schedule_id: scheduleId, p_date: date })

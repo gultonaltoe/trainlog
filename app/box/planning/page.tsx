@@ -4,7 +4,7 @@ import { useBoxGuard } from '@/components/useBoxGuard'
 import { getSessionUserId } from '@/lib/auth'
 import { getOrgMembers, getOrganization, DEFAULT_SESSION_TYPES, DEFAULT_CAPACITY, DEFAULT_DURATION_MIN, type OrgMember, type Role, type SessionType } from '@/lib/orgs'
 import { getSchedules, occurrencesInRange, createSchedules, deleteSchedule, endTime, KIND_META, EVENT_KINDS, type ClassSchedule, type ClassOccurrence, type WeeklySlot } from '@/lib/classes'
-import { getBookingsInRange, getOccurrenceAttendees, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
+import { getBookingsInRange, getOccurrenceAttendees, removeReservation, bookingKey, type OccBooking, type Attendee } from '@/lib/reservations'
 import { BackButton, Toggle, Select, Segmented, TimePicker } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
@@ -45,6 +45,7 @@ export default function PlanningPage() {
   const [bookings, setBookings] = useState<Map<string, OccBooking>>(new Map())
   const [attendeesFor, setAttendeesFor] = useState<ClassOccurrence | null>(null)
   const [coachFilter, setCoachFilter] = useState<Set<string> | null>(null)   // agenda mode; null = all
+  const [bookingsKey, setBookingsKey] = useState(0)   // bump to reload booking counts after a removal
 
   const range = useMemo(() => {
     if (view === 'week') {
@@ -79,7 +80,7 @@ export default function PlanningPage() {
       .then(m => { if (alive) setBookings(m) })
       .catch(() => { if (alive) setBookings(new Map()) })
     return () => { alive = false }
-  }, [orgId, range.fromISO, range.toISO])
+  }, [orgId, range.fromISO, range.toISO, bookingsKey])
 
   // Colour per coach (stable by index) — used in agenda mode.
   const colorByCoach = useMemo(() => {
@@ -362,7 +363,7 @@ export default function PlanningPage() {
       )}
 
       {attendeesFor && (
-        <AttendeesSheet occ={attendeesFor} onClose={() => setAttendeesFor(null)} />
+        <AttendeesSheet occ={attendeesFor} onClose={() => setAttendeesFor(null)} onChanged={() => setBookingsKey(k => k + 1)} />
       )}
     </div>
   )
@@ -403,8 +404,14 @@ function OccRow({ c, coachName, onDelete, booking, onOpen, onLeave }: {
   )
 }
 
-function AttendeesSheet({ occ, onClose }: { occ: ClassOccurrence; onClose: () => void }) {
+function AttendeesSheet({ occ, onClose, onChanged }: { occ: ClassOccurrence; onClose: () => void; onChanged: () => void }) {
   const [att, setAtt] = useState<Attendee[] | null>(null)
+  const [removing, setRemoving] = useState<string | null>(null)
+
+  const refetch = () => getOccurrenceAttendees(occ.id, occ.date)
+    .then(setAtt)
+    .catch(e => { toast.error(e instanceof Error ? e.message : 'Erreur'); setAtt([]) })
+
   useEffect(() => {
     let alive = true
     getOccurrenceAttendees(occ.id, occ.date)
@@ -412,6 +419,14 @@ function AttendeesSheet({ occ, onClose }: { occ: ClassOccurrence; onClose: () =>
       .catch(e => { toast.error(e instanceof Error ? e.message : 'Erreur'); if (alive) setAtt([]) })
     return () => { alive = false }
   }, [occ.id, occ.date])
+
+  const remove = async (a: Attendee) => {
+    if (!window.confirm(`Retirer ${a.firstName ?? 'ce membre'} ${a.status === 'booked' ? 'du cours' : 'de la liste d’attente'} ?`)) return
+    setRemoving(a.userId)
+    try { await removeReservation(occ.id, occ.date, a.userId); await refetch(); onChanged() }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setRemoving(null)
+  }
 
   const booked = (att ?? []).filter(a => a.status === 'booked')
   const waiting = (att ?? []).filter(a => a.status === 'waitlisted')
@@ -434,11 +449,15 @@ function AttendeesSheet({ occ, onClose }: { occ: ClassOccurrence; onClose: () =>
             {booked.length === 0
               ? <p className="text-sm text-[var(--border-strong)] mb-3">Personne d’inscrit.</p>
               : <div className="space-y-1.5 mb-4">{booked.map(a => (
-                  <div key={a.userId} className="flex items-center gap-2 text-sm text-[var(--ink)]">
-                    <span className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] text-xs font-bold flex items-center justify-center">
-                      {(a.firstName ?? '?').charAt(0).toUpperCase()}
+                  <div key={a.userId} className="flex items-center justify-between gap-2 text-sm text-[var(--ink)]">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] text-xs font-bold flex items-center justify-center flex-shrink-0">
+                        {(a.firstName ?? '?').charAt(0).toUpperCase()}
+                      </span>
+                      <span className="truncate">{a.firstName ?? 'Membre'}</span>
                     </span>
-                    {a.firstName ?? 'Membre'}
+                    <button onClick={() => remove(a)} disabled={removing === a.userId}
+                      className="text-[var(--border-strong)] hover:text-red-500 text-lg leading-none px-1.5 flex-shrink-0 disabled:opacity-40" title="Retirer du cours">×</button>
                   </div>
                 ))}</div>}
 
@@ -446,10 +465,14 @@ function AttendeesSheet({ occ, onClose }: { occ: ClassOccurrence; onClose: () =>
               <>
                 <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wide mb-2">Liste d’attente ({waiting.length})</p>
                 <div className="space-y-1.5">{waiting.map(a => (
-                  <div key={a.userId} className="flex items-center gap-2 text-sm text-[var(--ink-soft)]">
-                    <span className="w-6 h-6 rounded-full bg-[var(--track)] text-[var(--sub)] text-xs font-bold flex items-center justify-center">{a.position}</span>
-                    {a.firstName ?? 'Membre'}
-                    {a.notified && <span className="text-[11px] text-amber-600 font-semibold">· prévenu</span>}
+                  <div key={a.userId} className="flex items-center justify-between gap-2 text-sm text-[var(--ink-soft)]">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="w-6 h-6 rounded-full bg-[var(--track)] text-[var(--sub)] text-xs font-bold flex items-center justify-center flex-shrink-0">{a.position}</span>
+                      <span className="truncate">{a.firstName ?? 'Membre'}</span>
+                      {a.notified && <span className="text-[11px] text-amber-600 font-semibold flex-shrink-0">· prévenu</span>}
+                    </span>
+                    <button onClick={() => remove(a)} disabled={removing === a.userId}
+                      className="text-[var(--border-strong)] hover:text-red-500 text-lg leading-none px-1.5 flex-shrink-0 disabled:opacity-40" title="Retirer de la liste d’attente">×</button>
                   </div>
                 ))}</div>
               </>
