@@ -8,6 +8,7 @@ import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
 import { DatePicker } from '@/components/ui'
 import { ENERGY_LEVELS, energyOf } from '@/lib/energy'
+import { FEELING_LEVELS } from '@/lib/feeling'
 import { celebrate } from '@/lib/confetti'
 
 // ── Types ─────────────────────────────────────────────────
@@ -40,6 +41,7 @@ const COMMON_MOVES      = [
   'Pull-ups','TTB','HSPU','Bar MU','Dips',
   'Power Clean','Deadlift','KB Swing','Overhead Squat',
   'Row Cal','Echo Bike Cal','Run 400m','Run 200m',
+  'Lunges','Walking Lunges','Wall Walk','Sit-ups',
 ]
 const NO_WEIGHT_CATS = ['gymnastics','cardio','skill']
 const RUN_TYPES      = ['Endurance','Tempo','Fractionné','Récupération','Compétition']
@@ -1340,11 +1342,11 @@ export default function LogPage() {
             <div>
               <label className={labelCls}>Ressenti post-séance</label>
               <div className="flex gap-2">
-                {[{v:1,e:'😩',l:'Mauvais'},{v:2,e:'😕',l:'Passable'},{v:3,e:'😐',l:'Correct'},{v:4,e:'😊',l:'Bien'},{v:5,e:'🤩',l:'Excellent'}].map(f => (
+                {FEELING_LEVELS.map(f => (
                   <button key={f.v} onClick={() => setFeeling(f.v)}
                     className={`flex-1 py-2 rounded-xl border flex flex-col items-center gap-1 transition ${feeling === f.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'}`}>
-                    <span className="text-xl">{f.e}</span>
-                    <span className={`text-xs font-medium ${feeling === f.v ? 'text-orange-500' : 'text-[var(--muted)]'}`}>{f.l}</span>
+                    <span className="text-xl">{f.emoji}</span>
+                    <span className={`text-xs font-medium ${feeling === f.v ? 'text-orange-500' : 'text-[var(--muted)]'}`}>{f.label}</span>
                   </button>
                 ))}
               </div>

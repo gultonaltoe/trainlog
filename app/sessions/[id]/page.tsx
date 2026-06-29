@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { DatePicker } from '@/components/ui'
 import { energyOf } from '@/lib/energy'
+import { feelingOf } from '@/lib/feeling'
 
 type SessionDetail = {
   id: string
@@ -203,8 +204,8 @@ export default function SessionDetailPage() {
             )}
             {session.feeling_post !== null && (
               <div className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 text-center">
-                <p className="text-lg font-black text-[var(--ink)]">{session.feeling_post}</p>
-                <p className="text-[10px] text-[var(--muted)] mt-0.5">Feeling</p>
+                <p className="text-lg font-black text-[var(--ink)]">{feelingOf(session.feeling_post)?.emoji ?? '—'}</p>
+                <p className="text-[10px] text-[var(--muted)] mt-0.5">{feelingOf(session.feeling_post)?.label ?? 'Feeling'}</p>
               </div>
             )}
             {session.sleep_hours !== null && (

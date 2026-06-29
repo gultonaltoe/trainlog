@@ -19,13 +19,13 @@ const ROLE_LABEL: Record<string, string> = {
 
 type Profile = {
   first_name: string; email: string; birth_date: string
-  weight_kg: string; height_cm: string; level: string; goal: string
+  weight_kg: string; height_cm: string; level: string; goal: string; goals: string[]
   weekly_target: string; box_name: string; sports: string[]
   notes: string; theme_color: string; avatar_url: string
 }
 const EMPTY: Profile = {
   first_name:'', email:'', birth_date:'', weight_kg:'', height_cm:'',
-  level:'', goal:'', weekly_target:'', box_name:'', sports:[], notes:'', theme_color:'#F97316', avatar_url:''
+  level:'', goal:'', goals:[], weekly_target:'', box_name:'', sports:[], notes:'', theme_color:'#F97316', avatar_url:''
 }
 const LEVELS = [
   {v:'débutant',     l:'Débutant',     d:'Je découvre les mouvements'},
@@ -118,6 +118,7 @@ export default function ProfilePage() {
           height_cm:     data.height_cm     ? String(data.height_cm)   : '',
           level:         data.level         ?? '',
           goal:          data.goal          ?? '',
+          goals:         (data.goals as string[] | null) ?? (data.goal ? [data.goal] : []),
           weekly_target: data.weekly_target ? String(data.weekly_target) : '',
           box_name:      data.box_name      ?? '',
           sports:        data.sports        ?? [],
@@ -151,7 +152,7 @@ export default function ProfilePage() {
       weight_kg:     p.weight_kg     ? parseFloat(p.weight_kg)   : null,
       height_cm:     p.height_cm     ? parseInt(p.height_cm)     : null,
       level:         p.level         || null,
-      goal:          p.goal          || null,
+      goal:          p.goals[0]      || null,   // single column kept in sync (legacy readers)
       weekly_target: p.weekly_target ? parseInt(p.weekly_target) : null,
       box_name:      p.box_name      || null,
       sports:        p.sports.length > 0 ? p.sports : null,
@@ -167,6 +168,11 @@ export default function ProfilePage() {
       const { data } = await supabase.from('user_profile').insert({ ...payload, user_id: uid }).select('id').single()
       if (data) setPid(data.id)
     }
+    // goals[] written separately + best-effort, so a not-yet-migrated column
+    // can never break the main save (it persists once the migration is run).
+    const goalsUid = await getSessionUserId()
+    if (goalsUid) await supabase.from('user_profile').update({ goals: p.goals.length > 0 ? p.goals : null }).eq('user_id', goalsUid)
+
     document.documentElement.style.setProperty('--theme-primary', p.theme_color)
     setSaved(p)
     setS(false)
@@ -344,17 +350,20 @@ export default function ProfilePage() {
           </div>
 
           <div className="mb-5">
-            <label className={labelCls}>Objectif principal</label>
+            <label className={labelCls}>Objectifs <span className="text-[var(--muted)] normal-case font-medium">(plusieurs possibles)</span></label>
             <div className="grid grid-cols-2 gap-2">
-              {GOALS.map(g => (
-                <button key={g.v} onClick={() => upd('goal', g.v)}
-                  className={`p-3 rounded-xl border text-left transition ${
-                    p.goal === g.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
-                  }`}>
-                  <p className={`text-sm font-semibold ${p.goal === g.v ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{g.l}</p>
-                  <p className="text-xs text-[var(--muted)] mt-0.5">{g.d}</p>
-                </button>
-              ))}
+              {GOALS.map(g => {
+                const on = p.goals.includes(g.v)
+                return (
+                  <button key={g.v} onClick={() => upd('goals', on ? p.goals.filter(x => x !== g.v) : [...p.goals, g.v])}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      on ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
+                    }`}>
+                    <p className={`text-sm font-semibold ${on ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{g.l}</p>
+                    <p className="text-xs text-[var(--muted)] mt-0.5">{g.d}</p>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
