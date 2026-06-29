@@ -1,0 +1,67 @@
+<!--
+  Trainlift — shared auth email template (ST-63).
+  Paste into Supabase → Authentication → Email Templates for EACH template
+  (Confirm signup, Magic Link, Invite, Reset password, Change email).
+  Only the {{ heading }} / {{ intro }} / {{ button }} wording changes per slot
+  (see the table in the chat / ST-63). The link variable {{ .ConfirmationURL }}
+  is the same across all of them.
+
+  Email-safe: table layout + inline styles only (no external CSS, no flexbox).
+  Tested to render in Gmail, Apple Mail, Outlook.
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F7F5;margin:0;padding:32px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#FFFFFF;border:1px solid #ECE9E4;border-radius:20px;overflow:hidden;">
+        <!-- Wordmark -->
+        <tr>
+          <td align="center" style="padding:36px 32px 8px;">
+            <span style="font-size:26px;font-weight:800;letter-spacing:-0.02em;color:#1A1A1A;">Train<span style="color:#F97316;">lift</span></span>
+          </td>
+        </tr>
+        <!-- Heading + intro -->
+        <tr>
+          <td align="center" style="padding:8px 36px 0;">
+            <h1 style="margin:16px 0 8px;font-size:21px;font-weight:800;color:#1A1A1A;">Ta connexion à Trainlift</h1>
+            <p style="margin:0;font-size:15px;line-height:1.55;color:#6B6B6B;">
+              Clique sur le bouton ci-dessous pour accéder à ton compte. Ce lien expire dans 1 heure.
+            </p>
+          </td>
+        </tr>
+        <!-- CTA button -->
+        <tr>
+          <td align="center" style="padding:28px 36px 8px;">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="border-radius:14px;background:#F97316;background:linear-gradient(135deg,#F97316,#EA580C);">
+                  <a href="{{ .ConfirmationURL }}" target="_blank"
+                     style="display:inline-block;padding:15px 34px;font-size:16px;font-weight:800;color:#FFFFFF;text-decoration:none;border-radius:14px;">
+                    Me connecter →
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Fallback link -->
+        <tr>
+          <td align="center" style="padding:18px 36px 0;">
+            <p style="margin:0;font-size:12px;line-height:1.5;color:#9A9A9A;">
+              Le bouton ne marche pas ? Copie-colle ce lien dans ton navigateur :<br>
+              <a href="{{ .ConfirmationURL }}" target="_blank" style="color:#F97316;word-break:break-all;">{{ .ConfirmationURL }}</a>
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:24px 36px 36px;">
+            <p style="margin:0;font-size:12px;line-height:1.5;color:#B5B5B5;">
+              Tu n'as pas demandé cet email ? Ignore-le, rien ne se passera.<br>
+              Trainlift · ton suivi d'entraînement
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
