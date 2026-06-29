@@ -85,8 +85,17 @@ export default function ProfilePage() {
     setAvatarUploading(true)
     try {
       const url = await uploadAvatar(uid, file)
+      // Persist immediately so the photo survives navigation, independent of the
+      // global "Enregistrer" (ST-82).
+      if (pid) {
+        await supabase.from('user_profile').update({ avatar_url: url, updated_at: new Date().toISOString() }).eq('id', pid)
+      } else {
+        const { data } = await supabase.from('user_profile').insert({ user_id: uid, avatar_url: url }).select('id').single()
+        if (data) setPid(data.id)
+      }
       setP(prev => ({ ...prev, avatar_url: url }))
-      toast.success('Photo mise à jour — pense à enregistrer')
+      setSaved(prev => ({ ...prev, avatar_url: url }))   // already persisted → not "unsaved"
+      toast.success('Photo mise à jour ✓')
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
     setAvatarUploading(false)
   }

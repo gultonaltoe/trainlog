@@ -18,7 +18,7 @@ export type WodInput = {
   time_cap?:      number    // ← ajouter
   description?:   string
   result_detail?: string
-  is_rx:          boolean
+  is_rx:          boolean | null   // null = not applicable (non-CrossFit) — ST-71
 }
 export type PainEntry     = { label: string; severity: 1 | 2 | 3 }
 export type SessionInput  = {

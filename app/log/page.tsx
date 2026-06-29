@@ -8,6 +8,7 @@ import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
 import { DatePicker } from '@/components/ui'
 import { ENERGY_LEVELS, energyOf } from '@/lib/energy'
+import { celebrate } from '@/lib/confetti'
 
 // ── Types ─────────────────────────────────────────────────
 type SetRow    = { reps: string; weight: string }
@@ -261,6 +262,7 @@ export default function LogPage() {
   const isRun        = typeName === 'Run'
   const isHaltero    = typeName.toLowerCase().includes('haltéro') || typeName.toLowerCase() === 'halterophilie'
   const isHyrox      = typeName.toLowerCase() === 'hyrox'
+  const isCrossfit   = typeName === 'CrossFit'   // RX/Scaled only makes sense here (ST-71)
   const STEPS        = isHaltero ? STEPS_HALTEROPHILIE : isRun ? STEPS_RUN : isHyrox ? STEPS_HYROX : STEPS_DEFAULT
   const curKey       = STEPS[step]?.key
 
@@ -454,12 +456,13 @@ export default function LogPage() {
           time_cap:      wodTimeCap ? parseInt(wodTimeCap) : undefined,
           description:   wodDescription,
           result_detail: wodResult || undefined,
-          is_rx:         wodRx,
+          is_rx:         isCrossfit ? wodRx : null,
         } : undefined,
         pain_entries: painEntries.length > 0 ? painEntries : undefined,
         meta: hyroxMeta ?? runMeta,
       })
       setSavedId(id)
+      celebrate()   // 🎉 ST-76
 
       // Détecter les PRs
       const prBlocks = isHaltero ? halteroBlocks
@@ -1221,17 +1224,20 @@ export default function LogPage() {
                     'Score, temps ou reps...'
                   }
                   className={inputCls} />
-                <div className="flex gap-2">
-                  {[
-                    { v: true,  l: '✓ RX',   a: 'border-green-400 bg-green-50 text-green-700' },
-                    { v: false, l: 'Scaled', a: 'border-amber-400 bg-amber-50 text-amber-700' },
-                  ].map(o => (
-                    <button key={String(o.v)} onClick={() => setWodRx(o.v)}
-                      className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition ${wodRx === o.v ? o.a : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--muted)]'}`}>
-                      {o.l}
-                    </button>
-                  ))}
-                </div>
+                {/* RX/Scaled is a CrossFit concept — only show it there (ST-71) */}
+                {isCrossfit && (
+                  <div className="flex gap-2">
+                    {[
+                      { v: true,  l: '✓ RX',   a: 'border-green-400 bg-green-50 text-green-700' },
+                      { v: false, l: 'Scaled', a: 'border-amber-400 bg-amber-50 text-amber-700' },
+                    ].map(o => (
+                      <button key={String(o.v)} onClick={() => setWodRx(o.v)}
+                        className={`flex-1 py-2.5 rounded-xl border font-bold text-sm transition ${wodRx === o.v ? o.a : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--muted)]'}`}>
+                        {o.l}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
             </>)}
