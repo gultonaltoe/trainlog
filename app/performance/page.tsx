@@ -21,7 +21,7 @@ const CATS = [
   { key: 'force',   label: 'Force',       emoji: '🏋️', match: ['squat', 'deadlift', 'soulevé', 'press', 'développé', 'bench'] },
   { key: 'haltero', label: 'Haltéro',     emoji: '🥇', match: ['snatch', 'arraché', 'clean', 'épaulé', 'jerk', 'jeté'] },
   { key: 'gym',     label: 'Gymnastique', emoji: '🤸', match: ['muscle', 'hspu', 'handstand', 'pull', 'traction', 'dip', 'toes', 'pistol', 'rope', 'corde'] },
-  { key: 'engine',  label: 'Engine',      emoji: '🫁', match: ['run', 'course', 'row', 'rameur', 'bike', 'vélo', 'assault', 'ski', 'swim', 'natation', 'km'] },
+  { key: 'engine',  label: 'Endurance',   emoji: '🫁', match: ['run', 'course', 'row', 'rameur', 'bike', 'vélo', 'assault', 'ski', 'swim', 'natation', 'km'] },
 ]
 const catOf = (name: string) => { const n = name.toLowerCase(); return CATS.find(c => c.match.some(m => n.includes(m)))?.key ?? 'autre' }
 const fmtVal = (v: number, u: string) => u === 'sec' ? `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}` : `${v}`
