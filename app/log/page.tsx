@@ -7,6 +7,7 @@ import type { SessionType, PainEntry } from '@/lib/api'
 import { toast } from '@/lib/toast'
 import MovementSearch from '@/components/MovementSearch'
 import { DatePicker } from '@/components/ui'
+import { ENERGY_LEVELS, energyOf } from '@/lib/energy'
 
 // ── Types ─────────────────────────────────────────────────
 type SetRow    = { reps: string; weight: string }
@@ -601,17 +602,16 @@ export default function LogPage() {
               <div className="flex justify-between text-xs text-[var(--muted)] mt-1"><span>3h</span><span>12h</span></div>
             </div>
             <div>
-              <label className={labelCls}>Énergie au réveil</label>
+              <label className={labelCls}>Énergie avant la séance</label>
               <div className="flex gap-2">
-                {[
-                  { v: 1, l: '😴' }, { v: 2, l: '😕' }, { v: 3, l: '😐' }, { v: 4, l: '😊' }, { v: 5, l: '⚡' }
-                ].map(o => (
+                {ENERGY_LEVELS.map(o => (
                   <button key={o.v} onClick={() => setEnergy(o.v)}
                     className={`flex-1 py-2.5 rounded-xl border text-xl transition ${energy === o.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border-strong)] bg-[var(--card)]'}`}>
-                    {o.l}
+                    {o.emoji}
                   </button>
                 ))}
               </div>
+              <p className="text-[11px] text-[var(--muted)] mt-1 text-center">{energyOf(energy)?.label}</p>
             </div>
           </div>
         )}

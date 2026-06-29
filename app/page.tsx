@@ -267,11 +267,15 @@ export default function Dashboard() {
                   {weekCount}{weekTarget > 0 && <span className="text-base text-[var(--muted)] font-semibold">/{weekTarget}</span>}
                 </p>
                 <p className="text-xs text-[var(--muted)] mt-0.5">séances</p>
-                {weekTarget > 0 && (
+                {weekTarget > 0 ? (
                   <div className="mt-1.5 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all"
                       style={{ width: `${Math.min(100, (weekCount / weekTarget) * 100)}%`, background: 'var(--theme-primary, #F97316)' }} />
                   </div>
+                ) : (
+                  <Link href="/profile" className="block mt-1.5 text-[11px] font-bold text-[var(--accent-text)]">
+                    🎯 Définis ton objectif →
+                  </Link>
                 )}
               </div>
               <div className="flex-1 bg-[var(--bg)] rounded-xl p-3 text-center">

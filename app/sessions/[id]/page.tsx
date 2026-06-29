@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { DatePicker } from '@/components/ui'
+import { energyOf } from '@/lib/energy'
 
 type SessionDetail = {
   id: string
@@ -214,8 +215,8 @@ export default function SessionDetailPage() {
             )}
             {session.energy_level !== null && (
               <div className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 text-center">
-                <p className="text-lg font-black text-[var(--ink)]">{session.energy_level}</p>
-                <p className="text-[10px] text-[var(--muted)] mt-0.5">Énergie</p>
+                <p className="text-lg font-black text-[var(--ink)]">{energyOf(session.energy_level)?.emoji ?? '—'}</p>
+                <p className="text-[10px] text-[var(--muted)] mt-0.5">{energyOf(session.energy_level)?.label ?? 'Énergie'}</p>
               </div>
             )}
           </div>
@@ -346,7 +347,7 @@ export default function SessionDetailPage() {
                   className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Énergie (1-5)</label>
+                <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Énergie avant séance (1-5)</label>
                 <input type="number" min={1} max={5} placeholder="4" value={draft.energy_level} onChange={e => setDraft(d => d && ({ ...d, energy_level: e.target.value }))}
                   className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
               </div>
