@@ -12,8 +12,8 @@ function CallbackHandler() {
       router.replace('/auth?error=1')
       return
     }
-    // Supabase auto-exchanges ?code= via detectSessionInUrl during initialization.
-    // getSession() waits for that initialization (including PKCE exchange) to finish.
+    // Implicit flow: Supabase parses the session from the URL hash via
+    // detectSessionInUrl during initialization. getSession() waits for it to finish.
     supabase.auth.getSession().then(({ data: { session } }) => {
       router.replace(session ? '/' : '/auth?error=1')
     })
