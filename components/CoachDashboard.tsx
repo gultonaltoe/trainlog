@@ -53,9 +53,8 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
   const sections = [
     { href: '/box/members',  icon: '👥', title: 'Membres',       desc: 'Gérer les adhérents de la box' },
     { href: '/box/staff',    icon: '🧑‍🏫', title: 'Coachs',        desc: 'Coachs de la box' },
-    { href: '/box/planning', icon: '📅', title: 'Planning',      desc: 'Cours et réservations' },
+    { href: '/box/planning', icon: '📅', title: 'Planning',      desc: 'Cours, réservations & agenda des coachs' },
     { href: '/box/programming', icon: '🔥', title: 'Programmation', desc: 'Le WOD du jour pour tes membres' },
-    { href: '/box/agenda',   icon: '🗓️', title: 'Agenda',        desc: 'Planning des coachs (semaine/mois)' },
     { href: '/box/plans',    icon: '🎟️', title: 'Abonnements',   desc: 'Formules et tarifs' },
     { href: '/box/profile',  icon: 'ℹ️', title: 'Infos de la box', desc: 'Nom, adresse, contact' },
     { href: '/box/settings', icon: '⚙️', title: 'Réglages',       desc: 'Types de séances, préférences' },
