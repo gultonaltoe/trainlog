@@ -196,7 +196,7 @@ export default function SessionDetailPage() {
           <div className="grid grid-cols-4 gap-2 mb-4">
             {session.rpe !== null && (
               <div className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 text-center">
-                <p className="text-lg font-black" style={{ color: RPE_COLORS[session.rpe] }}>{session.rpe}</p>
+                <p className="text-lg font-black" style={{ color: RPE_COLORS[session.rpe] }}>{session.rpe}<span className="text-xs font-bold">/10</span></p>
                 <p className="text-[10px] text-[var(--muted)] mt-0.5">RPE</p>
               </div>
             )}

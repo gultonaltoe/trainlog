@@ -217,16 +217,19 @@ export function DatePicker({ value, onChange, placeholder = 'Choisir une date', 
   value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const [pickYear, setPickYear] = useState(false)   // ST-84: direct year selection
   const ref = useOutsideClose(open, () => setOpen(false))
   const sel = value ? new Date(value + 'T00:00:00') : null
   const init = sel ?? new Date()
   const [ym, setYm] = useState({ y: init.getFullYear(), m: init.getMonth() })
   const label = sel ? sel.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : placeholder
   const shift = (d: number) => setYm(s => { const x = new Date(s.y, s.m + d, 1); return { y: x.getFullYear(), m: x.getMonth() } })
+  const thisYear = new Date().getFullYear()
+  const years = Array.from({ length: 121 }, (_, i) => thisYear + 5 - i)   // +5 … −115, newest first
 
   return (
     <div className="relative" ref={ref}>
-      <button type="button" disabled={disabled} onClick={() => setOpen(o => !o)}
+      <button type="button" disabled={disabled} onClick={() => { setPickYear(false); setOpen(o => !o) }}
         className={`${ui.field} flex items-center justify-between gap-2 cursor-pointer ${!sel ? 'text-[var(--muted)]' : ''}`}>
         <span className="truncate">📅 {label}</span>
         <span className="text-[var(--muted)] text-xs flex-shrink-0">▾</span>
@@ -234,31 +237,45 @@ export function DatePicker({ value, onChange, placeholder = 'Choisir une date', 
       {open && (
         <div className="absolute z-50 mt-1 w-72 max-w-[90vw] rounded-2xl border border-[color:var(--border)] bg-[var(--card)] shadow-lg p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="flex items-center gap-0.5">
-              <button type="button" aria-label="Année précédente" onClick={() => setYm(s => ({ ...s, y: s.y - 1 }))} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)] text-xs font-bold">«</button>
-              <button type="button" aria-label="Mois précédent" onClick={() => shift(-1)} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)]">‹</button>
-            </span>
-            <span className="text-sm font-bold text-[var(--ink)]">{MONTHS[ym.m]} {ym.y}</span>
-            <span className="flex items-center gap-0.5">
-              <button type="button" aria-label="Mois suivant" onClick={() => shift(1)} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)]">›</button>
-              <button type="button" aria-label="Année suivante" onClick={() => setYm(s => ({ ...s, y: s.y + 1 }))} className="ds-hover w-7 h-7 rounded-full text-[var(--sub)] text-xs font-bold">»</button>
-            </span>
+            <button type="button" aria-label="Mois précédent" onClick={() => shift(-1)}
+              className={`ds-hover w-7 h-7 rounded-full text-[var(--sub)] ${pickYear ? 'invisible' : ''}`}>‹</button>
+            {/* Tap the month/year to jump straight to a year */}
+            <button type="button" onClick={() => setPickYear(p => !p)}
+              className="ds-hover inline-flex items-center gap-1 text-sm font-bold text-[var(--ink)] px-2 py-0.5 rounded-lg">
+              {MONTHS[ym.m]} {ym.y} <span className="text-[var(--muted)] text-[10px]">▾</span>
+            </button>
+            <button type="button" aria-label="Mois suivant" onClick={() => shift(1)}
+              className={`ds-hover w-7 h-7 rounded-full text-[var(--sub)] ${pickYear ? 'invisible' : ''}`}>›</button>
           </div>
-          <div className="grid grid-cols-7 mb-1">{DOW.map((d, i) => <span key={i} className="text-center text-[10px] font-bold text-[var(--muted)]">{d}</span>)}</div>
-          <div className="grid grid-cols-7 gap-0.5">
-            {monthCells(ym.y, ym.m).map((day, i) => {
-              if (!day) return <div key={i} />
-              const ds = isoDate(new Date(ym.y, ym.m, day))
-              const isSel = ds === value
-              return (
-                <button key={i} type="button" onClick={() => { onChange(ds); setOpen(false) }}
-                  className={`h-9 rounded-lg text-sm font-semibold transition ${isSel ? 'cursor-pointer' : 'ds-hover'}`}
-                  style={isSel ? { background: ui.primary, color: '#fff' } : { color: 'var(--ink-soft)' }}>
-                  {day}
+          {pickYear ? (
+            <div className="grid grid-cols-4 gap-1 max-h-56 overflow-y-auto">
+              {years.map(y => (
+                <button key={y} type="button" onClick={() => { setYm(s => ({ ...s, y })); setPickYear(false) }}
+                  className={`h-9 rounded-lg text-sm font-semibold transition ${y === ym.y ? 'cursor-pointer' : 'ds-hover'}`}
+                  style={y === ym.y ? { background: ui.primary, color: '#fff' } : { color: 'var(--ink-soft)' }}>
+                  {y}
                 </button>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-7 mb-1">{DOW.map((d, i) => <span key={i} className="text-center text-[10px] font-bold text-[var(--muted)]">{d}</span>)}</div>
+              <div className="grid grid-cols-7 gap-0.5">
+                {monthCells(ym.y, ym.m).map((day, i) => {
+                  if (!day) return <div key={i} />
+                  const ds = isoDate(new Date(ym.y, ym.m, day))
+                  const isSel = ds === value
+                  return (
+                    <button key={i} type="button" onClick={() => { onChange(ds); setOpen(false) }}
+                      className={`h-9 rounded-lg text-sm font-semibold transition ${isSel ? 'cursor-pointer' : 'ds-hover'}`}
+                      style={isSel ? { background: ui.primary, color: '#fff' } : { color: 'var(--ink-soft)' }}>
+                      {day}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

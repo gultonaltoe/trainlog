@@ -67,6 +67,9 @@ body {
 .ds-hover { cursor: pointer; transition: background-color .12s, opacity .12s, box-shadow .12s; }
 .ds-hover:hover { background: var(--hover); }
 
+/* Every enabled button is clickable — baseline so no action button feels dead (ST-83). */
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: pointer; }
+
 /* Toast animation */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(-8px); }

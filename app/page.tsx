@@ -272,7 +272,7 @@ export default function Dashboard() {
               </div>
               <div className="flex-1 bg-[var(--bg)] rounded-xl p-3 text-center">
                 <p className="text-2xl font-black text-[var(--ink)]">
-                  {weekAvgRpe !== null ? weekAvgRpe.toFixed(1) : '—'}
+                  {weekAvgRpe !== null ? `${weekAvgRpe.toFixed(1)}/10` : '—'}
                 </p>
                 <p className="text-xs text-[var(--muted)] mt-0.5">RPE moyen</p>
               </div>
@@ -358,7 +358,7 @@ export default function Dashboard() {
                   <p className={`text-2xl font-black ${m.main ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{m.count}</p>
                   <p className="text-xs text-[var(--muted)]">séances</p>
                   {m.rpe !== null && (
-                    <p className="text-xs text-[var(--sub)] mt-1">RPE {m.rpe.toFixed(1)}</p>
+                    <p className="text-xs text-[var(--sub)] mt-1">RPE {m.rpe.toFixed(1)}/10</p>
                   )}
                 </div>
               ))}

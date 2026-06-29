@@ -271,7 +271,7 @@ export default function SessionsPage() {
                           {s.rpe !== null && (
                             <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
                               style={{ background: RPE_COLORS[s.rpe] }}>
-                              {s.rpe}
+                              {s.rpe}/10
                             </span>
                           )}
                           <span className="text-[var(--border-strong)] text-sm">›</span>
