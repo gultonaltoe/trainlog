@@ -14,7 +14,7 @@ export default function GlobalContextBar() {
   // Show only when the user is an active member of at least one box.
   const hasActiveBox = memberships.some(m => m.status === 'active')
   if (loading || !hasActiveBox) return null
-  if (pathname.startsWith('/auth') || pathname === '/welcome' || pathname === '/design') return null
+  if (pathname.startsWith('/auth') || pathname === '/welcome' || pathname === '/design' || pathname === '/privacy' || pathname === '/terms') return null
 
   return (
     <div style={{ background: 'var(--bg)' }}>

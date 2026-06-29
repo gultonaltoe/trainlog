@@ -1,6 +1,7 @@
 'use client'
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { normalizeEmail } from '@/lib/auth'
 import Wordmark from '@/components/Wordmark'
@@ -115,6 +116,12 @@ function AuthForm() {
         </svg>
         Continuer avec Google
       </button>
+
+      <p className="text-[11px] text-[var(--muted)] mt-8 text-center leading-relaxed">
+        En continuant, tu acceptes nos{' '}
+        <Link href="/terms" className="underline underline-offset-2">Conditions</Link>{' '}et notre{' '}
+        <Link href="/privacy" className="underline underline-offset-2">Politique de confidentialité</Link>.
+      </p>
     </div>
   )
 }
