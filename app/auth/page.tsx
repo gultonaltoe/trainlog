@@ -8,12 +8,19 @@ import Wordmark from '@/components/Wordmark'
 
 function AuthForm() {
   const searchParams = useSearchParams()
-  const hasError = searchParams.get('error')
+  const errParam = searchParams.get('error')
+  // Show the real reason when Supabase/Google passed one through; fall back to the
+  // friendly message for a plain expired magic link.
+  const initialError = !errParam
+    ? ''
+    : (errParam === '1' || errParam === 'no_session')
+      ? 'Lien invalide ou expiré. Réessaie.'
+      : `Connexion échouée : ${decodeURIComponent(errParam)}`
 
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(hasError ? 'Lien invalide ou expiré. Réessaie.' : '')
+  const [error, setError] = useState(initialError)
 
   const handleSubmit = async () => {
     if (!email.trim()) return
