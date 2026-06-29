@@ -7,6 +7,7 @@ import { useAppContext } from '@/components/AppContext'
 import CoachDashboard from '@/components/CoachDashboard'
 import MemberBoxCard from '@/components/MemberBoxCard'
 import ProgrammingCard from '@/components/ProgrammingCard'
+import ApprovalBanner from '@/components/ApprovalBanner'
 
 // ── Helpers ───────────────────────────────────────────────
 function toDateStr(d: Date) {
@@ -175,6 +176,9 @@ export default function Dashboard() {
             : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Bonjour {profile?.first_name} 👋</h1>}
           <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
         </div>
+
+        {/* Box just approved the join request (ST-80) */}
+        <ApprovalBanner />
 
         {/* Quick actions: Réserver (primary) + Séance (secondary), same line */}
         {(() => {
