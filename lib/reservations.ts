@@ -56,9 +56,10 @@ type RangeRow = {
 /** Advance strict-order ('notify') waitlists whose confirmation window lapsed (ST-32).
  *  Lazy escalation — best-effort, called on booking-page load before reading counts. */
 export async function syncWaitlist(orgId: string, fromISO: string, toISO: string): Promise<void> {
-  // sync_waitlist isn't in the generated types yet — cast (same pattern as lib/orgs).
-  const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>
-  try { await rpc('sync_waitlist', { p_org_id: orgId, p_from: fromISO, p_to: toISO }) } catch { /* best-effort */ }
+  // sync_waitlist isn't in the generated types yet — cast inline so the call keeps
+  // its `supabase` receiver (extracting supabase.rpc to a const drops `this`).
+  const call = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>
+  try { await call.call(supabase, 'sync_waitlist', { p_org_id: orgId, p_from: fromISO, p_to: toISO }) } catch { /* best-effort */ }
 }
 
 /** Booking counts + the caller's own status for every occurrence in [fromISO, toISO]. */
@@ -85,9 +86,10 @@ type AttendeeRow = { user_id: string; first_name: string | null; status: Reserva
 /** Owner/coach/staff removes a member from an occurrence (booked or waitlisted).
  *  Frees the seat + handles the waitlist + refunds credits server-side. */
 export async function removeReservation(scheduleId: string, date: string, userId: string): Promise<void> {
-  // RPC not in generated types yet — cast (same pattern as syncWaitlist / lib/orgs).
-  const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
-  const { error } = await rpc('coach_remove_reservation', { p_schedule_id: scheduleId, p_date: date, p_user_id: userId })
+  // RPC not in generated types yet — keep the `supabase` receiver (don't extract
+  // supabase.rpc to a bare const, that drops `this` → "reading 'rest'").
+  const call = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
+  const { error } = await call.call(supabase, 'coach_remove_reservation', { p_schedule_id: scheduleId, p_date: date, p_user_id: userId })
   if (error) throw new Error(error.message)
 }
 

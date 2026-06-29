@@ -8,16 +8,16 @@ import { getChangelog, type ChangelogEntry, type ChangelogTag } from '@/lib/chan
 const SEEN_KEY = 'trainlift_changelog_last_seen'
 
 const TAG_META: Record<ChangelogTag, { label: string; emoji: string; accent: boolean }> = {
-  new_feature: { label: 'New Feature', emoji: '🆕', accent: true },
-  improvement: { label: 'Improvement', emoji: '⚡', accent: false },
-  fix:         { label: 'Fix',         emoji: '🐛', accent: false },
+  new_feature: { label: 'Nouveauté',   emoji: '🆕', accent: true },
+  improvement: { label: 'Amélioration', emoji: '⚡', accent: false },
+  fix:         { label: 'Correctif',   emoji: '🐛', accent: false },
 }
 
 function fmtDate(iso: string) {
   const d = new Date(iso), now = new Date()
   const o: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' }
   if (d.getFullYear() !== now.getFullYear()) o.year = 'numeric'
-  return d.toLocaleDateString('en-US', o)             // "June 28"
+  return d.toLocaleDateString('fr-FR', o)             // "28 juin"
 }
 const isRecent = (iso: string) => Date.now() - new Date(iso).getTime() < 7 * 86400000
 
@@ -60,14 +60,14 @@ export default function ChangelogButton() {
             className={`absolute inset-y-0 right-0 w-full max-w-sm bg-[var(--card)] shadow-2xl flex flex-col transition-transform duration-200 ${shown ? 'translate-x-0' : 'translate-x-full'}`}
             style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--border)]">
-              <h2 className="text-lg font-black text-[var(--ink)]">What&apos;s New</h2>
+              <h2 className="text-lg font-black text-[var(--ink)]">Nouveautés</h2>
               <button onClick={close} aria-label="Fermer" className="text-[var(--muted)] text-2xl leading-none">×</button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
               {entries === null ? (
                 <p className="text-sm text-[var(--muted)] text-center py-10">Chargement…</p>
               ) : entries.length === 0 ? (
-                <p className="text-sm text-[var(--muted)] text-center py-10">Nothing new yet — check back soon 💪</p>
+                <p className="text-sm text-[var(--muted)] text-center py-10">Rien de neuf pour l’instant — reviens vite 💪</p>
               ) : entries.map(e => {
                 const m = TAG_META[e.tag] ?? TAG_META.improvement
                 return (
@@ -79,7 +79,7 @@ export default function ChangelogButton() {
                         {m.emoji} {m.label}
                       </span>
                       <span className="flex items-center gap-1.5 text-[11px] text-[var(--muted)] flex-shrink-0">
-                        {isRecent(e.publishedAt) && <span className="text-[10px] font-black text-[var(--accent-text)]">NEW</span>}
+                        {isRecent(e.publishedAt) && <span className="text-[10px] font-black text-[var(--accent-text)]">NOUVEAU</span>}
                         {fmtDate(e.publishedAt)}
                       </span>
                     </div>
