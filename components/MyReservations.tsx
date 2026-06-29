@@ -39,7 +39,7 @@ export default function MyReservations({ orgId }: { orgId: string }) {
     <div>
       <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-2">À venir</p>
       {upcoming.length === 0 ? (
-        <p className="text-sm text-[var(--border-strong)] py-2 mb-4">Aucune réservation à venir.</p>
+        <p className="text-sm text-[var(--border-strong)] py-2 mb-4">Aucune réservation à venir — réserve un cours depuis l’onglet « Réserver » 👆</p>
       ) : (
         <div className="space-y-2 mb-6">
           {upcoming.map(r => {

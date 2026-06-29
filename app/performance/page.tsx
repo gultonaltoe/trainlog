@@ -175,7 +175,13 @@ export default function PerformancePage() {
 
         <SectionTitle>Progrès récents</SectionTitle>
         {recent.length === 0 ? (
-          <Card className="p-4 mb-5"><p className="text-sm text-[var(--muted)]">Aucun record pour l’instant. Logge une séance ou ajoute un PR.</p></Card>
+          <Card className="p-4 mb-5 text-center">
+            <p className="text-sm text-[var(--muted)] mb-3">Aucun record pour l’instant — logge une séance pour suivre tes progrès.</p>
+            <Link href="/log" className="inline-block text-white text-sm font-bold px-5 py-2.5 rounded-xl"
+              style={{ background: 'var(--theme-primary, #F97316)' }}>
+              + Enregistrer une séance
+            </Link>
+          </Card>
         ) : (
           <Card className="p-2 mb-5">
             {recent.map(p => (
