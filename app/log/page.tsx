@@ -15,6 +15,8 @@ type SetRow    = { reps: string; weight: string }
 type PrepBlock = { id: number; kind: 'block'; movementId: string; movementLabel: string; hasWeight: boolean; sets: SetRow[] }
 type PrepNote  = { id: number; kind: 'note';  text: string }
 type PrepItem  = PrepBlock | PrepNote
+// ST-69: an extra, self-contained WOD block (format + duration + movements + result).
+type ExtraWod  = { id: number; format: string; timeCap: string; description: string; result: string }
 
 // Haltérophilie
 type HSetRow = { reps: string; weight: string; tempo: string; pct_rm: string; execution: 'good' | 'ok' | 'fail' | '' }
@@ -86,6 +88,13 @@ const STEPS_HYROX = [
   { label: 'Date & Sommeil', key: 'sleep' },
   { label: 'Type de séance', key: 'type'  },
   { label: 'Hyrox',          key: 'hyrox' },
+  { label: 'Post-séance',    key: 'post'  },
+]
+// ST-69: Endurance skips the Skills/Séance step — the WOD blocks are the content.
+const STEPS_ENDURANCE = [
+  { label: 'Date & Sommeil', key: 'sleep' },
+  { label: 'Type de séance', key: 'type'  },
+  { label: 'Séance',         key: 'wod'   },
   { label: 'Post-séance',    key: 'post'  },
 ]
 
@@ -179,7 +188,7 @@ export default function LogPage() {
 
   const clearAIContent = () => {
     setWarmupNotes(''); setPrepItems([mkBlock(1)]); setHBlocks([mkHBlock(1)])
-    setWodDesc(''); setWodFormat(''); setWodResult('')
+    setWodDesc(''); setWodFormat(''); setWodResult(''); setExtraWods([])
   }
   const deletePhoto = () => {
     setPhotoPreview(null)
@@ -211,6 +220,8 @@ export default function LogPage() {
   const [wodDesc, setWodDesc]       = useState('')
   const [wodResult, setWodResult]   = useState('')
   const [wodRx, setWodRx]           = useState(true)
+  // ST-69: additional autonomous WOD blocks beneath the main one.
+  const [extraWods, setExtraWods]   = useState<ExtraWod[]>([])
 
   // ST-34 P2 — prefill the log from a box programming ("Logger ce WOD").
   useEffect(() => {
@@ -263,7 +274,8 @@ export default function LogPage() {
   const isHaltero    = typeName.toLowerCase().includes('haltéro') || typeName.toLowerCase() === 'halterophilie'
   const isHyrox      = typeName.toLowerCase() === 'hyrox'
   const isCrossfit   = typeName === 'CrossFit'   // RX/Scaled only makes sense here (ST-71)
-  const STEPS        = isHaltero ? STEPS_HALTEROPHILIE : isRun ? STEPS_RUN : isHyrox ? STEPS_HYROX : STEPS_DEFAULT
+  const isEndurance  = typeName === 'Endurance'  // hide Skills step, WOD-blocks only (ST-69)
+  const STEPS        = isHaltero ? STEPS_HALTEROPHILIE : isRun ? STEPS_RUN : isHyrox ? STEPS_HYROX : isEndurance ? STEPS_ENDURANCE : STEPS_DEFAULT
   const curKey       = STEPS[step]?.key
 
   const paceMinkm = (duration && runDistance && parseFloat(runDistance) > 0)
@@ -288,6 +300,11 @@ export default function LogPage() {
       return { ...p, sets: p.sets.map((s, i) => i === si ? { ...s, ...field } : s) }
     }))
   const removeItem = (id: number) => setPrepItems(ps => ps.filter(p => p.id !== id))
+
+  // ── Extra WOD blocks (ST-69) ─────────────────────────────
+  const addExtraWod    = () => setExtraWods(b => [...b, { id: Date.now(), format: '', timeCap: '', description: '', result: '' }])
+  const updExtraWod    = (id: number, patch: Partial<ExtraWod>) => setExtraWods(b => b.map(x => x.id === id ? { ...x, ...patch } : x))
+  const removeExtraWod = (id: number) => setExtraWods(b => b.filter(x => x.id !== id))
 
   // ── HBlock helpers ──────────────────────────────────────
   const updHBlock = (id: number, field: Partial<HBlock>) =>
@@ -365,7 +382,7 @@ export default function LogPage() {
     setRunIntervals([mkRunIv()])
     setHyroxTotalTime(''); setHyroxStations(HYROX_STATIONS.map(() => ({ timeMin: '', timeSec: '', weight: '' })))
     setHasWod(true); setWodFormat(''); setWodTimeCap('')
-    setWodDesc(''); setWodResult(''); setWodRx(true)
+    setWodDesc(''); setWodResult(''); setWodRx(true); setExtraWods([])
     setRpe(7); setFeeling(3); setPainEntries([]); setNotes(''); setShowRpeInfo(false)
   }
 
@@ -458,6 +475,16 @@ export default function LogPage() {
           result_detail: wodResult || undefined,
           is_rx:         isCrossfit ? wodRx : null,
         } : undefined,
+        // ST-69: additional WOD blocks (saved in order after the main one).
+        wods: (!isRun && !isHaltero && !isHyrox && hasWod)
+          ? extraWods.filter(b => b.format).map(b => ({
+              format_label:  b.format,
+              time_cap:      b.timeCap ? parseInt(b.timeCap) : undefined,
+              description:   b.description || undefined,
+              result_detail: b.result || undefined,
+              is_rx:         null,
+            }))
+          : undefined,
         pain_entries: painEntries.length > 0 ? painEntries : undefined,
         meta: hyroxMeta ?? runMeta,
       })
@@ -1239,6 +1266,36 @@ export default function LogPage() {
                   </div>
                 )}
               </div>
+
+              {/* Additional autonomous WOD blocks (ST-69) */}
+              {extraWods.map((b, i) => (
+                <div key={b.id} className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls}>Bloc {i + 2}</label>
+                    <button onClick={() => removeExtraWod(b.id)} className="text-[var(--border-strong)] hover:text-red-500 text-xl leading-none px-1">×</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[...WOD_FORMATS.filter(f => f !== 'Autre'), ...WOD_FORMATS_EXTRA].map(f => (
+                      <button key={f} onClick={() => updExtraWod(b.id, { format: f === b.format ? '' : f })}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${b.format === f ? 'bg-orange-500 border-orange-500 text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                  {TIMED_FORMATS.includes(b.format) && (
+                    <input type="number" placeholder="Durée (min)" value={b.timeCap}
+                      onChange={e => updExtraWod(b.id, { timeCap: e.target.value })} className={inputCls} />
+                  )}
+                  <textarea rows={4} value={b.description} onChange={e => updExtraWod(b.id, { description: e.target.value })}
+                    placeholder="Mouvements du bloc…" className={inputCls + ' resize-none'} />
+                  <input type="text" value={b.result} onChange={e => updExtraWod(b.id, { result: e.target.value })}
+                    placeholder="Résultat (score, temps, reps…)" className={inputCls} />
+                </div>
+              ))}
+              <button onClick={addExtraWod}
+                className="w-full py-2.5 rounded-xl border border-dashed border-[color:var(--border-strong)] text-sm font-bold text-[var(--sub)] cursor-pointer">
+                + Ajouter un bloc
+              </button>
 
             </>)}
           </div>

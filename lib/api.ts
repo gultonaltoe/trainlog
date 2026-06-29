@@ -25,7 +25,7 @@ export type SessionInput  = {
   date: string; session_type_id: string; duration_min?: number
   sleep_hours?: number; energy_level?: number
   rpe?: number; feeling_post?: number; notes?: string
-  blocks?: BlockInput[]; wod?: WodInput; pain_entries?: PainEntry[]
+  blocks?: BlockInput[]; wod?: WodInput; wods?: WodInput[]; pain_entries?: PainEntry[]
   meta?: Record<string, unknown>   // run data, future extensions
 }
 export type SessionSummary = {
@@ -116,16 +116,18 @@ export async function saveSession(input: SessionInput): Promise<string> {
     }
   }
 
-  if (input.wod?.format_label) {
-    const { data: fmt } = await supabase.from('wod_formats').select('id')
-      .eq('name', input.wod.format_label).maybeSingle()
+  // One or more WOD blocks (ST-69), each ordered. Accepts legacy single `wod`.
+  const wodList = [...(input.wod ? [input.wod] : []), ...(input.wods ?? [])].filter(w => w.format_label)
+  for (let i = 0; i < wodList.length; i++) {
+    const w = wodList[i]
+    const { data: fmt } = await supabase.from('wod_formats').select('id').eq('name', w.format_label).maybeSingle()
     const { error } = await supabase.from('wods').insert({
-      session_id: sessionId, format_id: fmt?.id ?? null,
-      format_label: input.wod.format_label,
-      description: input.wod.description ?? null, result_detail: input.wod.result_detail ?? null,
-is_rx: input.wod.is_rx, time_cap_min: input.wod.time_cap ?? null,
+      session_id: sessionId, wod_order: i + 1, format_id: fmt?.id ?? null,
+      format_label: w.format_label,
+      description: w.description ?? null, result_detail: w.result_detail ?? null,
+      is_rx: w.is_rx, time_cap_min: w.time_cap ?? null,
     })
-    if (error) throw new Error(`saveWod: ${error.message}`)
+    if (error) throw new Error(`saveWod[${i}]: ${error.message}`)
   }
 
   if ((input.pain_entries ?? []).length > 0) {
