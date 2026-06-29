@@ -31,6 +31,7 @@ const fmtDay = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('
 export default function PerformancePage() {
   const [prs, setPrs] = useState<PR[] | null>(null)
   const [sessMonth, setSessMonth] = useState(0)
+  const [tipsEligible, setTipsEligible] = useState(false)   // ST-79: enough real data for AI tips
   const [profile, setProfile] = useState<{ training_profile?: unknown; weight_kg?: number | null } | null>(null)
   const [tp, setTp] = useState<TrainingProfile>(EMPTY_TP)
   const [tpSaved, setTpSaved] = useState<TrainingProfile>(EMPTY_TP)
@@ -56,11 +57,17 @@ export default function PerformancePage() {
       const ym = new Date().toISOString().slice(0, 7)
       const [prRes, sRes, pRes] = await Promise.all([
         supabase.from('personal_records').select('id, movement_id, movement_name, value, unit, date').eq('user_id', uid).order('date', { ascending: true }),
-        supabase.from('sessions').select('id, date').eq('user_id', uid),
+        supabase.from('sessions').select('id, date, is_demo').eq('user_id', uid),
         supabase.from('user_profile').select('training_profile, weight_kg').eq('user_id', uid).maybeSingle(),
       ])
       setPrs((prRes.data ?? []) as PR[])
-      setSessMonth(((sRes.data ?? []) as { date: string }[]).filter(s => s.date?.startsWith(ym)).length)
+      const allS = (sRes.data ?? []) as { date: string; is_demo?: boolean }[]
+      setSessMonth(allS.filter(s => s.date?.startsWith(ym)).length)
+      // ST-79: AI tips need real (non-demo) substance — ≥3 sessions AND ≥2 weeks of history.
+      const real = allS.filter(s => !s.is_demo && s.date)
+      const earliest = real.map(s => s.date).sort()[0]
+      const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10)
+      setTipsEligible(real.length >= 3 && !!earliest && earliest <= twoWeeksAgo)
       setProfile(pRes.data ?? null)
       const tpLoaded = { ...EMPTY_TP, ...((pRes.data?.training_profile as Partial<TrainingProfile> | null) ?? {}) }
       setTp(tpLoaded); setTpSaved(tpLoaded)
@@ -185,7 +192,20 @@ export default function PerformancePage() {
 
         <SectionTitle>Conseils personnalisés</SectionTitle>
         <Card className="p-4 mb-5">
-          {tips && tips.length > 0 ? (
+          {!tipsEligible ? (
+            <div className="py-1">
+              <p className="text-sm font-bold text-[var(--ink)] mb-1.5">🧠 Conseils IA — bientôt pour toi</p>
+              <p className="text-sm text-[var(--muted)] leading-relaxed mb-2">
+                On analysera tes séances et tes records pour te proposer des pistes de progression concrètes
+                (équilibre, points faibles, charge). Pour des conseils <span className="font-semibold text-[var(--ink-soft)]">fiables</span>,
+                il faut un minimum de données : au moins <span className="font-semibold text-[var(--ink-soft)]">3 séances</span> et
+                <span className="font-semibold text-[var(--ink-soft)]"> 2 semaines</span> d’historique. Continue à logger 💪
+              </p>
+              <p className="text-xs text-[var(--muted)]">
+                On construit cette fonctionnalité avec vous — dis-nous ce que tu en attends via le bouton Feedback 💬 en bas à droite.
+              </p>
+            </div>
+          ) : tips && tips.length > 0 ? (
             <>
               <ul className="space-y-2">
                 {tips.map((t, i) => (

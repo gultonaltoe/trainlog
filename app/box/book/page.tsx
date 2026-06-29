@@ -101,7 +101,13 @@ export default function BookPage() {
   }, [orgId, range.fromISO, range.toISO])
   useEffect(() => { void refreshBookings() }, [refreshBookings])
 
-  const onDay = (ds: string) => occurrences.filter(c => c.date === ds)
+  const [showPast, setShowPast] = useState(false)   // coach/owner reveal of past slots (ST-85)
+
+  // ST-85: hide a day's already-started slots (v1 uses local/France time). Coaches
+  // and owners can reveal them with the toggle below.
+  const canSeePast = role === 'owner' || role === 'coach'
+  const occPast = (c: ClassOccurrence) => new Date(`${c.date}T${c.startTime}:00`) < new Date()
+  const onDay = (ds: string) => occurrences.filter(c => c.date === ds && ((showPast && canSeePast) || !occPast(c)))
 
   const act = async (c: ClassOccurrence, action: 'book' | 'cancel' | 'claim') => {
     const key = bookingKey(c.id, c.date)
@@ -220,6 +226,16 @@ export default function BookPage() {
           </p>
           <button onClick={() => shift(1)} className="ds-hover w-9 h-9 rounded-full bg-[var(--card)] border border-[color:var(--border)] text-[var(--ink-soft)] text-lg leading-none">›</button>
         </div>
+
+        {canSeePast && (
+          <button onClick={() => setShowPast(p => !p)}
+            className="mb-3 text-xs font-bold text-[var(--sub)] flex items-center gap-1.5 cursor-pointer">
+            <span className={`w-8 h-4.5 rounded-full transition relative ${showPast ? 'bg-[var(--ink)]' : 'bg-[var(--track)]'}`} style={{ height: '18px' }}>
+              <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${showPast ? 'left-[15px]' : 'left-0.5'}`} />
+            </span>
+            Voir les créneaux passés
+          </button>
+        )}
 
         {loading ? (
           <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>
