@@ -34,6 +34,7 @@ export default function ReservationSettingsPage() {
       bookCutoffMin: Math.max(0, resa.bookCutoffMin || 0),
       requirePlan: resa.requirePlan,
       maxActiveBookings: Math.max(0, resa.maxActiveBookings || 0),
+      waitlistNotifyWindowMin: Math.max(1, resa.waitlistNotifyWindowMin || 30),
     }
     setSaving(true)
     try { await updateReservationSettings(orgId, clean); setResa(clean); toast.success('Réservations enregistrées') }
@@ -65,14 +66,34 @@ export default function ReservationSettingsPage() {
                       value={resa.waitlistMode}
                       onChange={v => canEdit && upd({ waitlistMode: v })}
                       options={[['auto_promote', 'Promotion auto'], ['notify', 'Notifier 1er'], ['notify_all', 'Notifier tous']]} />
-                    <p className="text-[11px] text-[var(--muted)] mt-1.5">
-                      {resa.waitlistMode === 'auto_promote'
-                        ? 'Le premier en attente est automatiquement inscrit.'
-                        : resa.waitlistMode === 'notify_all'
-                        ? 'Tout le monde en attente est prévenu — premier arrivé, premier servi.'
-                        : 'Le premier en attente est prévenu et doit confirmer sa place.'}
-                    </p>
+
+                    {/* Each mode spelled out: what happens + the trade-off. */}
+                    <div className="mt-3 rounded-xl bg-[var(--bg)] border border-[color:var(--border)] p-3 space-y-2">
+                      {([
+                        ['auto_promote', '⚡', 'Promotion auto', 'La place est attribuée automatiquement au 1er de la liste — il est inscrit sans rien faire.', 'Le plus simple. Risque : un membre qui ne voulait plus venir se retrouve inscrit.'],
+                        ['notify', '🥇', 'Notifier 1er', 'La place est proposée au 1er de la liste, qui doit confirmer. S’il ne confirme pas dans le délai, elle passe automatiquement au suivant, et ainsi de suite.', 'Respecte l’ordre d’arrivée. Si personne ne confirme, la place reste libre (réservable normalement).'],
+                        ['notify_all', '📣', 'Notifier tous', 'Tout le monde en liste d’attente est prévenu en même temps ; le 1er à confirmer prend la place.', 'Se remplit vite. Moins « juste » : ce n’est pas forcément le 1er arrivé qui l’obtient.'],
+                      ] as const).map(([mode, emoji, title, what, tradeoff]) => (
+                        <div key={mode} className={`flex gap-2.5 ${resa.waitlistMode === mode ? '' : 'opacity-45'}`}>
+                          <span className="text-base leading-none flex-shrink-0 mt-0.5">{emoji}</span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-[var(--ink)]">{title}</p>
+                            <p className="text-[11px] text-[var(--ink-soft)] leading-snug">{what}</p>
+                            <p className="text-[11px] text-[var(--muted)] leading-snug mt-0.5">{tradeoff}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
+
+                  {resa.waitlistMode === 'notify' && (
+                    <Field label="Délai de confirmation (min)"
+                      hint="Temps laissé au 1er pour confirmer avant que la place passe au suivant.">
+                      <input type="number" min={1} step={5} className={ui.field} value={resa.waitlistNotifyWindowMin || ''} disabled={!canEdit}
+                        placeholder="30" onChange={e => upd({ waitlistNotifyWindowMin: parseInt(e.target.value) || 0 })} />
+                    </Field>
+                  )}
+
                   <Field label="Places en liste d’attente (défaut)" hint="Ajustable par cours dans le planning.">
                     <input type="number" min={0} className={ui.field} value={resa.waitlistCapacity || ''} disabled={!canEdit}
                       onChange={e => upd({ waitlistCapacity: parseInt(e.target.value) || 0 })} />

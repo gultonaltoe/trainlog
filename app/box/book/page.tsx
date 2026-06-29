@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppContext } from '@/components/AppContext'
 import { getSchedules, occurrencesInRange, type ClassSchedule, type ClassOccurrence } from '@/lib/classes'
-import { getBookingsInRange, bookClass, cancelClass, claimWaitlistSpot, bookingKey, type OccBooking } from '@/lib/reservations'
+import { getBookingsInRange, syncWaitlist, bookClass, cancelClass, claimWaitlistSpot, bookingKey, type OccBooking } from '@/lib/reservations'
 import { getOrganization, DEFAULT_BRAND, type OrgBrand } from '@/lib/orgs'
 import { getMyPlans, isUsable, type MemberPlan } from '@/lib/memberPlans'
 import { PLAN_KIND_LABEL } from '@/lib/plans'
@@ -94,6 +94,8 @@ export default function BookPage() {
 
   const refreshBookings = useCallback(async () => {
     if (!orgId) return
+    // Advance any lapsed strict-order offers before reading counts (ST-32, lazy).
+    await syncWaitlist(orgId, range.fromISO, range.toISO)
     try { setBookings(await getBookingsInRange(orgId, range.fromISO, range.toISO)) }
     catch { setBookings(new Map()) }
   }, [orgId, range.fromISO, range.toISO])

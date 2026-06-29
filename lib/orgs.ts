@@ -108,6 +108,7 @@ export type ReservationSettings = {
   bookCutoffMin: number         // minutes before start when booking closes (0 = until start)
   requirePlan: boolean          // members need a usable plan/credits to book (owner/coach exempt)
   maxActiveBookings: number     // max upcoming reservations per member (0 = unlimited)
+  waitlistNotifyWindowMin: number  // 'notify' mode: minutes the 1st has to confirm before the offer passes on (ST-32)
 }
 
 export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
@@ -119,6 +120,7 @@ export const DEFAULT_RESERVATION_SETTINGS: ReservationSettings = {
   bookCutoffMin: 0,
   requirePlan: false,
   maxActiveBookings: 0,
+  waitlistNotifyWindowMin: 30,
 }
 
 // Box branding shown to members in box context.

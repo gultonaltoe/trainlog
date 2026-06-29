@@ -53,6 +53,14 @@ type RangeRow = {
   my_status: ReservationStatus | null; my_position: number | null; my_notified: boolean
 }
 
+/** Advance strict-order ('notify') waitlists whose confirmation window lapsed (ST-32).
+ *  Lazy escalation — best-effort, called on booking-page load before reading counts. */
+export async function syncWaitlist(orgId: string, fromISO: string, toISO: string): Promise<void> {
+  // sync_waitlist isn't in the generated types yet — cast (same pattern as lib/orgs).
+  const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>
+  try { await rpc('sync_waitlist', { p_org_id: orgId, p_from: fromISO, p_to: toISO }) } catch { /* best-effort */ }
+}
+
 /** Booking counts + the caller's own status for every occurrence in [fromISO, toISO]. */
 export async function getBookingsInRange(orgId: string, fromISO: string, toISO: string): Promise<Map<string, OccBooking>> {
   const { data, error } = await supabase.rpc('get_bookings_in_range', { p_org_id: orgId, p_from: fromISO, p_to: toISO })
