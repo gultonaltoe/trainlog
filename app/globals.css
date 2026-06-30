@@ -20,8 +20,9 @@
   --hover:         #F3F4F6;  /* hover surface            */
   --secondary-bg:  #111827;  /* secondary button fill    */
   --secondary-fg:  #FFFFFF;
-  --accent-soft:   #FFF7ED;  /* orange-50 tint fills      */
-  --accent-text:   #C2410C;  /* accent text / on tint     */
+  /* Derived from the active accent so tints/labels re-skin per box (ST-8 v2). */
+  --accent-soft:   color-mix(in srgb, var(--theme-primary) 12%, #FFFFFF);  /* tint fills */
+  --accent-text:   color-mix(in srgb, var(--theme-primary) 80%, #000000);  /* text on tint */
 }
 
 .dark {
@@ -37,8 +38,8 @@
   --hover:         #1F2024;
   --secondary-bg:  #E5E7EB;
   --secondary-fg:  #0E0F12;
-  --accent-soft:   rgba(249, 115, 22, 0.16);
-  --accent-text:   #FDBA74;
+  --accent-soft:   color-mix(in srgb, var(--theme-primary) 18%, transparent);
+  --accent-text:   color-mix(in srgb, var(--theme-primary) 55%, #FFFFFF);
 }
 
 html {

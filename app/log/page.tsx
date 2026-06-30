@@ -49,7 +49,7 @@ const RUN_SURFACES   = ['Route','Trail','Piste','Tapis']
 const PAIN_PARTS     = ['Épaule G','Épaule D','Poignet G','Poignet D','Coude G','Coude D','Avant-bras G','Avant-bras D','Genou G','Genou D','Hanche G','Hanche D','Bas du dos','Lombaires','Cheville G','Cheville D','Cou','Quad G','Quad D','Ischio G','Ischio D']
 const SEVERITY       = [
   { v: 1 as const, l: 'Légère',  cls: 'border-yellow-300 bg-yellow-50 text-yellow-700' },
-  { v: 2 as const, l: 'Modérée', cls: 'border-orange-300 bg-[var(--accent-soft)] text-[var(--accent-text)]' },
+  { v: 2 as const, l: 'Modérée', cls: 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' },
   { v: 3 as const, l: 'Forte',   cls: 'border-red-300 bg-red-50 text-red-700'          },
 ]
 const SEV_PILL   = ['','bg-yellow-100 text-yellow-700','bg-[var(--accent-soft)] text-[var(--accent-text)]','bg-red-100 text-red-700']
@@ -528,7 +528,7 @@ export default function LogPage() {
   // ── Loading ─────────────────────────────────────────────
   if (loading) return (
     <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
-      <div className="w-8 h-8 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+      <div className="w-8 h-8 rounded-full border-4 border-[color:var(--theme-primary)] border-t-transparent animate-spin" />
     </div>
   )
 
@@ -599,7 +599,7 @@ export default function LogPage() {
         {curKey === 'sleep' && (
           <div className="space-y-6">
             <div>
-              <label className={labelCls}>Date <span className="text-orange-400">*</span></label>
+              <label className={labelCls}>Date <span className="text-[color:var(--theme-primary)]">*</span></label>
               {(() => {
                 const ds = (off: number) => { const d = new Date(); d.setDate(d.getDate() - off); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
                 const chips = [["Aujourd'hui", ds(0)], ['Hier', ds(1)], ['Avant-hier', ds(2)]] as [string,string][]
@@ -630,7 +630,7 @@ export default function LogPage() {
             <div>
               <label className={labelCls}>Nuit de sommeil — {Math.floor(sleepHours)}h{sleepHours % 1 ? '30' : ''}</label>
               <input type="range" min={3} max={12} step={0.5} value={sleepHours} onChange={e => setSleepHours(parseFloat(e.target.value))}
-                className="w-full accent-orange-400" />
+                className="w-full accent-[var(--theme-primary)]" />
               <div className="flex justify-between text-xs text-[var(--muted)] mt-1"><span>3h</span><span>12h</span></div>
             </div>
             <div>
@@ -638,7 +638,7 @@ export default function LogPage() {
               <div className="flex gap-2">
                 {ENERGY_LEVELS.map(o => (
                   <button key={o.v} onClick={() => setEnergy(o.v)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xl transition ${energy === o.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border-strong)] bg-[var(--card)]'}`}>
+                    className={`flex-1 py-2.5 rounded-xl border text-xl transition ${energy === o.v ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]' : 'border-[color:var(--border-strong)] bg-[var(--card)]'}`}>
                     {o.emoji}
                   </button>
                 ))}
@@ -652,11 +652,11 @@ export default function LogPage() {
         {curKey === 'type' && (
           <div className="space-y-6">
             <div>
-              <label className={labelCls}>Type de séance <span className="text-orange-400">*</span></label>
+              <label className={labelCls}>Type de séance <span className="text-[color:var(--theme-primary)]">*</span></label>
               <div className="grid grid-cols-3 gap-2">
                 {sessionTypes.map(t => (
                   <button key={t.id} onClick={() => { setTypeId(t.id); setError(null) }}
-                    className={`p-3 rounded-xl border text-xs font-medium transition flex flex-col items-center gap-1 ${typeId === t.id ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
+                    className={`p-3 rounded-xl border text-xs font-medium transition flex flex-col items-center gap-1 ${typeId === t.id ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                     <span className="text-xl">{t.emoji}</span>{t.name}
                   </button>
                 ))}
@@ -665,7 +665,7 @@ export default function LogPage() {
             <div>
               <label className={labelCls}>Durée (min) — optionnel</label>
               <input type="number" placeholder="ex: 75" value={duration} onChange={e => setDuration(e.target.value)}
-                className="w-28 rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                className="w-28 rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
             </div>
           </div>
         )}
@@ -678,7 +678,7 @@ export default function LogPage() {
               <div className="flex flex-wrap gap-2">
                 {RUN_TYPES.map(t => (
                   <button key={t} onClick={() => setRunType(t)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition ${runType === t ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>{t}</button>
+                    className={`px-4 py-2 rounded-full text-sm font-medium border transition ${runType === t ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>{t}</button>
                 ))}
               </div>
             </div>
@@ -686,12 +686,12 @@ export default function LogPage() {
               <div>
                 <label className={labelCls}>Distance (km)</label>
                 <input type="number" step="0.1" placeholder="ex: 10" value={runDistance} onChange={e => setRunDistance(e.target.value)}
-                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
               </div>
               <div>
                 <label className={labelCls}>Dénivelé+ (m)</label>
                 <input type="number" placeholder="ex: 250" value={runElevation} onChange={e => setRunElevation(e.target.value)}
-                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="w-full rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
               </div>
             </div>
             {paceStr && (
@@ -706,7 +706,7 @@ export default function LogPage() {
               <div className="flex gap-2">
                 {RUN_SURFACES.map(s => (
                   <button key={s} onClick={() => setRunSurface(s)}
-                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition ${runSurface === s ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>{s}</button>
+                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition ${runSurface === s ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>{s}</button>
                 ))}
               </div>
             </div>
@@ -731,25 +731,25 @@ export default function LogPage() {
                             <label className="block text-xs text-[var(--muted)] mb-1">Distance</label>
                             <input type="text" placeholder="400m" value={iv.distance}
                               onChange={e => updInterval(i, { distance: e.target.value })}
-                              className="w-full rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                              className="w-full rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                           </div>
                           <div>
                             <label className="block text-xs text-[var(--muted)] mb-1">Temps mm:ss</label>
                             <div className="flex items-center gap-0.5">
                               <input type="number" placeholder="mm" value={iv.timeMin}
                                 onChange={e => updInterval(i, { timeMin: e.target.value })}
-                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-[color:var(--theme-primary)]" />
                               <span className="text-[var(--muted)] text-xs">:</span>
                               <input type="number" placeholder="ss" value={iv.timeSec}
                                 onChange={e => updInterval(i, { timeSec: e.target.value })}
-                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-[color:var(--theme-primary)]" />
                             </div>
                           </div>
                           <div>
                             <label className="block text-xs text-[var(--muted)] mb-1">Repos</label>
                             <input type="text" placeholder="2'" value={iv.rest}
                               onChange={e => updInterval(i, { rest: e.target.value })}
-                              className="w-full rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                              className="w-full rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                           </div>
                         </div>
                         {pace && (
@@ -759,7 +759,7 @@ export default function LogPage() {
                     )
                   })}
                   <button onClick={() => setRunIntervals(ivs => [...ivs, mkRunIv()])}
-                    className="w-full py-2.5 border border-dashed border-[color:var(--border-strong)] text-[var(--muted)] rounded-xl text-xs font-bold hover:border-orange-300 hover:text-orange-400 transition">
+                    className="w-full py-2.5 border border-dashed border-[color:var(--border-strong)] text-[var(--muted)] rounded-xl text-xs font-bold hover:border-[color:var(--theme-primary)] hover:text-[color:var(--theme-primary)] transition">
                     + Rep
                   </button>
                 </div>
@@ -848,11 +848,11 @@ export default function LogPage() {
                 {/* Simple / Complex toggle */}
                 <div className="flex gap-2">
                   <button onClick={() => updHBlock(block.id, { isComplex: false })}
-                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${!block.isComplex ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--muted)]'}`}>
+                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${!block.isComplex ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--muted)]'}`}>
                     Mouvement unique
                   </button>
                   <button onClick={() => updHBlock(block.id, { isComplex: true })}
-                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${block.isComplex ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--muted)]'}`}>
+                    className={`flex-1 py-1.5 rounded-lg border text-xs font-bold transition ${block.isComplex ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--muted)]'}`}>
                     Complexe
                   </button>
                 </div>
@@ -874,7 +874,7 @@ export default function LogPage() {
                   <span className="text-xs text-[var(--sub)] flex-shrink-0">1RM réf :</span>
                   <input type="number" placeholder="—" value={block.rm1}
                     onChange={e => updHBlock(block.id, { rm1: e.target.value })}
-                    className="w-20 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    className="w-20 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                   <span className="text-xs text-[var(--muted)]">kg</span>
                   <span className="text-xs text-[var(--border-strong)] ml-1">→ auto %RM</span>
                 </div>
@@ -896,21 +896,21 @@ export default function LogPage() {
                             <span className="text-[10px] text-[var(--border-strong)] font-bold text-center">S{si+1}</span>
                             <input type="number" placeholder="—" value={set.reps}
                               onChange={e => updHSet(block.id, si, { reps: e.target.value })}
-                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-[color:var(--theme-primary)]" />
                             <div>
                               <input type="number" step="0.5" placeholder="—" value={set.weight}
                                 onChange={e => updHSet(block.id, si, { weight: e.target.value })}
-                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                                className="w-full rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-[color:var(--theme-primary)]" />
                               {autoKg !== null && !set.weight && (
-                                <p className="text-[9px] text-orange-400 text-center mt-0.5">{autoKg}kg</p>
+                                <p className="text-[9px] text-[color:var(--theme-primary)] text-center mt-0.5">{autoKg}kg</p>
                               )}
                             </div>
                             <input type="text" placeholder="@30X1" value={set.tempo}
                               onChange={e => updHSet(block.id, si, { tempo: e.target.value })}
-                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-[11px] text-center font-mono focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-[11px] text-center font-mono focus:outline-none focus:ring-1 focus:ring-[color:var(--theme-primary)]" />
                             <input type="number" placeholder="%" value={set.pct_rm}
                               onChange={e => updHSet(block.id, si, { pct_rm: e.target.value })}
-                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-orange-400" />
+                              className="rounded-lg border border-[color:var(--border-strong)] px-1 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-[color:var(--theme-primary)]" />
                             <div className="flex gap-0.5">
                               {([
                                 { v: 'good', l: '✓', active: 'bg-green-100 text-green-600 border-green-300' },
@@ -934,7 +934,7 @@ export default function LogPage() {
                     })}
                   </div>
                   <button onClick={() => updHBlock(block.id, { sets: [...block.sets, { reps: '', weight: '', tempo: '', pct_rm: '', execution: '' }] })}
-                    className="w-full mt-2 py-1.5 text-xs text-[var(--muted)] border border-dashed border-[color:var(--border-strong)] rounded-lg hover:border-orange-300 hover:text-orange-400 transition">
+                    className="w-full mt-2 py-1.5 text-xs text-[var(--muted)] border border-dashed border-[color:var(--border-strong)] rounded-lg hover:border-[color:var(--theme-primary)] hover:text-[color:var(--theme-primary)] transition">
                     + Série
                   </button>
                 </div>
@@ -942,7 +942,7 @@ export default function LogPage() {
             ))}
 
             <button onClick={() => setHBlocks(bs => [...bs, mkHBlock(Date.now())])}
-              className="w-full py-3 border-2 border-dashed border-[color:var(--accent-soft)] text-orange-400 rounded-2xl text-sm font-bold hover:border-orange-400 transition flex items-center justify-center gap-2">
+              className="w-full py-3 border-2 border-dashed border-[color:var(--accent-soft)] text-[color:var(--theme-primary)] rounded-2xl text-sm font-bold hover:border-[color:var(--theme-primary)] transition flex items-center justify-center gap-2">
               <span>🏋️</span> Ajouter un exercice
             </button>
           </div>
@@ -983,11 +983,11 @@ export default function LogPage() {
                     <div className="flex items-center gap-1">
                       <input type="number" placeholder="mm" value={hyroxStations[i].timeMin}
                         onChange={e => updStation(i, { timeMin: e.target.value })}
-                        className="w-14 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                        className="w-14 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                       <span className="text-[var(--muted)] font-bold">:</span>
                       <input type="number" placeholder="ss" value={hyroxStations[i].timeSec}
                         onChange={e => updStation(i, { timeSec: e.target.value })}
-                        className="w-14 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                        className="w-14 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                     </div>
                   </div>
                   {station.hasWeight && (
@@ -995,7 +995,7 @@ export default function LogPage() {
                       <label className="block text-xs text-[var(--muted)] mb-1">Charge (kg)</label>
                       <input type="number" placeholder="—" value={hyroxStations[i].weight}
                         onChange={e => updStation(i, { weight: e.target.value })}
-                        className="w-20 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                        className="w-20 rounded-lg border border-[color:var(--border-strong)] px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                     </div>
                   )}
                 </div>
@@ -1105,11 +1105,11 @@ export default function LogPage() {
                         <span className="text-xs text-[var(--border-strong)] font-bold text-center">S{si+1}</span>
                         <input type="number" placeholder="—" value={set.reps}
                           onChange={e => updSet(item.id, si, { reps: e.target.value })}
-                          className="w-full min-w-0 rounded-lg border border-[color:var(--muted)] px-2 py-1.5 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                          className="w-full min-w-0 rounded-lg border border-[color:var(--muted)] px-2 py-1.5 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                         {(item as PrepBlock).hasWeight && (
                           <input type="number" placeholder="—" value={set.weight}
                             onChange={e => updSet(item.id, si, { weight: e.target.value })}
-                            className="w-full min-w-0 rounded-lg border border-[color:var(--muted)] px-2 py-1.5 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                            className="w-full min-w-0 rounded-lg border border-[color:var(--muted)] px-2 py-1.5 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                         )}
                         <button onClick={() => {
                           if ((item as PrepBlock).sets.length > 1)
@@ -1118,7 +1118,7 @@ export default function LogPage() {
                       </div>
                     ))}
                     <button onClick={() => updBlock(item.id, { sets: [...(item as PrepBlock).sets, { reps: '', weight: '' }] })}
-                      className="w-full mt-2 py-1.5 text-xs text-[var(--muted)] border border-dashed border-[color:var(--border-strong)] rounded-lg hover:border-orange-300 hover:text-orange-400 transition">
+                      className="w-full mt-2 py-1.5 text-xs text-[var(--muted)] border border-dashed border-[color:var(--border-strong)] rounded-lg hover:border-[color:var(--theme-primary)] hover:text-[color:var(--theme-primary)] transition">
                       + Série
                     </button>
                   </div>
@@ -1132,7 +1132,7 @@ export default function LogPage() {
                   <span>🎯</span> Note technique
                 </button>
                 <button onClick={() => setPrepItems(ps => [...ps, mkBlock(Date.now())])}
-                  className="flex-1 py-2.5 border-2 border-dashed border-[color:var(--accent-soft)] text-orange-400 rounded-xl text-xs font-bold hover:border-orange-400 transition flex items-center justify-center gap-1">
+                  className="flex-1 py-2.5 border-2 border-dashed border-[color:var(--accent-soft)] text-[color:var(--theme-primary)] rounded-xl text-xs font-bold hover:border-[color:var(--theme-primary)] transition flex items-center justify-center gap-1">
                   <span>🏋️</span> Bloc force
                 </button>
               </div>
@@ -1196,14 +1196,14 @@ export default function LogPage() {
                     <div className="flex flex-wrap gap-2">
                       {DURATION_CHIPS.map(d => (
                         <button key={d} onClick={() => setWodTimeCap(wodTimeCap === String(d) ? '' : String(d))}
-                          className={`px-3 py-2 rounded-xl border font-bold text-sm transition ${wodTimeCap === String(d) ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
+                          className={`px-3 py-2 rounded-xl border font-bold text-sm transition ${wodTimeCap === String(d) ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                           {d}&apos;
                         </button>
                       ))}
                       <input type="number" placeholder="autre"
                         value={DURATION_CHIPS.includes(parseInt(wodTimeCap)) ? '' : wodTimeCap}
                         onChange={e => setWodTimeCap(e.target.value)}
-                        className="w-20 rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-2 py-2 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                        className="w-20 rounded-xl border border-[color:var(--muted)] bg-[var(--card)] px-2 py-2 text-sm text-[var(--ink)] text-center focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                     </div>
                   </div>
                 )}
@@ -1215,17 +1215,17 @@ export default function LogPage() {
                 <input
                   type="text" placeholder="Chercher un mouvement..." value={wodMoveSearch}
                   onChange={e => setWodMoveSearch(e.target.value)}
-                  className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2" />
+                  className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)] mb-2" />
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {COMMON_MOVES.filter(m => m.toLowerCase().includes(wodMoveSearch.toLowerCase())).map(m => (
                     <button key={m} onClick={() => { setWodDesc(d => d ? d + '\n' + m : m); setWodMoveSearch('') }}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)] hover:border-orange-300 hover:text-[color:var(--theme-primary)] transition cursor-pointer">
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)] hover:border-[color:var(--theme-primary)] hover:text-[color:var(--theme-primary)] transition cursor-pointer">
                       + {m}
                     </button>
                   ))}
                   {COMMON_MOVES.filter(m => m.toLowerCase().includes(wodMoveSearch.toLowerCase())).length === 0 && wodMoveSearch && (
                     <button onClick={() => { setWodDesc(d => d ? d + '\n' + wodMoveSearch : wodMoveSearch); setWodMoveSearch('') }}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-orange-300 bg-[var(--accent-soft)] text-[var(--accent-text)] transition cursor-pointer">
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)] transition cursor-pointer">
                       + Ajouter «{wodMoveSearch}»
                     </button>
                   )}
@@ -1344,7 +1344,7 @@ export default function LogPage() {
               <div className="flex gap-2">
                 {FEELING_LEVELS.map(f => (
                   <button key={f.v} onClick={() => setFeeling(f.v)}
-                    className={`flex-1 py-2 rounded-xl border flex flex-col items-center gap-1 transition ${feeling === f.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'}`}>
+                    className={`flex-1 py-2 rounded-xl border flex flex-col items-center gap-1 transition ${feeling === f.v ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'}`}>
                     <span className="text-xl">{f.emoji}</span>
                     <span className={`text-xs font-medium ${feeling === f.v ? 'text-[color:var(--theme-primary)]' : 'text-[var(--muted)]'}`}>{f.label}</span>
                   </button>
@@ -1372,7 +1372,7 @@ export default function LogPage() {
                     <label className="block text-xs text-[var(--sub)] mb-1.5">Zone</label>
                     <input list="pain-parts-list" value={painPart} onChange={e => setPainPart(e.target.value)}
                       placeholder="Sélectionne ou tape une zone..."
-                      className="w-full rounded-lg border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                      className="w-full rounded-lg border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                     <datalist id="pain-parts-list">{PAIN_PARTS.map(p => <option key={p} value={p} />)}</datalist>
                   </div>
                   <div>
@@ -1391,7 +1391,7 @@ export default function LogPage() {
                 </div>
               ) : (
                 <button onClick={() => setAddingPain(true)}
-                  className="w-full py-2.5 border border-dashed border-[color:var(--border-strong)] text-[var(--muted)] rounded-xl text-sm hover:border-orange-300 hover:text-orange-400 transition">
+                  className="w-full py-2.5 border border-dashed border-[color:var(--border-strong)] text-[var(--muted)] rounded-xl text-sm hover:border-[color:var(--theme-primary)] hover:text-[color:var(--theme-primary)] transition">
                   + Ajouter une douleur
                 </button>
               )}

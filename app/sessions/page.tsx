@@ -179,7 +179,7 @@ export default function SessionsPage() {
                       border: first?.is_demo ? '1.5px dashed #D1D5DB' : undefined,
                     }}>
                     <span className={`text-xs font-bold leading-none mb-0.5 ${
-                      isToday ? 'text-orange-500' : items.length > 0 ? 'text-[var(--ink-soft)]' : 'text-[var(--border-strong)]'
+                      isToday ? 'text-[color:var(--theme-primary)]' : items.length > 0 ? 'text-[var(--ink-soft)]' : 'text-[var(--border-strong)]'
                     }`}>
                       {day}
                     </span>

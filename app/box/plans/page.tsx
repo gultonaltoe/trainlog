@@ -152,13 +152,13 @@ function PlanForm({ orgId, initial, onClose, onSaved }: {
                 onChange={e => upd({ durationDays: parseInt(e.target.value) || null })} />
             </div>
             <label className="flex items-end gap-2 pb-2.5">
-              <input type="checkbox" className="w-5 h-5 accent-orange-500" checked={p.recurring}
+              <input type="checkbox" className="w-5 h-5 accent-[var(--theme-primary)]" checked={p.recurring}
                 onChange={e => upd({ recurring: e.target.checked })} />
               <span className="text-sm font-semibold text-[var(--ink-soft)]">Récurrent</span>
             </label>
           </div>
           <label className="flex items-center gap-2">
-            <input type="checkbox" className="w-5 h-5 accent-orange-500" checked={p.active}
+            <input type="checkbox" className="w-5 h-5 accent-[var(--theme-primary)]" checked={p.active}
               onChange={e => upd({ active: e.target.checked })} />
             <span className="text-sm font-semibold text-[var(--ink-soft)]">Actif (visible par les membres)</span>
           </label>

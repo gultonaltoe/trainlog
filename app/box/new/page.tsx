@@ -45,7 +45,7 @@ export default function NewBoxPage() {
           placeholder="CrossFit Lyon"
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
-          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
 
         <button onClick={submit} disabled={saving || !name.trim()}
           className="mt-6 w-full py-4 rounded-2xl text-white font-black text-base transition"

@@ -83,7 +83,7 @@ function AuthForm() {
           value={email}
           onChange={e => { setEmail(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]"
           autoFocus
           autoComplete="email"
         />

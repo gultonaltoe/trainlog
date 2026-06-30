@@ -84,7 +84,7 @@ export default function MembersPage() {
         </p>
         {!loading && members.some(m => m.status === 'active' && m.role === 'member') && (
           <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un membre…"
-            className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] mb-2 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] mb-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
         )}
         {loading ? (
           <p className="text-sm text-[var(--muted)] text-center py-8">Chargement…</p>

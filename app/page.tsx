@@ -157,7 +157,7 @@ export default function Dashboard() {
   // athlete dashboard before the box/coach view resolves on reload.
   if (ctxLoading) return (
     <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
-      <div className="w-8 h-8 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+      <div className="w-8 h-8 rounded-full border-4 border-[color:var(--theme-primary)] border-t-transparent animate-spin" />
     </div>
   )
 
@@ -273,7 +273,7 @@ export default function Dashboard() {
                         ))}
                       </div>
                     ) : (
-                      <div className={`w-8 h-8 rounded-lg border-2 border-dashed ${isToday ? 'border-orange-300' : 'border-[color:var(--border)]'}`} />
+                      <div className={`w-8 h-8 rounded-lg border-2 border-dashed ${isToday ? 'border-[color:var(--theme-primary)]' : 'border-[color:var(--border)]'}`} />
                     )}
                   </div>
                 )

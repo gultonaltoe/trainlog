@@ -127,7 +127,7 @@ export default function MovementPRPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
-      <div className="w-8 h-8 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+      <div className="w-8 h-8 rounded-full border-4 border-[color:var(--theme-primary)] border-t-transparent animate-spin" />
     </div>
   )
 

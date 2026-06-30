@@ -62,7 +62,7 @@ export default function JoinBoxPage() {
         <input type="text" value={query} autoFocus
           placeholder="Nom de la box…"
           onChange={e => setQuery(e.target.value)}
-          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3 text-[var(--ink)] text-base placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
 
         <div className="mt-3 space-y-2">
           {searching && <p className="text-sm text-[var(--muted)] text-center py-3">Recherche…</p>}

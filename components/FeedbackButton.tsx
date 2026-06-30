@@ -90,7 +90,7 @@ export default function FeedbackButton() {
                     <button key={t.v} onClick={() => setType(t.v)}
                       className={`py-2.5 rounded-xl border text-center transition flex flex-col items-center gap-1 ${
                         type === t.v
-                          ? 'border-orange-400 bg-[var(--accent-soft)]'
+                          ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]'
                           : 'border-[color:var(--border)] bg-[var(--card)]'
                       }`}>
                       <span className="text-xl">{t.emoji}</span>
@@ -106,7 +106,7 @@ export default function FeedbackButton() {
                 <textarea rows={3} value={message}
                   onChange={e => setMessage(e.target.value)}
                   placeholder="Décris le problème, l'idée ou ta question..."
-                  className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+                  className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)] resize-none" />
               </div>
 
               <button onClick={submit} disabled={saving || !message.trim()}

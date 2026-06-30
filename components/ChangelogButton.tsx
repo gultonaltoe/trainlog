@@ -50,7 +50,7 @@ export default function ChangelogButton() {
         <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5L6 9H3v6h3l5 4V5zM15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13" />
         </svg>
-        {hasUnread && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-[var(--bg)]" />}
+        {hasUnread && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-[var(--bg)]" style={{ background: 'var(--theme-primary)' }} />}
       </button>
 
       {open && (

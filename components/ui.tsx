@@ -107,7 +107,7 @@ export function Toggle({ label, hint, checked, disabled, onChange }: {
     <div>
       <label className="flex items-center justify-between gap-3 cursor-pointer">
         <span className="text-sm font-semibold text-[var(--ink-soft)]">{label}</span>
-        <input type="checkbox" className="w-5 h-5 accent-orange-500 flex-shrink-0 cursor-pointer" checked={checked}
+        <input type="checkbox" className="w-5 h-5 accent-[var(--theme-primary)] flex-shrink-0 cursor-pointer" checked={checked}
           disabled={disabled} onChange={e => onChange(e.target.checked)} />
       </label>
       {hint && <p className="text-[11px] text-[var(--muted)] mt-1">{hint}</p>}

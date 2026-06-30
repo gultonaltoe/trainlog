@@ -87,7 +87,7 @@ export default function MovementSearch({ value, onChange }: Props) {
           type="text" value={query} onFocus={onFocus}
           onChange={e => onType(e.target.value)}
           placeholder="Chercher ou parcourir les mouvements..."
-          className="w-full rounded-lg border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400 pr-7"
+          className="w-full rounded-lg border border-[color:var(--muted)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)] pr-7"
         />
         {locked
           ? <button onClick={clear} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--ink-soft)] text-lg">×</button>
@@ -119,7 +119,7 @@ export default function MovementSearch({ value, onChange }: Props) {
             <>
               <div className="flex items-center gap-2 px-3 py-2 border-b border-[color:var(--track)]">
                 <button onClick={() => setMode('categories')} className="text-xs text-[var(--muted)] hover:text-[var(--ink-soft)]">← Catégories</button>
-                <span className="text-xs font-semibold text-orange-500">
+                <span className="text-xs font-semibold text-[color:var(--theme-primary)]">
                   {CATS.find(c => c.id === browseCategory)?.emoji} {CAT_LABELS[browseCategory]}
                 </span>
               </div>
@@ -141,7 +141,7 @@ export default function MovementSearch({ value, onChange }: Props) {
               {browseCategory && (
                 <div className="px-3 py-1.5 border-b border-[color:var(--track)] flex items-center justify-between">
                   <span className="text-xs text-[var(--muted)]">
-                    Dans <span className="font-medium text-orange-500">{CAT_LABELS[browseCategory]}</span>
+                    Dans <span className="font-medium text-[color:var(--theme-primary)]">{CAT_LABELS[browseCategory]}</span>
                   </span>
                   <button onClick={() => setBrowseCategory('')} className="text-xs text-[var(--muted)] hover:text-[var(--ink-soft)]">Tout</button>
                 </div>

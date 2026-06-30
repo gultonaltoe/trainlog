@@ -242,7 +242,7 @@ export default function PRsPage() {
         {/* Recherche */}
         <input type="text" placeholder="Rechercher un mouvement..." value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400 mb-4" />
+          className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)] mb-4" />
 
         {/* Liste */}
         {loading ? (
@@ -313,7 +313,7 @@ export default function PRsPage() {
                 ] as { v: PRType; icon: string; label: string }[]).map(t => (
                   <button key={t.v} onClick={() => setPrType(t.v)}
                     className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition ${
-                      prType === t.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'
+                      prType === t.v ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'
                     }`}>
                     <span className="text-xl">{t.icon}</span>
                     <span className={`text-[11px] font-bold ${prType === t.v ? 'text-[var(--accent-text)]' : 'text-[var(--sub)]'}`}>{t.label}</span>
@@ -333,7 +333,7 @@ export default function PRsPage() {
                     <button key={m.label} onClick={() => selectPreset(m.label)}
                       className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition text-center leading-tight ${
                         sel
-                          ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                          ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
                           : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)] hover:border-[color:var(--border-strong)]'
                       }`}>
                       <span className="block text-base mb-0.5">{m.icon}</span>
@@ -346,7 +346,7 @@ export default function PRsPage() {
                 <button onClick={() => { setIsCustom(true); setMovName('') }}
                   className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition text-center leading-tight ${
                     isCustom
-                      ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                      ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
                       : 'border-dashed border-[color:var(--border-strong)] bg-[var(--card)] text-[var(--muted)]'
                   }`}>
                   <span className="block text-base mb-0.5">✏️</span>
@@ -367,7 +367,7 @@ export default function PRsPage() {
 
               {/* Selected label */}
               {(movName || (isCustom && customMov)) && (
-                <p className="text-xs text-orange-500 font-semibold mt-2">
+                <p className="text-xs text-[color:var(--theme-primary)] font-semibold mt-2">
                   ✓ {isCustom ? customMov : movName}
                 </p>
               )}
@@ -381,7 +381,7 @@ export default function PRsPage() {
                   {SCHEMES.map(s => (
                     <button key={s} onClick={() => setScheme(s)}
                       className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition ${
-                        scheme === s ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] text-[var(--sub)]'
+                        scheme === s ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] text-[var(--sub)]'
                       }`}>
                       {s}
                     </button>
@@ -400,14 +400,14 @@ export default function PRsPage() {
                   <div className="flex-1 relative">
                     <input type="number" value={minutes} onChange={e => setMinutes(e.target.value)}
                       placeholder="00" min="0"
-                      className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-3 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                      className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-3 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                     <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-[var(--muted)] font-medium">min</span>
                   </div>
                   <span className="text-2xl font-black text-[var(--muted)] pb-4">:</span>
                   <div className="flex-1 relative">
                     <input type="number" value={seconds} onChange={e => setSeconds(e.target.value)}
                       placeholder="00" min="0" max="59"
-                      className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-3 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                      className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-3 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                     <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-[var(--muted)] font-medium">sec</span>
                   </div>
                 </div>
@@ -415,7 +415,7 @@ export default function PRsPage() {
                 <div className="flex items-center gap-3">
                   <input type="number" value={value} onChange={e => setValue(e.target.value)}
                     placeholder="0" min="0" step={prType === 'charge' ? '0.5' : '1'}
-                    className="flex-1 rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-4 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                    className="flex-1 rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-3 py-4 text-3xl font-black text-center text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
                   <span className="text-lg font-bold text-[var(--muted)] w-10">{prType === 'charge' ? 'kg' : 'reps'}</span>
                 </div>
               )}
@@ -431,7 +431,7 @@ export default function PRsPage() {
                     <button key={opt.offset}
                       onClick={() => { setDateOffset(opt.offset); setShowDatePicker(false); setCustomDate('') }}
                       className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition ${
-                        active ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
+                        active ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
                       }`}>
                       {opt.label}
                     </button>
@@ -440,7 +440,7 @@ export default function PRsPage() {
                 <button
                   onClick={() => setShowDatePicker(v => !v)}
                   className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition ${
-                    showDatePicker ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
+                    showDatePicker ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
                   }`}>
                   Autre
                 </button>

@@ -163,7 +163,7 @@ export default function WelcomePage() {
             <button key={s.id} onClick={() => toggleSport(s.id)}
               className={`p-4 rounded-2xl border text-left transition ${
                 sports.includes(s.id)
-                  ? 'border-orange-400 bg-[var(--accent-soft)]'
+                  ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]'
                   : 'border-[color:var(--border)] bg-[var(--card)]'
               }`}>
               <div className="text-2xl mb-1.5">{s.icon}</div>
@@ -217,14 +217,14 @@ export default function WelcomePage() {
             {LEVELS.map(l => (
               <button key={l.id} onClick={() => setLevel(l.id)}
                 className={`w-full p-4 rounded-xl border text-left flex items-center gap-3 transition ${
-                  level === l.id ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'
+                  level === l.id ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'
                 }`}>
                 <span className="text-2xl flex-shrink-0">{l.icon}</span>
                 <div className="flex-1">
                   <p className={`text-sm font-bold ${level === l.id ? 'text-[var(--accent-text)]' : 'text-[var(--ink)]'}`}>{l.label}</p>
                   <p className="text-xs text-[var(--muted)]">{l.desc}</p>
                 </div>
-                {level === l.id && <span className="text-orange-500 font-black">✓</span>}
+                {level === l.id && <span className="text-[color:var(--theme-primary)] font-black">✓</span>}
               </button>
             ))}
           </div>
@@ -236,7 +236,7 @@ export default function WelcomePage() {
             {GOALS.map(g => (
               <button key={g.id} onClick={() => setGoal(g.id)}
                 className={`p-3 rounded-xl border text-left transition ${
-                  goal === g.id ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'
+                  goal === g.id ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'
                 }`}>
                 <div className="text-xl mb-1">{g.icon}</div>
                 <p className={`text-xs font-bold mb-0.5 ${goal === g.id ? 'text-[var(--accent-text)]' : 'text-[var(--ink)]'}`}>{g.label}</p>
@@ -250,7 +250,7 @@ export default function WelcomePage() {
           <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wide mb-3">Séances par semaine — {weekly}</p>
           <input type="range" min={1} max={7} step={1} value={weekly}
             onChange={e => setWeekly(parseInt(e.target.value))}
-            className="w-full accent-orange-400 mb-1" />
+            className="w-full accent-[var(--theme-primary)] mb-1" />
           <div className="flex justify-between text-xs text-[var(--muted)]"><span>1×</span><span>7×</span></div>
         </div>
 
@@ -288,12 +288,12 @@ export default function WelcomePage() {
         <div className="bg-[var(--bg)] rounded-2xl p-5 mb-6 space-y-4">
           <div>
             <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-wide mb-2">
-              Prénom <span className="text-orange-400">*</span>
+              Prénom <span className="text-[color:var(--theme-primary)]">*</span>
             </label>
             <input type="text" placeholder="Julien" value={name}
               onChange={e => { setName(e.target.value); setError('') }}
               onKeyDown={e => e.key === 'Enter' && handleFinish()}
-              className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3 text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]"
               autoFocus />
           </div>
           {error && <p className="text-red-500 text-sm">⚠️ {error}</p>}

@@ -63,7 +63,7 @@ export default function NotificationBell() {
             ) : items.map(n => (
               <button key={n.id} onClick={() => openNotif(n)}
                 className="w-full text-left px-4 py-3 border-b border-[color:var(--border)] hover:bg-[var(--hover)] flex gap-2 cursor-pointer">
-                {!n.readAt && <span className="mt-1.5 w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" />}
+                {!n.readAt && <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--theme-primary)' }} />}
                 <span className={`min-w-0 ${n.readAt ? 'pl-4' : ''}`}>
                   <span className="block text-sm font-bold text-[var(--ink)]">{n.title}</span>
                   {n.body && <span className="block text-xs text-[var(--sub)] truncate">{n.body}</span>}

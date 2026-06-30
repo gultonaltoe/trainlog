@@ -340,7 +340,7 @@ export default function ProfilePage() {
               {LEVELS.map(l => (
                 <button key={l.v} onClick={() => upd('level', l.v)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition ${
-                    p.level === l.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
+                    p.level === l.v ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
                   }`}>
                   <span className={`text-sm font-semibold ${p.level === l.v ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{l.l}</span>
                   <span className="text-xs text-[var(--muted)]">{l.d}</span>
@@ -357,7 +357,7 @@ export default function ProfilePage() {
                 return (
                   <button key={g.v} onClick={() => upd('goals', on ? p.goals.filter(x => x !== g.v) : [...p.goals, g.v])}
                     className={`p-3 rounded-xl border text-left transition ${
-                      on ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
+                      on ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)] hover:border-[color:var(--border-strong)]'
                     }`}>
                     <p className={`text-sm font-semibold ${on ? 'text-[var(--accent-text)]' : 'text-[var(--ink-soft)]'}`}>{g.l}</p>
                     <p className="text-xs text-[var(--muted)] mt-0.5">{g.d}</p>
@@ -374,7 +374,7 @@ export default function ProfilePage() {
                 <button key={n} onClick={() => upd('weekly_target', String(n))}
                   className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition ${
                     p.weekly_target === String(n)
-                      ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                      ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
                       : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'
                   }`}>{n}×</button>
               ))}
@@ -388,7 +388,7 @@ export default function ProfilePage() {
                 <button key={s} onClick={() => toggleSport(s)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                     p.sports.includes(s)
-                      ? 'border-orange-400 bg-[var(--accent-soft)] text-[var(--accent-text)]'
+                      ? 'border-[color:var(--theme-primary)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
                       : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)]'
                   }`}>{s}</button>
               ))}

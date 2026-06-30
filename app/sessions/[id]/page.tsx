@@ -139,7 +139,7 @@ export default function SessionDetailPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center" style={{ minHeight: '80dvh' }}>
-      <div className="w-8 h-8 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+      <div className="w-8 h-8 rounded-full border-4 border-[color:var(--theme-primary)] border-t-transparent animate-spin" />
     </div>
   )
 
@@ -147,7 +147,7 @@ export default function SessionDetailPage() {
     <div className="flex flex-col items-center justify-center gap-3" style={{ minHeight: '80dvh' }}>
       <p className="text-3xl">🤷</p>
       <p className="text-sm text-[var(--sub)]">Séance introuvable</p>
-      <button onClick={goBack} className="text-orange-500 text-sm font-semibold">← Retour</button>
+      <button onClick={goBack} className="text-[color:var(--theme-primary)] text-sm font-semibold">← Retour</button>
     </div>
   )
 
@@ -324,7 +324,7 @@ export default function SessionDetailPage() {
               <div>
                 <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Durée (min)</label>
                 <input type="number" placeholder="60" value={draft.duration_min} onChange={e => setDraft(d => d && ({ ...d, duration_min: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
               </div>
             </div>
 
@@ -332,12 +332,12 @@ export default function SessionDetailPage() {
               <div>
                 <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">RPE (1-10)</label>
                 <input type="number" min={1} max={10} placeholder="7" value={draft.rpe} onChange={e => setDraft(d => d && ({ ...d, rpe: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
               </div>
               <div>
                 <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Feeling (1-5)</label>
                 <input type="number" min={1} max={5} placeholder="3" value={draft.feeling_post} onChange={e => setDraft(d => d && ({ ...d, feeling_post: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
               </div>
             </div>
 
@@ -345,19 +345,19 @@ export default function SessionDetailPage() {
               <div>
                 <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Sommeil (h)</label>
                 <input type="number" step="0.5" placeholder="7.5" value={draft.sleep_hours} onChange={e => setDraft(d => d && ({ ...d, sleep_hours: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
               </div>
               <div>
                 <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Énergie avant séance (1-5)</label>
                 <input type="number" min={1} max={5} placeholder="4" value={draft.energy_level} onChange={e => setDraft(d => d && ({ ...d, energy_level: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
               </div>
             </div>
 
             <div>
               <label className="text-[11px] font-bold text-[var(--sub)] uppercase tracking-wide">Notes</label>
               <textarea rows={3} placeholder="Notes libres…" value={draft.notes} onChange={e => setDraft(d => d && ({ ...d, notes: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+                className="mt-1 w-full rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)] resize-none" />
             </div>
 
             <button onClick={handleSave} disabled={saving}
