@@ -35,6 +35,23 @@ export async function bookClass(scheduleId: string, date: string): Promise<Reser
   return data as ReservationStatus
 }
 
+/** Latest moment a booked spot can be cancelled: class start minus the box's
+ *  cancel cutoff (minutes). Mirrors the server-side check in cancel_class. */
+export function cancelDeadline(date: string, startTime: string, cancelCutoffMin: number): Date {
+  const start = new Date(`${date}T${startTime}:00`)
+  return new Date(start.getTime() - Math.max(0, cancelCutoffMin) * 60000)
+}
+
+/** Human deadline: "aujourd'hui à 15:15" / "demain à 18:00" / "dim. 29 juin à 15:15". */
+export function fmtDeadline(d: Date): string {
+  const midnight = (x: Date) => { const c = new Date(x); c.setHours(0, 0, 0, 0); return c.getTime() }
+  const days = Math.round((midnight(d) - midnight(new Date())) / 86400000)
+  const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const day = days === 0 ? "aujourd'hui" : days === 1 ? 'demain'
+    : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+  return `${day} à ${time}`
+}
+
 /** Cancel the current user's reservation for an occurrence. */
 export async function cancelClass(scheduleId: string, date: string): Promise<void> {
   const { error } = await supabase.rpc('cancel_class', { p_schedule_id: scheduleId, p_date: date })

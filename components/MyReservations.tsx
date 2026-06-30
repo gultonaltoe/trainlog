@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { getMyReservations, cancelClass, claimWaitlistSpot, type MyReservation } from '@/lib/reservations'
+import { getMyReservations, cancelClass, claimWaitlistSpot, cancelDeadline, fmtDeadline, type MyReservation } from '@/lib/reservations'
 import { endTime } from '@/lib/classes'
 import { toast } from '@/lib/toast'
 
@@ -8,8 +8,9 @@ const fmtDay = (iso: string) =>
   new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
 
 // A member's own bookings: upcoming (cancellable) + past. Used in the booking
-// hub's "Mes réservations" tab.
-export default function MyReservations({ orgId }: { orgId: string }) {
+// hub's "Mes réservations" tab. cancelCutoffMin drives the cancel deadline shown
+// per reservation (defaults to the box default if not passed).
+export default function MyReservations({ orgId, cancelCutoffMin = 120 }: { orgId: string; cancelCutoffMin?: number }) {
   const [items, setItems] = useState<MyReservation[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [confirmKey, setConfirmKey] = useState<string | null>(null)
@@ -52,14 +53,20 @@ export default function MyReservations({ orgId }: { orgId: string }) {
         <div className="space-y-2 mb-6">
           {upcoming.map(r => {
             const key = `${r.scheduleId}|${r.date}`
+            const deadline = cancelDeadline(r.date, r.startTime, cancelCutoffMin)
+            const canCancel = now < deadline
             return (
               <div key={key} className="bg-[var(--card)] rounded-xl border border-[color:var(--border)] p-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[var(--ink)] truncate">{r.title}</p>
                   <p className="text-xs text-[var(--muted)] capitalize">{fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}</p>
-                  {r.status === 'waitlisted' && (
+                  {r.status === 'waitlisted' ? (
                     <p className={`text-[11px] font-bold ${r.notified ? 'text-green-600' : 'text-amber-600'}`}>
                       {r.notified ? 'Place dispo — confirme !' : 'Liste d’attente'}
+                    </p>
+                  ) : (
+                    <p className={`text-[11px] font-semibold ${canCancel ? 'text-[var(--sub)]' : 'text-red-500'}`}>
+                      {canCancel ? `Annulation possible jusqu’au ${fmtDeadline(deadline)}` : 'Annulation fermée'}
                     </p>
                   )}
                 </div>
@@ -68,7 +75,8 @@ export default function MyReservations({ orgId }: { orgId: string }) {
                     className="text-xs font-black text-white bg-green-500 rounded-lg px-3 py-2 disabled:opacity-50 cursor-pointer whitespace-nowrap flex-shrink-0">
                     {busy === key ? '…' : 'Confirmer ma place'}
                   </button>
-                ) : confirmKey === key ? (
+                ) : r.status === 'booked' && !canCancel ? null
+                : confirmKey === key ? (
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button onClick={() => cancel(r)} disabled={busy === key}
                       className="text-xs font-black text-white bg-red-500 rounded-lg px-3 py-2 disabled:opacity-50 cursor-pointer whitespace-nowrap">

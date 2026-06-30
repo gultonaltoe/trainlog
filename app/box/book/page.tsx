@@ -62,6 +62,7 @@ export default function BookPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [brand, setBrand] = useState<OrgBrand>(DEFAULT_BRAND)
   const [policy, setPolicy] = useState('')
+  const [cancelCutoffMin, setCancelCutoffMin] = useState(120)
   const [showPolicy, setShowPolicy] = useState(false)
   const [tab, setTab] = useState<'browse' | 'mine'>('browse')
   useEffect(() => { if (window.location.hash === '#mine') setTab('mine') }, [])
@@ -90,7 +91,7 @@ export default function BookPage() {
   // Box branding + cancellation policy (member-facing).
   useEffect(() => {
     if (!orgId) return
-    getOrganization(orgId).then(info => { setBrand(info.brand); setPolicy(info.cancellationPolicy) }).catch(() => {})
+    getOrganization(orgId).then(info => { setBrand(info.brand); setPolicy(info.cancellationPolicy); setCancelCutoffMin(info.reservations.cancelCutoffMin) }).catch(() => {})
   }, [orgId])
 
   // The member's own plan(s) — show their active plan / remaining credits.
@@ -215,7 +216,7 @@ export default function BookPage() {
         </div>
 
         {tab === 'mine' ? (
-          <MyReservations orgId={orgId!} />
+          <MyReservations orgId={orgId!} cancelCutoffMin={cancelCutoffMin} />
         ) : (
         <>{/* ── Réserver (browse + book) ── */}
 

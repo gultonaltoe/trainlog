@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getMyReservations, type MyReservation } from '@/lib/reservations'
+import { getMyReservations, cancelDeadline, fmtDeadline, type MyReservation } from '@/lib/reservations'
+import { getOrganization } from '@/lib/orgs'
 import { endTime } from '@/lib/classes'
 
 const fmtDay = (iso: string) =>
@@ -11,6 +12,7 @@ const fmtDay = (iso: string) =>
 // dashboard when the active view is a box (member context).
 export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgName: string }) {
   const [upcoming, setUpcoming] = useState<MyReservation[]>([])
+  const [cancelCutoffMin, setCancelCutoffMin] = useState(120)
 
   useEffect(() => {
     let alive = true
@@ -21,6 +23,7 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
         if (alive) setUpcoming(next)
       })
       .catch(() => {})
+    getOrganization(orgId).then(info => { if (alive) setCancelCutoffMin(info.reservations.cancelCutoffMin) }).catch(() => {})
     return () => { alive = false }
   }, [orgId])
 
@@ -37,16 +40,26 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
       {upcoming.length === 0 ? (
         <p className="text-sm text-[var(--border-strong)]">Aucune réservation à venir.</p>
       ) : (
-        <div className="space-y-1.5">
-          {upcoming.map(r => (
-            <div key={`${r.scheduleId}|${r.date}`} className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-[var(--ink)] truncate">{r.title}</span>
-              <span className="text-xs text-[var(--sub)] flex-shrink-0 capitalize">
-                {fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}
-                {r.status === 'waitlisted' && <span className="text-amber-600 font-bold"> · attente</span>}
-              </span>
-            </div>
-          ))}
+        <div className="space-y-2.5">
+          {upcoming.map(r => {
+            const deadline = cancelDeadline(r.date, r.startTime, cancelCutoffMin)
+            const canCancel = new Date() < deadline
+            return (
+              <div key={`${r.scheduleId}|${r.date}`} className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--ink)] truncate">{r.title}</p>
+                  {r.status === 'waitlisted'
+                    ? <p className="text-[11px] font-bold text-amber-600">{r.notified ? 'Place dispo — confirme !' : 'Liste d’attente'}</p>
+                    : <p className={`text-[11px] font-semibold ${canCancel ? 'text-[var(--muted)]' : 'text-red-500'}`}>
+                        {canCancel ? `Annulation jusqu’au ${fmtDeadline(deadline)}` : 'Annulation fermée'}
+                      </p>}
+                </div>
+                <span className="text-xs font-bold text-[var(--sub)] flex-shrink-0 capitalize whitespace-nowrap">
+                  {fmtDay(r.date)} · {r.startTime}–{endTime(r.startTime, r.durationMin)}
+                </span>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
