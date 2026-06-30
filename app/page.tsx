@@ -74,7 +74,7 @@ export default function Dashboard() {
   const [period, setPeriod]           = useState<Period>('30j')
   const [dashCalY, setDashCalY] = useState(new Date().getFullYear())
   const [dashCalM, setDashCalM] = useState(new Date().getMonth())
-  const { active, memberships, loading: ctxLoading } = useAppContext()
+  const { active, memberships, loading: ctxLoading, setActive } = useAppContext()
 
   const load = useCallback(async () => {
     let p = await getProfile()
@@ -169,6 +169,26 @@ export default function Dashboard() {
   return (
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
+
+        {/* Owner/coach previewing their own box as a member → offer the way back. */}
+        {(() => {
+          if (active.type !== 'org' || active.role !== 'member') return null
+          const real = memberships.find(m => m.organizationId === active.orgId)?.role
+          if (!real || real === 'member') return null
+          return (
+            <button onClick={() => setActive({ type: 'org', orgId: active.orgId, orgName: active.orgName, role: real })}
+              className="ds-hover mt-4 w-full flex items-center justify-between gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-bold text-white"
+              style={{ background: 'var(--theme-primary)' }}>
+              <span className="flex items-center gap-2 min-w-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+                </svg>
+                <span className="truncate">Vue membre · {active.orgName}</span>
+              </span>
+              <span className="flex-shrink-0 underline underline-offset-2">Revenir à la gestion</span>
+            </button>
+          )
+        })()}
 
         {/* Header — branded with the active box's identity when inside one. */}
         {(() => {

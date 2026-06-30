@@ -16,7 +16,7 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 // The box-side dashboard, shown when the active view is a box and the user is
 // owner / coach. (Members in a box still see the athlete dashboard.)
 export default function CoachDashboard({ orgId, orgName, role }: { orgId: string; orgName: string; role: Role }) {
-  const { memberships } = useAppContext()
+  const { memberships, setActive } = useAppContext()
   const logoUrl = memberships.find(m => m.organizationId === orgId)?.logoUrl ?? null
   const [memberCount, setMemberCount] = useState<number | null>(null)
   // This-week occupancy: booked seats vs capacity across the week's classes.
@@ -81,6 +81,16 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
           </div>
           <p className="text-sm text-[var(--muted)] mt-1">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
         </Link>
+
+        {/* Owners/coaches can preview their own box exactly as a member sees it
+            (member dashboard, booking flow) without leaving the box. */}
+        <button onClick={() => setActive({ type: 'org', orgId, orgName, role: 'member' })}
+          className="ds-hover w-full mb-4 flex items-center justify-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[var(--card)] py-2.5 text-sm font-bold text-[var(--ink-soft)]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+          </svg>
+          Voir en tant que membre
+        </button>
 
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 text-center">
