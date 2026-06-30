@@ -51,7 +51,7 @@ export default function FeedbackButton() {
     <>
       {/* Bouton flottant */}
       <button onClick={() => setOpen(true)}
-        className="fixed z-40 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm px-4 py-2.5 rounded-full shadow-lg transition flex items-center gap-2"
+        className="fixed z-40 bg-[var(--theme-primary)] hover:opacity-90 text-white font-bold text-sm px-4 py-2.5 rounded-full shadow-lg transition flex items-center gap-2"
         style={{ bottom: 'calc(72px + env(safe-area-inset-bottom))', right: 16 }}>
         <span>💬</span> Feedback
       </button>
@@ -112,7 +112,7 @@ export default function FeedbackButton() {
               <button onClick={submit} disabled={saving || !message.trim()}
                 className={`w-full py-3.5 rounded-xl text-white text-sm font-bold transition ${
                   message.trim() && !saving
-                    ? 'bg-orange-500 hover:bg-orange-600'
+                    ? 'bg-[var(--theme-primary)] hover:opacity-90'
                     : 'bg-[var(--border)] text-[var(--muted)] cursor-not-allowed'
                 }`}>
                 {saving ? 'Envoi...' : 'Envoyer →'}

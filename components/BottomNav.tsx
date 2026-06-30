@@ -88,7 +88,7 @@ export default function BottomNav() {
           return (
             <Link key={item.href} href={item.href}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors ${
-                active ? 'text-orange-500' : 'text-[var(--muted)]'
+                active ? 'text-[color:var(--theme-primary)]' : 'text-[var(--muted)]'
               }`}>
               {item.icon(active)}
               <span className={`text-[10px] ${active ? 'font-bold' : 'font-medium'}`}>

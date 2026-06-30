@@ -49,7 +49,7 @@ export default function NewBoxPage() {
 
         <button onClick={submit} disabled={saving || !name.trim()}
           className="mt-6 w-full py-4 rounded-2xl text-white font-black text-base transition"
-          style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', opacity: saving || !name.trim() ? 0.5 : 1 }}>
+          style={{ background: 'var(--theme-primary)', opacity: saving || !name.trim() ? 0.5 : 1 }}>
           {saving ? 'Création...' : 'Créer la box →'}
         </button>
       </div>

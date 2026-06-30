@@ -225,7 +225,7 @@ export default function PlanningPage() {
                         style={{ background: sel ? 'var(--ink)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
                         <span className={`text-[10px] font-bold ${sel ? 'text-[var(--card)]' : 'text-[var(--muted)]'}`}>{DAY_WK[i]}</span>
                         <span className={`text-sm font-black ${sel ? 'text-[var(--card)]' : 'text-[var(--ink-soft)]'}`}>{d.getDate()}</span>
-                        {count > 0 && <span className={`text-[8px] font-bold ${sel ? 'text-[var(--card)]' : 'text-orange-500'}`}>{count}</span>}
+                        {count > 0 && <span className={`text-[8px] font-bold ${sel ? 'text-[var(--card)]' : 'text-[color:var(--theme-primary)]'}`}>{count}</span>}
                       </button>
                     )
                   })}
@@ -245,7 +245,7 @@ export default function PlanningPage() {
                       <button key={i} onClick={() => setSelectedDay(ds)} className="min-h-12 rounded-lg flex flex-col items-center justify-center"
                         style={{ background: sel ? 'var(--ink)' : count ? 'var(--accent-soft)' : 'var(--bg)' }}>
                         <span className={`text-xs font-bold ${sel ? 'text-[var(--card)]' : 'text-[var(--ink-soft)]'}`}>{day}</span>
-                        {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-[var(--card)]' : 'text-orange-500'}`}>{count}</span>}
+                        {count > 0 && <span className={`text-[9px] font-bold ${sel ? 'text-[var(--card)]' : 'text-[color:var(--theme-primary)]'}`}>{count}</span>}
                       </button>
                     )
                   })}

@@ -610,13 +610,13 @@ export default function LogPage() {
                       {chips.map(([label, val]) => (
                         <button key={label} type="button"
                           onClick={() => { setDate(val); setShowDatePicker(false) }}
-                          className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${date === val && !showDatePicker ? 'bg-orange-500 border-orange-500 text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
+                          className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${date === val && !showDatePicker ? 'bg-[var(--theme-primary)] border-[color:var(--theme-primary)] text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                           {label}
                         </button>
                       ))}
                       <button type="button"
                         onClick={() => setShowDatePicker(true)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${(showDatePicker || !isChip) ? 'bg-orange-500 border-orange-500 text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
+                        className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition ${(showDatePicker || !isChip) ? 'bg-[var(--theme-primary)] border-[color:var(--theme-primary)] text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                         Autre
                       </button>
                     </div>
@@ -794,7 +794,7 @@ export default function LogPage() {
               <div>
                 <button onClick={() => photoCaptureRef.current?.click()} disabled={analyzingPhoto}
                   className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
-                  style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
+                  style={{ background: analyzingPhoto ? '#FED7AA' : 'var(--theme-primary)' }}>
                   <span className="text-2xl">📷</span>
                   <div className="text-left">
                     <p className="text-sm font-black">Analyser le tableau</p>
@@ -1030,7 +1030,7 @@ export default function LogPage() {
               <div>
                 <button onClick={() => photoCaptureRef.current?.click()} disabled={analyzingPhoto}
                   className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition text-white shadow-md cursor-pointer"
-                  style={{ background: analyzingPhoto ? '#FED7AA' : 'linear-gradient(135deg, #F97316, #EA580C)' }}>
+                  style={{ background: analyzingPhoto ? '#FED7AA' : 'var(--theme-primary)' }}>
                   <span className="text-2xl">📷</span>
                   <div className="text-left">
                     <p className="text-sm font-black">Analyser le tableau</p>
@@ -1092,7 +1092,7 @@ export default function LogPage() {
                     </div>
                     <div className="flex items-center gap-2 mb-3">
                       <button onClick={() => updBlock(item.id, { hasWeight: !(item as PrepBlock).hasWeight })}
-                        className={`w-9 h-5 rounded-full relative transition-colors flex-shrink-0 ${(item as PrepBlock).hasWeight ? 'bg-orange-500' : 'bg-[var(--border)]'}`}>
+                        className={`w-9 h-5 rounded-full relative transition-colors flex-shrink-0 ${(item as PrepBlock).hasWeight ? 'bg-[var(--theme-primary)]' : 'bg-[var(--border)]'}`}>
                         <span className={`absolute top-0.5 w-4 h-4 bg-[var(--card)] rounded-full shadow transition-all ${(item as PrepBlock).hasWeight ? 'left-4' : 'left-0.5'}`} />
                       </button>
                       <span className="text-xs text-[var(--sub)]">{(item as PrepBlock).hasWeight ? 'Avec poids (kg)' : 'Reps uniquement'}</span>
@@ -1151,7 +1151,7 @@ export default function LogPage() {
                 <p className="text-xs text-[var(--muted)] mt-0.5">Conditioning / partie métabolique</p>
               </div>
               <button onClick={() => setHasWod(v => !v)}
-                className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ${hasWod ? 'bg-orange-500' : 'bg-[var(--border)]'}`}>
+                className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ${hasWod ? 'bg-[var(--theme-primary)]' : 'bg-[var(--border)]'}`}>
                 <span className={`absolute top-0.5 w-5 h-5 bg-[var(--card)] rounded-full shadow transition-all ${hasWod ? 'left-5' : 'left-0.5'}`} />
               </button>
             </div>
@@ -1167,7 +1167,7 @@ export default function LogPage() {
                       <button key={f} onClick={() => setWodFormat(f === wodFormat ? '' : f)}
                         className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition ${
                           wodFormat === f
-                            ? 'bg-orange-500 border-orange-500 text-white'
+                            ? 'bg-[var(--theme-primary)] border-[color:var(--theme-primary)] text-white'
                             : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'
                         }`}>
                         {f}
@@ -1180,7 +1180,7 @@ export default function LogPage() {
                         <button key={f} onClick={() => setWodFormat(f === wodFormat ? 'Autre' : f)}
                           className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition ${
                             wodFormat === f
-                              ? 'bg-orange-500 border-orange-500 text-white'
+                              ? 'bg-[var(--theme-primary)] border-[color:var(--theme-primary)] text-white'
                               : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'
                           }`}>
                           {f}
@@ -1219,7 +1219,7 @@ export default function LogPage() {
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {COMMON_MOVES.filter(m => m.toLowerCase().includes(wodMoveSearch.toLowerCase())).map(m => (
                     <button key={m} onClick={() => { setWodDesc(d => d ? d + '\n' + m : m); setWodMoveSearch('') }}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)] hover:border-orange-300 hover:text-orange-500 transition cursor-pointer">
+                      className="px-2.5 py-1 rounded-full text-xs font-medium border border-[color:var(--border)] bg-[var(--card)] text-[var(--sub)] hover:border-orange-300 hover:text-[color:var(--theme-primary)] transition cursor-pointer">
                       + {m}
                     </button>
                   ))}
@@ -1279,7 +1279,7 @@ export default function LogPage() {
                   <div className="flex flex-wrap gap-2">
                     {[...WOD_FORMATS.filter(f => f !== 'Autre'), ...WOD_FORMATS_EXTRA].map(f => (
                       <button key={f} onClick={() => updExtraWod(b.id, { format: f === b.format ? '' : f })}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${b.format === f ? 'bg-orange-500 border-orange-500 text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${b.format === f ? 'bg-[var(--theme-primary)] border-[color:var(--theme-primary)] text-white' : 'border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]'}`}>
                         {f}
                       </button>
                     ))}
@@ -1346,7 +1346,7 @@ export default function LogPage() {
                   <button key={f.v} onClick={() => setFeeling(f.v)}
                     className={`flex-1 py-2 rounded-xl border flex flex-col items-center gap-1 transition ${feeling === f.v ? 'border-orange-400 bg-[var(--accent-soft)]' : 'border-[color:var(--border)] bg-[var(--card)]'}`}>
                     <span className="text-xl">{f.emoji}</span>
-                    <span className={`text-xs font-medium ${feeling === f.v ? 'text-orange-500' : 'text-[var(--muted)]'}`}>{f.label}</span>
+                    <span className={`text-xs font-medium ${feeling === f.v ? 'text-[color:var(--theme-primary)]' : 'text-[var(--muted)]'}`}>{f.label}</span>
                   </button>
                 ))}
               </div>

@@ -190,7 +190,7 @@ export default function Dashboard() {
               {hasBox && (
                 <Link href="/box/book"
                   className="flex-1 text-center text-white text-sm font-black py-3.5 rounded-2xl"
-                  style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+                  style={{ background: 'var(--theme-primary)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
                   Réserver un cours
                 </Link>
               )}
@@ -198,7 +198,7 @@ export default function Dashboard() {
                 className={`${hasBox ? 'flex-1' : 'flex-1'} text-center py-3.5 rounded-2xl text-sm font-black ${hasBox ? '' : 'text-white'}`}
                 style={hasBox
                   ? { background: 'var(--secondary-bg)', color: 'var(--secondary-fg)' }
-                  : { background: 'linear-gradient(135deg, #F97316, #EA580C)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+                  : { background: 'var(--theme-primary)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
                 Enregistrer une séance
               </Link>
             </div>
@@ -244,7 +244,7 @@ export default function Dashboard() {
                 const isToday = str === toDateStr(new Date())
                 return (
                   <div key={str} className="flex-1 flex flex-col items-center gap-1">
-                    <span className={`text-xs font-semibold ${isToday ? 'text-orange-500' : 'text-[var(--muted)]'}`}>
+                    <span className={`text-xs font-semibold ${isToday ? 'text-[color:var(--theme-primary)]' : 'text-[var(--muted)]'}`}>
                       {DAY_LABELS[i]}
                     </span>
                     {daySessions.length > 0 ? (
@@ -324,7 +324,7 @@ export default function Dashboard() {
                       outline: isToday ? '2px solid var(--theme-primary, #F97316)' : undefined,
                     }}>
                     <span className={`text-[10px] font-bold leading-none mb-0.5 ${
-                      isToday ? 'text-orange-500' : items.length > 0 ? 'text-[var(--ink-soft)]' : 'text-[var(--border-strong)]'
+                      isToday ? 'text-[color:var(--theme-primary)]' : items.length > 0 ? 'text-[var(--ink-soft)]' : 'text-[var(--border-strong)]'
                     }`}>
                       {day}
                     </span>
@@ -339,7 +339,7 @@ export default function Dashboard() {
               <p className="text-xs text-[var(--muted)]">
                 <span className="font-bold text-[var(--ink-soft)]">{Object.values(calByDate).flat().length}</span> séance{Object.values(calByDate).flat().length !== 1 ? 's' : ''}
               </p>
-              <Link href="/sessions" className="text-xs font-semibold text-orange-500">Voir tout →</Link>
+              <Link href="/sessions" className="text-xs font-semibold text-[color:var(--theme-primary)]">Voir tout →</Link>
             </div>
           </div>
         )}

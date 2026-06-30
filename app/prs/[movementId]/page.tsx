@@ -236,7 +236,7 @@ export default function MovementPRPage() {
         </div>
 
         {/* PR actuel */}
-        <div className="bg-orange-500 rounded-2xl p-5 mb-4 flex items-center justify-between">
+        <div className="bg-[var(--theme-primary)] rounded-2xl p-5 mb-4 flex items-center justify-between">
           <div>
             <p className="text-orange-200 text-xs font-bold uppercase tracking-wide mb-1">Record personnel</p>
             <p className="text-4xl font-black text-white">{best} <span className="text-2xl font-semibold text-orange-200">{unit}</span></p>
@@ -484,7 +484,7 @@ export default function MovementPRPage() {
                       <p className="text-sm font-bold text-[var(--ink)]">{formatDateLong(p.date)}</p>
                       <div className="flex items-center gap-2">
                         {p.session_id && (
-                          <a href={`/sessions/${p.session_id}`} className="text-xs text-orange-500 hover:underline">Voir →</a>
+                          <a href={`/sessions/${p.session_id}`} className="text-xs text-[color:var(--theme-primary)] hover:underline">Voir →</a>
                         )}
                         {e1rm && e1rm !== p.value && (
                           <span className="text-xs text-purple-400">1RM ~{e1rm}kg</span>
