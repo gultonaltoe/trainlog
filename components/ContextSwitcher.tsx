@@ -23,6 +23,9 @@ export default function ContextSwitcher() {
   const switchable = memberships.filter(m => m.status === 'active')
   const label = active.type === 'personal' ? PERSONAL_LABEL : active.orgName
   const sub   = active.type === 'personal' ? 'Athlète' : ROLE_LABEL[active.role]
+  // Management mode (owner/coach/staff) gets a filled brand badge so it's
+  // visibly distinct from the athlete/member view at a glance (ST-8 v2).
+  const isMgmt = active.type === 'org' && active.role !== 'member'
   const activeLogo = active.type === 'org'
     ? (memberships.find(m => m.organizationId === active.orgId)?.logoUrl ?? null) : null
 
@@ -41,7 +44,10 @@ export default function ContextSwitcher() {
         <span className="flex items-center gap-2 min-w-0">
           {active.type === 'personal' ? <span className="text-base flex-shrink-0">🏋️</span> : boxIcon(activeLogo)}
           <span className="text-sm font-black text-[var(--ink)] truncate">{label}</span>
-          <span className="text-[10px] font-bold text-[var(--sub)] bg-[var(--track)] rounded-full px-1.5 py-0.5 flex-shrink-0">{sub}</span>
+          <span className="text-[10px] font-bold rounded-full px-1.5 py-0.5 flex-shrink-0"
+            style={isMgmt
+              ? { background: 'var(--theme-primary)', color: '#fff' }
+              : { background: 'var(--track)', color: 'var(--sub)' }}>{sub}</span>
         </span>
         <span className="text-[var(--ink-soft)] text-xs flex-shrink-0 ml-2">▾</span>
       </button>

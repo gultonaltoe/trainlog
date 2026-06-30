@@ -64,6 +64,8 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <Link href="/box/profile" className="block pt-8 pb-4 hover:opacity-80 transition">
+          <span className="inline-block text-[10px] font-black uppercase tracking-wider text-white rounded-full px-2 py-0.5 mb-1.5"
+            style={{ background: 'var(--theme-primary)' }}>Gestion</span>
           <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight flex items-center gap-1.5">
             {orgName} <span className="text-[var(--border-strong)] text-lg">›</span>
           </h1>
