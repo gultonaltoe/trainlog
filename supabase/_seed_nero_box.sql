@@ -25,8 +25,12 @@ begin
   end if;
   if v_owner is null then raise exception 'Owner de la box source introuvable'; end if;
 
-  -- Create Nero (idempotent by name). The BEFORE-INSERT trigger nulls
-  -- owner_user_id (uses auth.uid(), null here) + sets join_code — so own it via UPDATE.
+  -- The BEFORE-INSERT trigger sets owner_user_id := auth.uid() (NOT NULL column),
+  -- which is null in the SQL editor → insert fails. Make auth.uid() resolve to the
+  -- owner for this transaction so the trigger sets it correctly.
+  perform set_config('request.jwt.claims', json_build_object('sub', v_owner::text)::text, true);
+
+  -- Create Nero (idempotent by name). join_code is auto-set by the same trigger.
   select id into v_nero from public.organizations where name = 'Nero CrossFit' limit 1;
   if v_nero is null then
     v_nero := gen_random_uuid();
