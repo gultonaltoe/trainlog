@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ── Design tokens (ST-28 / ST-39) ───────────────────────────────────────────
-   --theme-primary is the ACCENT (per user/box brand, set by ThemeLoader).
+   --theme-primary is the ACCENT (active box brand, else user profile; set by BoxBranding).
    The surface tokens below flip light↔dark. Add `.dark` on <html> (global
    toggle) or on any wrapper (scoped preview, e.g. /design) to switch. */
 :root {

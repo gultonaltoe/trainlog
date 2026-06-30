@@ -52,9 +52,16 @@ export function AppProvider({ children, initialActive }: { children: ReactNode; 
       const s = stored
       // Only restore into a box the user is an ACTIVE member of (not pending).
       if (s && s.type === 'org' && !mine.some(m => m.organizationId === s.orgId && m.status === 'active')) {
-        stored = null  // left/never-active in that org — fall back to personal
+        stored = null  // left/never-active in that org — fall back below
       }
-      setActiveState(stored ?? PERSONAL)
+      // No valid stored choice → auto-select when there's exactly one active box
+      // (frictionless single-box entry, ST-8 v2); otherwise personal stays the
+      // first-class default (solo athletes + multi-box use the switcher).
+      const boxes = mine.filter(m => m.status === 'active')
+      const fallback: ActiveContext = boxes.length === 1
+        ? { type: 'org', orgId: boxes[0].organizationId, orgName: boxes[0].organizationName, role: boxes[0].role }
+        : PERSONAL
+      setActiveState(stored ?? fallback)
     } catch {
       setMemberships([])           // logged out or no orgs
       setActiveState(PERSONAL)

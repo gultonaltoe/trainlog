@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import ToastContainer from '@/components/ToastContainer'
-import ThemeLoader    from '@/components/ThemeLoader'
+import BoxBranding    from '@/components/BoxBranding'
 import UserInit       from '@/components/UserInit'
 import ClientShell    from '@/components/ClientShell'
 import { AppProvider } from '@/components/AppContext'
@@ -49,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AppProvider>
           <UserInit />
-          <ThemeLoader />
+          <BoxBranding />
           <ToastContainer />
           <GlobalContextBar />
           <div className="pb-20" style={{ background: 'var(--bg)' }}>

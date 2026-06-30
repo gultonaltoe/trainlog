@@ -17,6 +17,7 @@ export type Membership = {
   status: MembershipStatus
   dataSharing: boolean
   logoUrl: string | null
+  brandColor: string | null   // box accent — drives in-app theming when active (ST-8 v2)
 }
 
 /** The current user's memberships (active + pending) — their boxes + role/status. */
@@ -30,7 +31,7 @@ export async function getMyMemberships(): Promise<Membership[]> {
     .order('created_at', { ascending: true })
   if (error) throw new Error(`getMyMemberships: ${error.message}`)
   return (data ?? []).map(m => {
-    const s = (m.organizations?.settings ?? {}) as { brand?: { logoUrl?: string } }
+    const s = (m.organizations?.settings ?? {}) as { brand?: { logoUrl?: string; brandColor?: string } }
     return {
       id:               m.id,
       organizationId:   m.organization_id,
@@ -39,6 +40,7 @@ export async function getMyMemberships(): Promise<Membership[]> {
       status:           m.status as MembershipStatus,
       dataSharing:      m.data_sharing,
       logoUrl:          s.brand?.logoUrl?.trim() || null,
+      brandColor:       s.brand?.brandColor?.trim() || null,
     }
   })
 }
