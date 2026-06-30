@@ -180,6 +180,30 @@ export default function BookPage() {
           )}
         </div>
 
+        {/* Box selector: members of several boxes pick which one to book in
+            (the planning + bookings re-scope to it). Hidden for single-box. */}
+        {activeBoxes.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 mb-3 -mx-1 px-1">
+            {activeBoxes.map(m => {
+              const sel = m.organizationId === orgId
+              return (
+                <button key={m.organizationId}
+                  onClick={() => setActive({ type: 'org', orgId: m.organizationId, orgName: m.organizationName, role: m.role })}
+                  className="ds-hover flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold flex-shrink-0 whitespace-nowrap"
+                  style={sel
+                    ? { background: 'var(--theme-primary)', color: '#fff', borderColor: 'transparent' }
+                    : { background: 'var(--card)', color: 'var(--ink-soft)', borderColor: 'var(--border)' }}>
+                  {m.logoUrl
+                    ? /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={m.logoUrl} alt="" className="w-4 h-4 rounded object-cover" />
+                    : <span aria-hidden>🏢</span>}
+                  {m.organizationName}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {/* Hub toggle: browse & book vs my reservations */}
         <div className="flex rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-sm font-bold mb-4">
           {([['browse', 'Réserver'], ['mine', 'Mes réservations']] as const).map(([t, label]) => (
