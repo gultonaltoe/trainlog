@@ -49,13 +49,18 @@ export default function ContextSwitcher() {
               ? { background: 'var(--theme-primary)', color: '#fff' }
               : { background: 'var(--track)', color: 'var(--sub)' }}>{sub}</span>
         </span>
-        <span className="text-[var(--ink-soft)] text-xs flex-shrink-0 ml-2">▾</span>
+        <span className="flex-shrink-0 ml-2 w-6 h-6 rounded-lg grid place-items-center" style={{ background: 'var(--accent-soft)' }} aria-hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--theme-primary)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+          </svg>
+        </span>
       </button>
 
       {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
 
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-2xl border border-[color:var(--border)] bg-[var(--card)] shadow-lg overflow-hidden">
+          <div className="px-4 pt-3 pb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--muted)]">Changer d’espace</div>
           <button onClick={() => choose({ type: 'personal' })}
             className="w-full text-left px-4 py-3 hover:bg-[var(--hover)] flex items-center justify-between gap-2 cursor-pointer">
             <span className="flex items-center gap-2 min-w-0">
