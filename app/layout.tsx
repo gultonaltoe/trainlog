@@ -8,7 +8,7 @@ import { AppProvider } from '@/components/AppContext'
 import GlobalContextBar from '@/components/GlobalContextBar'
 
 export const metadata: Metadata = {
-  title: 'Trainlift',
+  title: 'Nero CrossFit',
   description: 'Ton journal d\'entraînement intelligent pour CrossFit et sports fonctionnels.',
   manifest: '/manifest.json',
   appleWebApp: {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
   openGraph: {
-    title: 'Trainlift',
+    title: 'Nero CrossFit',
     description: 'Journal d\'entraînement CrossFit intelligent',
     type: 'website',
   },
