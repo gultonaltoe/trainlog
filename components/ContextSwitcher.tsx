@@ -51,21 +51,29 @@ export default function ContextSwitcher() {
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-2xl border border-[color:var(--border)] bg-[var(--card)] shadow-lg overflow-hidden">
           <button onClick={() => choose({ type: 'personal' })}
-            className="w-full text-left px-4 py-3 hover:bg-[var(--hover)] flex items-center gap-2 cursor-pointer">
-            <span>🏋️</span>
-            <span className="text-sm font-semibold text-[var(--ink)]">{PERSONAL_LABEL}</span>
+            className="w-full text-left px-4 py-3 hover:bg-[var(--hover)] flex items-center justify-between gap-2 cursor-pointer">
+            <span className="flex items-center gap-2 min-w-0">
+              <span>🏋️</span>
+              <span className="text-sm font-semibold text-[var(--ink)]">{PERSONAL_LABEL}</span>
+            </span>
+            {active.type === 'personal' && <span className="text-xs font-black flex-shrink-0" style={{ color: 'var(--theme-primary)' }}>✓</span>}
           </button>
-          {switchable.map(m => (
-            <button key={m.organizationId}
-              onClick={() => choose({ type: 'org', orgId: m.organizationId, orgName: m.organizationName, role: m.role })}
-              className="w-full text-left px-4 py-3 hover:bg-[var(--hover)] flex items-center justify-between gap-2 cursor-pointer">
-              <span className="flex items-center gap-2 min-w-0">
-                {boxIcon(m.logoUrl)}
-                <span className="text-sm font-semibold text-[var(--ink)] truncate">{m.organizationName}</span>
-              </span>
-              <span className="text-[11px] text-[var(--muted)] flex-shrink-0">{ROLE_LABEL[m.role]}</span>
-            </button>
-          ))}
+          {switchable.map(m => {
+            const isActive = active.type === 'org' && active.orgId === m.organizationId
+            return (
+              <button key={m.organizationId}
+                onClick={() => choose({ type: 'org', orgId: m.organizationId, orgName: m.organizationName, role: m.role })}
+                className="w-full text-left px-4 py-3 hover:bg-[var(--hover)] flex items-center justify-between gap-2 cursor-pointer">
+                <span className="flex items-center gap-2 min-w-0">
+                  {boxIcon(m.logoUrl)}
+                  <span className="text-sm font-semibold text-[var(--ink)] truncate">{m.organizationName}</span>
+                </span>
+                {isActive
+                  ? <span className="text-xs font-black flex-shrink-0" style={{ color: 'var(--theme-primary)' }}>✓</span>
+                  : <span className="text-[11px] text-[var(--muted)] flex-shrink-0">{ROLE_LABEL[m.role]}</span>}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

@@ -26,7 +26,7 @@ function monthCells(y: number, m: number): (number | null)[] {
 }
 
 export default function BookPage() {
-  const { active, memberships, loading: ctxLoading } = useAppContext()
+  const { active, memberships, loading: ctxLoading, setActive } = useAppContext()
   const router = useRouter()
   // Which box to book in: the active org if we're in one; else (athlete view)
   // a ?org= param, else the user's first active box membership. Lets owners/
@@ -44,6 +44,14 @@ export default function BookPage() {
   const orgName = box?.orgName ?? 'Box'
   const role = box?.role ?? 'member'
   useEffect(() => { if (!ctxLoading && !orgId) router.replace('/') }, [ctxLoading, orgId, router])
+  // Reservations is a box feature: make the box you're viewing the ACTIVE
+  // environment, so the header/switcher/theme all agree with the planning shown
+  // (no "Mon espace" header while browsing a specific box's classes).
+  useEffect(() => {
+    if (ctxLoading || !box) return
+    if (active.type === 'org' && active.orgId === box.orgId) return
+    setActive({ type: 'org', orgId: box.orgId, orgName: box.orgName, role: box.role })
+  }, [ctxLoading, box?.orgId])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const [view, setView] = useState<'week' | 'month'>('week')
   const [anchor, setAnchor] = useState(() => new Date())
