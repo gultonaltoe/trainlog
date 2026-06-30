@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import type { Role } from '@/lib/orgs'
 import { getSchedules, occurrencesInRange } from '@/lib/classes'
 import { getBookingsInRange, bookingKey } from '@/lib/reservations'
+import { useAppContext } from '@/components/AppContext'
 
 const ROLE_LABEL: Record<Role, string> = {
   owner: 'Propriétaire', coach: 'Coach', member: 'Membre',
@@ -15,6 +16,8 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 // The box-side dashboard, shown when the active view is a box and the user is
 // owner / coach. (Members in a box still see the athlete dashboard.)
 export default function CoachDashboard({ orgId, orgName, role }: { orgId: string; orgName: string; role: Role }) {
+  const { memberships } = useAppContext()
+  const logoUrl = memberships.find(m => m.organizationId === orgId)?.logoUrl ?? null
   const [memberCount, setMemberCount] = useState<number | null>(null)
   // This-week occupancy: booked seats vs capacity across the week's classes.
   const [week, setWeek] = useState<{ occupancy: number; bookings: number; classes: number } | null>(null)
@@ -64,12 +67,19 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <Link href="/box/profile" className="block pt-8 pb-4 hover:opacity-80 transition">
-          <span className="inline-block text-[10px] font-black uppercase tracking-wider text-white rounded-full px-2 py-0.5 mb-1.5"
+          <span className="inline-block text-[10px] font-black uppercase tracking-wider text-white rounded-full px-2 py-0.5 mb-2"
             style={{ background: 'var(--theme-primary)' }}>Gestion</span>
-          <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight flex items-center gap-1.5">
-            {orgName} <span className="text-[var(--border-strong)] text-lg">›</span>
-          </h1>
-          <p className="text-sm text-[var(--muted)] mt-0.5">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
+          <div className="flex items-center gap-2.5">
+            {logoUrl
+              ? /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={logoUrl} alt="" className="w-10 h-10 rounded-xl object-cover border border-[color:var(--border)] flex-shrink-0" />
+              : <span className="w-10 h-10 rounded-xl grid place-items-center text-base font-black text-white flex-shrink-0"
+                  style={{ background: 'var(--theme-primary)' }}>{orgName.charAt(0).toUpperCase()}</span>}
+            <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight flex items-center gap-1.5 min-w-0">
+              <span className="truncate">{orgName}</span> <span className="text-[var(--border-strong)] text-lg flex-shrink-0">›</span>
+            </h1>
+          </div>
+          <p className="text-sm text-[var(--muted)] mt-1">Espace {ROLE_LABEL[role].toLowerCase()} · voir les infos</p>
         </Link>
 
         <div className="grid grid-cols-3 gap-3 mb-4">

@@ -23,10 +23,11 @@ export default function GlobalContextBar() {
   const hasActiveBox = memberships.some(m => m.status === 'active')
 
   return (
-    <div style={hasActiveBox
-      ? { background: 'color-mix(in srgb, var(--theme-primary) 7%, var(--bg))', borderBottom: '2px solid color-mix(in srgb, var(--theme-primary) 45%, transparent)' }
-      : { background: 'var(--bg)' }}>
-      <div className="max-w-lg mx-auto px-4 pt-3 pb-1.5 flex items-center gap-2">
+    <div className="border-b border-[color:var(--border)]"
+      style={hasActiveBox
+        ? { background: 'color-mix(in srgb, var(--theme-primary) 5%, var(--card))' }
+        : { background: 'var(--card)' }}>
+      <div className="max-w-lg mx-auto px-4 pt-3 pb-2.5 flex items-center gap-2">
         <div className="flex-1 min-w-0">{hasActiveBox ? <ContextSwitcher /> : <Wordmark size={26} className="text-lg" />}</div>
         <ChangelogButton />
         {hasActiveBox && <NotificationBell />}

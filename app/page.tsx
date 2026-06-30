@@ -176,12 +176,12 @@ export default function Dashboard() {
           return (
             <div className="pt-8 pb-4">
               {box && (
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex items-center gap-2.5 mb-3">
                   {box.logoUrl
-                    ? <img src={box.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover" />
-                    : <span className="w-6 h-6 rounded-md grid place-items-center text-[11px] font-black text-white"
+                    ? <img src={box.logoUrl} alt="" className="w-10 h-10 rounded-xl object-cover border border-[color:var(--border)]" />
+                    : <span className="w-10 h-10 rounded-xl grid place-items-center text-base font-black text-white"
                         style={{ background: 'var(--theme-primary)' }}>{box.organizationName.charAt(0).toUpperCase()}</span>}
-                  <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--theme-primary)' }}>
+                  <span className="text-base font-black text-[var(--ink)] tracking-tight truncate">
                     {box.organizationName}
                   </span>
                 </div>
