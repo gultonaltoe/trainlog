@@ -170,13 +170,29 @@ export default function Dashboard() {
     <div className="bg-[var(--bg)]">
       <div className="max-w-lg mx-auto px-4 pb-4">
 
-        {/* Header */}
-        <div className="pt-8 pb-4">
-          {loading
-            ? <Skeleton className="h-7 w-40 mb-1.5" />
-            : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Bonjour {profile?.first_name} 👋</h1>}
-          <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
-        </div>
+        {/* Header — branded with the active box's identity when inside one. */}
+        {(() => {
+          const box = active.type === 'org' ? memberships.find(m => m.organizationId === active.orgId) : null
+          return (
+            <div className="pt-8 pb-4">
+              {box && (
+                <div className="flex items-center gap-2 mb-1.5">
+                  {box.logoUrl
+                    ? <img src={box.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover" />
+                    : <span className="w-6 h-6 rounded-md grid place-items-center text-[11px] font-black text-white"
+                        style={{ background: 'var(--theme-primary)' }}>{box.organizationName.charAt(0).toUpperCase()}</span>}
+                  <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--theme-primary)' }}>
+                    {box.organizationName}
+                  </span>
+                </div>
+              )}
+              {loading
+                ? <Skeleton className="h-7 w-40 mb-1.5" />
+                : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Bonjour {profile?.first_name} 👋</h1>}
+              <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
+            </div>
+          )
+        })()}
 
         {/* Join request: pending (ST-81) then approved (ST-80) */}
         <PendingBanner />
@@ -190,7 +206,7 @@ export default function Dashboard() {
               {hasBox && (
                 <Link href="/box/book"
                   className="flex-1 text-center text-white text-sm font-black py-3.5 rounded-2xl"
-                  style={{ background: 'var(--theme-primary)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+                  style={{ background: 'var(--theme-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent)' }}>
                   Réserver un cours
                 </Link>
               )}
@@ -198,7 +214,7 @@ export default function Dashboard() {
                 className={`${hasBox ? 'flex-1' : 'flex-1'} text-center py-3.5 rounded-2xl text-sm font-black ${hasBox ? '' : 'text-white'}`}
                 style={hasBox
                   ? { background: 'var(--secondary-bg)', color: 'var(--secondary-fg)' }
-                  : { background: 'var(--theme-primary)', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>
+                  : { background: 'var(--theme-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent)' }}>
                 Enregistrer une séance
               </Link>
             </div>
