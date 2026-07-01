@@ -257,6 +257,7 @@ export type Database = {
           id: string
           notes: string | null
           organization_id: string
+          score_type: string | null
           strength: string | null
           time_cap_min: number | null
           title: string | null
@@ -272,6 +273,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id: string
+          score_type?: string | null
           strength?: string | null
           time_cap_min?: number | null
           title?: string | null
@@ -287,6 +289,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id?: string
+          score_type?: string | null
           strength?: string | null
           time_cap_min?: number | null
           title?: string | null
@@ -294,6 +297,81 @@ export type Database = {
           warmup?: string | null
           wod_description?: string | null
           wod_format?: string | null
+        }
+        Relationships: []
+      }
+      benchmarks: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          score_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          score_type: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          score_type?: string
+        }
+        Relationships: []
+      }
+      wod_scores: {
+        Row: {
+          benchmark_id: string | null
+          created_at: string | null
+          id: string
+          note: string | null
+          organization_id: string
+          rx: boolean
+          score_display: string
+          score_type: string
+          score_value: number
+          updated_at: string | null
+          user_id: string
+          wod_date: string | null
+        }
+        Insert: {
+          benchmark_id?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          organization_id: string
+          rx?: boolean
+          score_display: string
+          score_type: string
+          score_value: number
+          updated_at?: string | null
+          user_id: string
+          wod_date?: string | null
+        }
+        Update: {
+          benchmark_id?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          organization_id?: string
+          rx?: boolean
+          score_display?: string
+          score_type?: string
+          score_value?: number
+          updated_at?: string | null
+          user_id?: string
+          wod_date?: string | null
         }
         Relationships: []
       }

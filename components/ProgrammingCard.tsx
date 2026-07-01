@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { getProgramming, hasContent, type Programming } from '@/lib/programming'
 import { getOrganization, type ProgrammingSettings } from '@/lib/orgs'
 
@@ -80,6 +81,13 @@ export default function ProgrammingCard({ orgId, orgName }: { orgId: string; org
         style={{ background: 'var(--theme-primary, #F97316)' }}>
         Logger ce WOD
       </button>
+      {prog.scoreType && (
+        <Link href="/box/leaderboards"
+          className="mt-2 block w-full text-center py-2.5 rounded-xl text-sm font-black"
+          style={{ background: 'var(--secondary-bg)', color: 'var(--secondary-fg)' }}>
+          🏆 Classement du jour
+        </Link>
+      )}
     </div>
   )
 }

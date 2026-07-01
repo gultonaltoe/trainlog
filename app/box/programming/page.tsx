@@ -2,9 +2,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getProgramming, upsertProgramming, emptyProgramming, type Programming } from '@/lib/programming'
+import { SCORE_TYPE_OPTIONS, type ScoreType } from '@/lib/leaderboard'
 import ImagePicker from '@/components/ImagePicker'
 import { toast } from '@/lib/toast'
-import { PageHeader, Card, Field, Button, DatePicker, ui } from '@/components/ui'
+import { PageHeader, Card, Field, Button, DatePicker, Select, ui } from '@/components/ui'
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
@@ -130,6 +131,12 @@ export default function ProgrammingPage() {
               <Field label="WOD / Metcon">
                 <textarea rows={4} className={ui.field} value={p.wodDescription} disabled={!canEdit}
                   placeholder={'21-15-9\nThrusters 43kg\nPull-ups'} onChange={e => upd({ wodDescription: e.target.value })} />
+              </Field>
+              <Field label="Type de score (classement)" hint="Active le classement du jour. Temps = le plus rapide gagne ; Reps/Charge/Rounds = le plus élevé gagne.">
+                <Select<ScoreType> value={p.scoreType ?? ''} disabled={!canEdit}
+                  placeholder="Aucun classement"
+                  onChange={v => upd({ scoreType: v })}
+                  options={SCORE_TYPE_OPTIONS.map(([value, label]) => ({ value, label }))} />
               </Field>
               <Field label="Notes (option.)">
                 <textarea rows={2} className={ui.field} value={p.notes} disabled={!canEdit}
