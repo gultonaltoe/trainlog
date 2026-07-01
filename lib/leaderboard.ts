@@ -97,14 +97,94 @@ type LbRow = {
   score_value: number; score_display: string; rx: boolean; note: string | null
 }
 
+function mapRows(data: LbRow[] | null): LeaderboardEntry[] {
+  return (data ?? []).map(r => ({
+    userId: r.user_id, firstName: r.first_name, scoreType: r.score_type,
+    scoreValue: r.score_value, scoreDisplay: r.score_display, rx: r.rx, note: r.note,
+  }))
+}
+
 /** Ranked leaderboard for a day's WOD (names via SECURITY DEFINER RPC). */
 export async function getWodLeaderboard(orgId: string, date: string): Promise<LeaderboardEntry[]> {
   const call = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) =>
     Promise<{ data: LbRow[] | null; error: { message: string } | null }>
   const { data, error } = await call.call(supabase, 'get_wod_leaderboard', { p_org_id: orgId, p_date: date })
   if (error) throw new Error(error.message)
-  return (data ?? []).map(r => ({
-    userId: r.user_id, firstName: r.first_name, scoreType: r.score_type,
-    scoreValue: r.score_value, scoreDisplay: r.score_display, rx: r.rx, note: r.note,
-  }))
+  return mapRows(data)
+}
+
+// ── Benchmarks (named workouts, all-time PR per member) ──────────────────────
+
+export type Benchmark = { id: string; name: string; scoreType: ScoreType; description: string | null }
+
+/** Benchmarks defined for a box, alphabetical. */
+export async function getBenchmarks(orgId: string): Promise<Benchmark[]> {
+  const { data, error } = await supabase.from('benchmarks')
+    .select('id, name, score_type, description').eq('organization_id', orgId).order('name')
+  if (error) throw new Error(`getBenchmarks: ${error.message}`)
+  return ((data ?? []) as { id: string; name: string; score_type: ScoreType; description: string | null }[])
+    .map(b => ({ id: b.id, name: b.name, scoreType: b.score_type, description: b.description }))
+}
+
+/** Coach/owner creates a benchmark. */
+export async function createBenchmark(orgId: string, name: string, scoreType: ScoreType, description: string): Promise<void> {
+  const uid = await getSessionUserId()
+  const { error } = await supabase.from('benchmarks').insert({
+    organization_id: orgId, name: name.trim(), score_type: scoreType, description: description.trim() || null, created_by: uid,
+  })
+  if (error) throw new Error(error.message)
+}
+
+/** Coach/owner deletes a benchmark (cascades its scores). */
+export async function deleteBenchmark(id: string): Promise<void> {
+  const { error } = await supabase.from('benchmarks').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+/** The current user's score for a benchmark (to prefill), or null. */
+export async function getMyBenchmarkScore(benchmarkId: string): Promise<MyScore> {
+  const uid = await getSessionUserId()
+  if (!uid) return null
+  const { data } = await supabase.from('wod_scores')
+    .select('id, score_display, rx, note').eq('benchmark_id', benchmarkId).eq('user_id', uid).maybeSingle()
+  if (!data) return null
+  const r = data as { id: string; score_display: string; rx: boolean; note: string | null }
+  return { id: r.id, scoreDisplay: r.score_display, rx: r.rx, note: r.note }
+}
+
+/** Upsert the current user's score for a benchmark (one row per member). */
+export async function logBenchmarkScore(
+  orgId: string, benchmarkId: string, scoreType: ScoreType,
+  value: number, display: string, rx: boolean, note: string,
+): Promise<void> {
+  const uid = await getSessionUserId()
+  if (!uid) throw new Error('Session expirée, reconnecte-toi')
+  const existing = await supabase.from('wod_scores').select('id')
+    .eq('benchmark_id', benchmarkId).eq('user_id', uid).maybeSingle()
+  const row = {
+    organization_id: orgId, user_id: uid, wod_date: null, benchmark_id: benchmarkId,
+    score_type: scoreType, score_value: value, score_display: display,
+    rx, note: note.trim() || null, updated_at: new Date().toISOString(),
+  }
+  const { error } = existing.data
+    ? await supabase.from('wod_scores').update(row).eq('id', (existing.data as { id: string }).id)
+    : await supabase.from('wod_scores').insert(row)
+  if (error) throw new Error(error.message)
+}
+
+/** Delete the current user's score for a benchmark. */
+export async function deleteMyBenchmarkScore(benchmarkId: string): Promise<void> {
+  const uid = await getSessionUserId()
+  if (!uid) return
+  const { error } = await supabase.from('wod_scores').delete().eq('benchmark_id', benchmarkId).eq('user_id', uid)
+  if (error) throw new Error(error.message)
+}
+
+/** Ranked all-time leaderboard for a benchmark (names via SECURITY DEFINER RPC). */
+export async function getBenchmarkLeaderboard(orgId: string, benchmarkId: string): Promise<LeaderboardEntry[]> {
+  const call = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) =>
+    Promise<{ data: LbRow[] | null; error: { message: string } | null }>
+  const { data, error } = await call.call(supabase, 'get_benchmark_leaderboard', { p_org_id: orgId, p_benchmark_id: benchmarkId })
+  if (error) throw new Error(error.message)
+  return mapRows(data)
 }

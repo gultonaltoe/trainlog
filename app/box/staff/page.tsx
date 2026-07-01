@@ -11,7 +11,7 @@ import { Select, DatePicker, Field, BackButton } from '@/components/ui'
 import { toast } from '@/lib/toast'
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Propriétaire', coach: 'Coach', member: 'Membre' }
-const EMP_LABEL: Record<EmploymentStatus, string> = { active: 'Actif', on_leave: 'Congé', sick: 'Maladie', inactive: 'Inactif' }
+const EMP_LABEL: Record<EmploymentStatus, string> = { active: 'Actif', stagiaire: 'Stagiaire', on_leave: 'Congé', sick: 'Maladie', inactive: 'Inactif' }
 const COACH_ROLES: Role[] = ['owner', 'coach']
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
