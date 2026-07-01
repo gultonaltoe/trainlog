@@ -6,8 +6,9 @@ import {
   getWodLeaderboard, getMyWodScore, logWodScore, deleteMyWodScore,
   getBenchmarks, createBenchmark, deleteBenchmark,
   getBenchmarkLeaderboard, getMyBenchmarkScore, logBenchmarkScore, deleteMyBenchmarkScore,
+  toggleKudo, getScoreComments, addComment, deleteComment,
   parseScore, SCORE_TYPE_LABEL, SCORE_TYPE_OPTIONS,
-  type LeaderboardEntry, type ScoreType, type MyScore, type Benchmark,
+  type LeaderboardEntry, type ScoreType, type MyScore, type Benchmark, type ScoreComment,
 } from '@/lib/leaderboard'
 import { getSessionUserId } from '@/lib/auth'
 import { toast } from '@/lib/toast'
@@ -45,25 +46,82 @@ function ScoreForm({ scoreType, mine, busy, onSubmit, onRemove }: {
   )
 }
 
-function Ranking({ rows, uid }: { rows: LeaderboardEntry[]; uid: string | null }) {
+function Ranking({ rows, uid, orgId }: { rows: LeaderboardEntry[]; uid: string | null; orgId: string }) {
   if (rows.length === 0) return <p className="text-sm text-[var(--border-strong)] py-2">Aucun score encore. Sois le premier 🔥</p>
+  return <div className="space-y-1.5">{rows.map((r, i) => <RankRow key={r.scoreId} entry={r} rank={i} uid={uid} orgId={orgId} />)}</div>
+}
+
+function RankRow({ entry, rank, uid, orgId }: { entry: LeaderboardEntry; rank: number; uid: string | null; orgId: string }) {
+  const me = entry.userId === uid
+  const [kudos, setKudos] = useState(entry.kudos)
+  const [iKudoed, setIKudoed] = useState(entry.iKudoed)
+  const [nComments, setNComments] = useState(entry.comments)
+  const [open, setOpen] = useState(false)
+  const [thread, setThread] = useState<ScoreComment[] | null>(null)
+  const [draft, setDraft] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const kudo = async () => {
+    const next = !iKudoed
+    setIKudoed(next); setKudos(k => k + (next ? 1 : -1))
+    try { await toggleKudo(orgId, entry.scoreId, next) }
+    catch { setIKudoed(!next); setKudos(k => k + (next ? -1 : 1)); toast.error('Erreur') }
+  }
+  const expand = async () => {
+    const next = !open; setOpen(next)
+    if (next && thread === null) { try { setThread(await getScoreComments(entry.scoreId)) } catch { setThread([]) } }
+  }
+  const post = async () => {
+    if (!draft.trim()) return
+    setBusy(true)
+    try { await addComment(orgId, entry.scoreId, draft); setDraft(''); setThread(await getScoreComments(entry.scoreId)); setNComments(n => n + 1) }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+    setBusy(false)
+  }
+  const del = async (id: string) => {
+    try { await deleteComment(id); setThread(t => (t ?? []).filter(c => c.id !== id)); setNComments(n => Math.max(0, n - 1)) }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
+  }
+
   return (
-    <div className="space-y-1.5">
-      {rows.map((r, i) => {
-        const me = r.userId === uid
-        return (
-          <div key={r.userId} className="flex items-center gap-3 rounded-xl border p-3"
-            style={me ? { borderColor: 'var(--theme-primary)', background: 'var(--accent-soft)' } : { borderColor: 'var(--border)', background: 'var(--card)' }}>
-            <span className="w-7 text-center text-sm font-black flex-shrink-0" style={{ color: i < 3 ? undefined : 'var(--muted)' }}>{medal(i)}</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-[var(--ink)] truncate">{r.firstName}{me && <span className="text-[var(--muted)] font-semibold"> · toi</span>}</p>
-              {r.note && <p className="text-xs text-[var(--muted)] truncate">{r.note}</p>}
-            </div>
-            {!r.rx && <span className="text-[10px] font-bold text-[var(--sub)] bg-[var(--track)] rounded-full px-2 py-0.5 flex-shrink-0">Scaled</span>}
-            <span className="text-base font-black text-[var(--ink)] flex-shrink-0 tabular-nums">{r.scoreDisplay}</span>
+    <div className="rounded-xl border" style={me ? { borderColor: 'var(--theme-primary)', background: 'var(--accent-soft)' } : { borderColor: 'var(--border)', background: 'var(--card)' }}>
+      <div className="flex items-center gap-3 p-3">
+        <span className="w-7 text-center text-sm font-black flex-shrink-0" style={{ color: rank < 3 ? undefined : 'var(--muted)' }}>{medal(rank)}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-[var(--ink)] truncate">{entry.firstName}{me && <span className="text-[var(--muted)] font-semibold"> · toi</span>}</p>
+          {entry.note && <p className="text-xs text-[var(--muted)] truncate">{entry.note}</p>}
+        </div>
+        {!entry.rx && <span className="text-[10px] font-bold text-[var(--sub)] bg-[var(--track)] rounded-full px-2 py-0.5 flex-shrink-0">Scaled</span>}
+        <span className="text-base font-black text-[var(--ink)] flex-shrink-0 tabular-nums">{entry.scoreDisplay}</span>
+      </div>
+      {/* Social actions */}
+      <div className="flex items-center gap-4 px-3 pb-2 -mt-1">
+        <button onClick={kudo} className="flex items-center gap-1 text-xs font-bold cursor-pointer"
+          style={{ color: iKudoed ? 'var(--theme-primary)' : 'var(--muted)' }}>
+          👊 {kudos > 0 ? kudos : ''}
+        </button>
+        <button onClick={expand} className="flex items-center gap-1 text-xs font-bold text-[var(--muted)] cursor-pointer">
+          💬 {nComments > 0 ? nComments : ''}
+        </button>
+      </div>
+      {open && (
+        <div className="px-3 pb-3 space-y-2 border-t border-[color:var(--border)] pt-2">
+          {thread === null ? <p className="text-xs text-[var(--muted)]">Chargement…</p>
+            : thread.length === 0 ? <p className="text-xs text-[var(--muted)]">Aucun commentaire.</p>
+            : thread.map(c => (
+              <div key={c.id} className="flex items-start gap-2">
+                <p className="text-xs text-[var(--ink-soft)] flex-1 min-w-0"><span className="font-bold text-[var(--ink)]">{c.firstName}</span> {c.body}</p>
+                {c.userId === uid && <button onClick={() => del(c.id)} className="text-[10px] text-[var(--muted)] hover:text-red-500 cursor-pointer flex-shrink-0">✕</button>}
+              </div>
+            ))}
+          <div className="flex gap-2 pt-1">
+            <input value={draft} onChange={e => setDraft(e.target.value)} placeholder="Un mot d'encouragement…"
+              onKeyDown={e => { if (e.key === 'Enter') void post() }}
+              className="flex-1 rounded-lg border border-[color:var(--border-strong)] bg-[var(--card)] px-2.5 py-1.5 text-xs text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]" />
+            <button onClick={post} disabled={busy || !draft.trim()} className="text-xs font-black cursor-pointer disabled:opacity-40" style={{ color: 'var(--theme-primary)' }}>Envoyer</button>
           </div>
-        )
-      })}
+        </div>
+      )}
     </div>
   )
 }
@@ -155,7 +213,7 @@ function WodTab({ orgId, uid, busy, setBusy }: { orgId: string; uid: string | nu
             )}
             <ScoreForm key={`wod-${date}-${mine?.id ?? 'none'}`} scoreType={scoreType} mine={mine} busy={busy} onSubmit={submit} onRemove={remove} />
             <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-2">Classement · {rows.length}</p>
-            <Ranking rows={rows} uid={uid} />
+            <Ranking rows={rows} uid={uid} orgId={orgId} />
           </>
         )}
     </>
@@ -229,7 +287,7 @@ function BenchTab({ orgId, uid, isCoach, busy, setBusy }: { orgId: string; uid: 
           <>
             <ScoreForm key={`bench-${sel.id}-${mine?.id ?? 'none'}`} scoreType={sel.scoreType} mine={mine} busy={busy} onSubmit={submit} onRemove={removeScore} />
             <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider mb-2">Classement · {rows.length}</p>
-            <Ranking rows={rows} uid={uid} />
+            <Ranking rows={rows} uid={uid} orgId={orgId} />
           </>
         )}
       </>

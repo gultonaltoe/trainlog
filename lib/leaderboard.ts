@@ -16,6 +16,7 @@ export const SCORE_TYPE_OPTIONS: [ScoreType, string][] = [
 ]
 
 export type LeaderboardEntry = {
+  scoreId: string
   userId: string
   firstName: string
   scoreType: ScoreType
@@ -23,7 +24,12 @@ export type LeaderboardEntry = {
   scoreDisplay: string
   rx: boolean
   note: string | null
+  kudos: number
+  iKudoed: boolean
+  comments: number
 }
+
+export type ScoreComment = { id: string; userId: string; firstName: string; body: string; createdAt: string }
 
 export type MyScore = { id: string; scoreDisplay: string; rx: boolean; note: string | null } | null
 
@@ -93,15 +99,55 @@ export async function deleteMyWodScore(orgId: string, date: string): Promise<voi
 }
 
 type LbRow = {
-  user_id: string; first_name: string; score_type: ScoreType
+  score_id: string; user_id: string; first_name: string; score_type: ScoreType
   score_value: number; score_display: string; rx: boolean; note: string | null
+  kudos: number; i_kudoed: boolean; comments: number
 }
 
 function mapRows(data: LbRow[] | null): LeaderboardEntry[] {
   return (data ?? []).map(r => ({
-    userId: r.user_id, firstName: r.first_name, scoreType: r.score_type,
+    scoreId: r.score_id, userId: r.user_id, firstName: r.first_name, scoreType: r.score_type,
     scoreValue: r.score_value, scoreDisplay: r.score_display, rx: r.rx, note: r.note,
+    kudos: r.kudos ?? 0, iKudoed: r.i_kudoed ?? false, comments: r.comments ?? 0,
   }))
+}
+
+// ── Social: kudos (fist-bumps) + comments on a score (ST-103) ────────────────
+
+/** Add or remove the current user's kudo on a score. */
+export async function toggleKudo(orgId: string, scoreId: string, on: boolean): Promise<void> {
+  const uid = await getSessionUserId()
+  if (!uid) throw new Error('Session expirée')
+  if (on) {
+    const { error } = await supabase.from('score_kudos').insert({ organization_id: orgId, score_id: scoreId, user_id: uid })
+    if (error && !error.message.includes('duplicate')) throw new Error(error.message)
+  } else {
+    const { error } = await supabase.from('score_kudos').delete().eq('score_id', scoreId).eq('user_id', uid)
+    if (error) throw new Error(error.message)
+  }
+}
+
+/** Comment thread for a score (author names via SECURITY DEFINER RPC). */
+export async function getScoreComments(scoreId: string): Promise<ScoreComment[]> {
+  const call = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) =>
+    Promise<{ data: { id: string; user_id: string; first_name: string; body: string; created_at: string }[] | null; error: { message: string } | null }>
+  const { data, error } = await call.call(supabase, 'get_score_comments', { p_score_id: scoreId })
+  if (error) throw new Error(error.message)
+  return (data ?? []).map(c => ({ id: c.id, userId: c.user_id, firstName: c.first_name, body: c.body, createdAt: c.created_at }))
+}
+
+/** Post a comment on a score. */
+export async function addComment(orgId: string, scoreId: string, body: string): Promise<void> {
+  const uid = await getSessionUserId()
+  if (!uid) throw new Error('Session expirée')
+  const { error } = await supabase.from('score_comments').insert({ organization_id: orgId, score_id: scoreId, user_id: uid, body: body.trim() })
+  if (error) throw new Error(error.message)
+}
+
+/** Delete a comment (own, or moderated by owner/coach — enforced by RLS). */
+export async function deleteComment(id: string): Promise<void> {
+  const { error } = await supabase.from('score_comments').delete().eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 /** Ranked leaderboard for a day's WOD (names via SECURITY DEFINER RPC). */

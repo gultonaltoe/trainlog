@@ -330,6 +330,18 @@ export type Database = {
         }
         Relationships: []
       }
+      score_kudos: {
+        Row: { created_at: string | null; id: string; organization_id: string; score_id: string; user_id: string }
+        Insert: { created_at?: string | null; id?: string; organization_id: string; score_id: string; user_id: string }
+        Update: { created_at?: string | null; id?: string; organization_id?: string; score_id?: string; user_id?: string }
+        Relationships: []
+      }
+      score_comments: {
+        Row: { body: string; created_at: string | null; id: string; organization_id: string; score_id: string; user_id: string }
+        Insert: { body: string; created_at?: string | null; id?: string; organization_id: string; score_id: string; user_id: string }
+        Update: { body?: string; created_at?: string | null; id?: string; organization_id?: string; score_id?: string; user_id?: string }
+        Relationships: []
+      }
       wod_scores: {
         Row: {
           benchmark_id: string | null
