@@ -16,6 +16,8 @@ export default function BoxSettingsPage() {
             hint="Liste d’attente, annulation, fenêtre de réservation" />
           <NavRow href="/box/settings/types" icon="🏋️" title="Types de séances"
             hint="Durée et places par défaut de tes cours" />
+          <NavRow href="/box/settings/programming" icon="📝" title="Programmation"
+            hint="Visibilité du WOD pour tes membres" />
           <NavRow href="/box/settings/brand" icon="🎨" title="Marque & politique"
             hint="Logo, couleur, politique d’annulation" />
         </div>

@@ -2,10 +2,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
 import { getProgramming, upsertProgramming, emptyProgramming, type Programming } from '@/lib/programming'
-import { getOrganization, updateProgrammingSettings, DEFAULT_PROGRAMMING_SETTINGS, type ProgrammingSettings } from '@/lib/orgs'
 import ImagePicker from '@/components/ImagePicker'
 import { toast } from '@/lib/toast'
-import { PageHeader, Card, Field, Button, DatePicker, TimePicker, Segmented, ui } from '@/components/ui'
+import { PageHeader, Card, Field, Button, DatePicker, ui } from '@/components/ui'
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
@@ -18,8 +17,6 @@ export default function ProgrammingPage() {
   const [p, setP] = useState<Programming>(() => emptyProgramming(iso(new Date())))
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [vis, setVis] = useState<ProgrammingSettings>(DEFAULT_PROGRAMMING_SETTINGS)
-  const [visSaving, setVisSaving] = useState(false)
 
   const load = useCallback(async () => {
     if (!orgId) return
@@ -29,15 +26,6 @@ export default function ProgrammingPage() {
     setLoading(false)
   }, [orgId, date])
   useEffect(() => { void load() }, [load])
-  useEffect(() => { if (orgId) getOrganization(orgId).then(o => setVis(o.programming)).catch(() => {}) }, [orgId])
-
-  const saveVis = async () => {
-    if (!orgId) return
-    setVisSaving(true)
-    try { await updateProgrammingSettings(orgId, vis); toast.success('Visibilité enregistrée') }
-    catch (e) { toast.error(e instanceof Error ? e.message : 'Erreur') }
-    setVisSaving(false)
-  }
 
   const upd = (patch: Partial<Programming>) => setP(prev => ({ ...prev, ...patch }))
 
@@ -84,19 +72,12 @@ export default function ProgrammingPage() {
         <PageHeader title="Programmation" subtitle="Le WOD du jour, visible par tes membres" backHref="/" />
 
         {canEdit && (
-          <Card className="p-4 mb-4 space-y-3">
-            <Field label="Visibilité du WOD pour les membres">
-              <Segmented<'before' | 'after'> value={vis.wodVisibility}
-                onChange={v => setVis(s => ({ ...s, wodVisibility: v }))}
-                options={[['before', 'Avant le cours'], ['after', 'À partir d’une heure']]} />
-            </Field>
-            {vis.wodVisibility === 'after' && (
-              <Field label="Dévoilé à partir de" hint="Les membres ne voient le WOD qu’après cette heure.">
-                <TimePicker value={vis.revealTime} onChange={t => setVis(s => ({ ...s, revealTime: t }))} />
-              </Field>
-            )}
-            <Button variant="secondary" onClick={saveVis} disabled={visSaving}>{visSaving ? '…' : 'Enregistrer la visibilité'}</Button>
-          </Card>
+          <div className="flex justify-end mb-3">
+            {/* Foundations for CSV/Excel import (ST-96) — mapped to classes. Stub for now. */}
+            <Button variant="secondary" onClick={() => toast.info('Import CSV/Excel — bientôt disponible')}>
+              ⬆︎ Importer
+            </Button>
+          </div>
         )}
 
         <div className="mb-4">
