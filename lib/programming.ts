@@ -24,18 +24,27 @@ export function hasContent(p: Programming | null): boolean {
   return !!p && !!(p.title || p.warmup || p.strength || p.wodDescription || p.notes)
 }
 
+const SELECT_COLS = 'id, date, title, warmup, strength, wod_format, wod_description, time_cap_min, notes, score_type'
+type Row = { id: string; date: string; title: string | null; warmup: string | null; strength: string | null; wod_format: string | null; wod_description: string | null; time_cap_min: number | null; notes: string | null; score_type: ScoreType | null }
+const fromRow = (d: Row): Programming => ({
+  id: d.id, date: d.date, title: d.title ?? '', warmup: d.warmup ?? '', strength: d.strength ?? '',
+  wodFormat: d.wod_format ?? '', wodDescription: d.wod_description ?? '', timeCapMin: d.time_cap_min, notes: d.notes ?? '',
+  scoreType: d.score_type ?? null,
+})
+
 export async function getProgramming(orgId: string, date: string): Promise<Programming | null> {
-  const { data, error } = await supabase.from('box_programming')
-    .select('id, date, title, warmup, strength, wod_format, wod_description, time_cap_min, notes, score_type')
+  const { data, error } = await supabase.from('box_programming').select(SELECT_COLS)
     .eq('organization_id', orgId).eq('date', date).maybeSingle()
   if (error) throw new Error(`getProgramming: ${error.message}`)
-  if (!data) return null
-  const d = data as typeof data & { score_type: ScoreType | null }
-  return {
-    id: d.id, date: d.date, title: d.title ?? '', warmup: d.warmup ?? '', strength: d.strength ?? '',
-    wodFormat: d.wod_format ?? '', wodDescription: d.wod_description ?? '', timeCapMin: d.time_cap_min, notes: d.notes ?? '',
-    scoreType: d.score_type ?? null,
-  }
+  return data ? fromRow(data as unknown as Row) : null
+}
+
+/** All programming rows in a date range (for the week board). */
+export async function getProgrammingRange(orgId: string, fromISO: string, toISO: string): Promise<Programming[]> {
+  const { data, error } = await supabase.from('box_programming').select(SELECT_COLS)
+    .eq('organization_id', orgId).gte('date', fromISO).lte('date', toISO).order('date')
+  if (error) throw new Error(`getProgrammingRange: ${error.message}`)
+  return ((data ?? []) as unknown as Row[]).map(fromRow)
 }
 
 export async function upsertProgramming(orgId: string, p: Programming): Promise<void> {

@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { useBoxGuard } from '@/components/useBoxGuard'
-import { getProgramming, upsertProgramming, emptyProgramming, type Programming } from '@/lib/programming'
+import { getProgramming, getProgrammingRange, upsertProgramming, emptyProgramming, type Programming } from '@/lib/programming'
 import { SCORE_TYPE_OPTIONS, type ScoreType } from '@/lib/leaderboard'
 import ImagePicker from '@/components/ImagePicker'
 import { toast } from '@/lib/toast'
@@ -18,6 +18,7 @@ export default function ProgrammingPage() {
   const [p, setP] = useState<Programming>(() => emptyProgramming(iso(new Date())))
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [view, setView] = useState<'week' | 'day'>('week')
 
   const load = useCallback(async () => {
     if (!orgId) return
@@ -69,17 +70,25 @@ export default function ProgrammingPage() {
 
   return (
     <div className="bg-[var(--bg)] min-h-screen">
-      <div className="max-w-lg mx-auto px-4 pb-10">
+      <div className={`${view === 'week' ? 'max-w-5xl' : 'max-w-lg'} mx-auto px-4 pb-10`}>
         <PageHeader title="Programmation" subtitle="Le WOD du jour, visible par tes membres" backHref="/" />
 
-        {canEdit && (
-          <div className="flex justify-end mb-3">
-            {/* Foundations for CSV/Excel import (ST-96) — mapped to classes. Stub for now. */}
-            <Button variant="secondary" onClick={() => toast.info('Import CSV/Excel — bientôt disponible')}>
-              ⬆︎ Importer
-            </Button>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex flex-1 rounded-xl overflow-hidden border border-[color:var(--border)] bg-[var(--card)] text-sm font-bold">
+            {([['week', 'Semaine'], ['day', 'Jour']] as const).map(([v, label]) => (
+              <button key={v} onClick={() => setView(v)} className="flex-1 py-2.5 cursor-pointer"
+                style={view === v ? { background: 'var(--ink)', color: 'var(--card)' } : { color: 'var(--sub)' }}>{label}</button>
+            ))}
           </div>
-        )}
+          {canEdit && (
+            /* Foundations for CSV/Excel import (ST-96) — mapped to classes. Stub for now. */
+            <Button variant="secondary" onClick={() => toast.info('Import CSV/Excel — bientôt disponible')}>⬆︎ Importer</Button>
+          )}
+        </div>
+
+        {view === 'week' ? (
+          <WeekBoard orgId={orgId!} canEdit={canEdit} onPick={d => { setDate(d); setView('day') }} />
+        ) : (<>
 
         <div className="mb-4">
           <Field label="Jour"><DatePicker value={date} onChange={setDate} /></Field>
@@ -147,7 +156,86 @@ export default function ProgrammingPage() {
             {canEdit && <Button full onClick={save} disabled={saving}>{saving ? 'Enregistrement…' : 'Publier la programmation'}</Button>}
           </div>
         )}
+        </>)}
       </div>
     </div>
+  )
+}
+
+// ── Week board (ST-124) — the week at a glance, colored blocks per day. ──────
+const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const mondayOf = (d: Date) => { const m = new Date(d); m.setDate(d.getDate() - ((d.getDay() + 6) % 7)); m.setHours(0, 0, 0, 0); return m }
+const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(d.getDate() + n); return x }
+
+function blocksOf(p: Programming): { label: string; text: string; bg: string; fg: string }[] {
+  const b: { label: string; text: string; bg: string; fg: string }[] = []
+  if (p.warmup) b.push({ label: 'Warm-up', text: p.warmup, bg: '#FEF3C7', fg: '#92400E' })
+  if (p.strength) b.push({ label: 'Force / Skill', text: p.strength, bg: '#EDE9FE', fg: '#5B21B6' })
+  if (p.wodFormat || p.wodDescription) b.push({ label: 'WOD' + (p.wodFormat ? ` · ${p.wodFormat}` : ''), text: p.wodDescription, bg: '#DBEAFE', fg: '#1E40AF' })
+  if (p.notes) b.push({ label: 'Notes', text: p.notes, bg: '#F1F5F9', fg: '#334155' })
+  return b
+}
+
+function WeekBoard({ orgId, canEdit, onPick }: { orgId: string; canEdit: boolean; onPick: (iso: string) => void }) {
+  const [anchor, setAnchor] = useState(() => new Date())
+  const monday = mondayOf(anchor)
+  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i))
+  const fromISO = iso(days[0]); const toISO = iso(days[6])
+  const [map, setMap] = useState<Record<string, Programming>>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let alive = true; setLoading(true)
+    getProgrammingRange(orgId, fromISO, toISO)
+      .then(rows => { if (!alive) return; const m: Record<string, Programming> = {}; rows.forEach(r => { m[r.date] = r }); setMap(m); setLoading(false) })
+      .catch(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [orgId, fromISO, toISO])
+
+  const todayISO = iso(new Date())
+  const label = `${days[0].getDate()} – ${days[6].getDate()} ${days[6].toLocaleDateString('fr-FR', { month: 'long' })}`
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={() => setAnchor(a => addDays(a, -7))} className="ds-hover w-9 h-9 rounded-xl border border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]">‹</button>
+        <div className="text-center">
+          <p className="text-sm font-black text-[var(--ink)] capitalize">{label}</p>
+          <button onClick={() => setAnchor(new Date())} className="text-[11px] font-bold text-[var(--sub)] cursor-pointer">Aujourd’hui</button>
+        </div>
+        <button onClick={() => setAnchor(a => addDays(a, 7))} className="ds-hover w-9 h-9 rounded-xl border border-[color:var(--border)] bg-[var(--card)] text-[var(--ink-soft)]">›</button>
+      </div>
+      {loading ? <p className="text-sm text-[var(--muted)] text-center py-10">Chargement…</p> : (
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+          {days.map((d, i) => {
+            const ds = iso(d); const p = map[ds]; const blocks = p ? blocksOf(p) : []; const isToday = ds === todayISO
+            return (
+              <div key={ds} onClick={() => canEdit && onPick(ds)}
+                className={`flex-shrink-0 w-[168px] rounded-2xl border bg-[var(--card)] p-2.5 ${canEdit ? 'cursor-pointer ds-hover' : ''}`}
+                style={{ borderColor: isToday ? 'var(--theme-primary)' : 'var(--border)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-black text-[var(--ink)]">{WEEKDAYS[i]} {d.getDate()}</p>
+                  {isToday && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--theme-primary)' }} />}
+                </div>
+                {blocks.length === 0 ? (
+                  <p className="text-[11px] text-[var(--border-strong)] py-4 text-center">{canEdit ? '+ Ajouter' : '—'}</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {p?.title && <p className="text-[11px] font-black text-[var(--ink)] truncate">{p.title}</p>}
+                    {blocks.map((b, bi) => (
+                      <div key={bi} className="rounded-lg px-2 py-1.5" style={{ background: b.bg }}>
+                        <p className="text-[9px] font-black uppercase tracking-wide" style={{ color: b.fg }}>{b.label}</p>
+                        <p className="text-[11px] leading-snug whitespace-pre-line line-clamp-4" style={{ color: b.fg }}>{b.text}</p>
+                      </div>
+                    ))}
+                    {p?.scoreType && <p className="text-[9px] font-bold" style={{ color: 'var(--theme-primary)' }}>🏆 Classé</p>}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </>
   )
 }
