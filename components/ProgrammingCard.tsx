@@ -88,6 +88,10 @@ export default function ProgrammingCard({ orgId, orgName }: { orgId: string; org
           🏆 Classement du jour
         </Link>
       )}
+      <Link href="/timer"
+        className="mt-2 block w-full text-center py-2.5 rounded-xl text-sm font-black border border-[color:var(--border)] text-[var(--ink-soft)]">
+        ⏱ Timer
+      </Link>
     </div>
   )
 }

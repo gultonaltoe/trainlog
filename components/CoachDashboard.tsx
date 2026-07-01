@@ -59,6 +59,7 @@ export default function CoachDashboard({ orgId, orgName, role }: { orgId: string
     { href: '/box/planning', icon: '📅', title: 'Planning',      desc: 'Cours, réservations & agenda des coachs' },
     { href: '/box/programming', icon: '🔥', title: 'Programmation', desc: 'Le WOD du jour pour tes membres' },
     { href: '/box/leaderboards', icon: '🏆', title: 'Classement',   desc: 'Résultats & classement du WOD' },
+    { href: '/timer',        icon: '⏱️', title: 'Timer',          desc: 'AMRAP, EMOM, Tabata, For Time' },
     { href: '/box/plans',    icon: '🎟️', title: 'Abonnements',   desc: 'Formules et tarifs' },
     { href: '/box/profile',  icon: 'ℹ️', title: 'Infos de la box', desc: 'Nom, adresse, contact' },
     { href: '/box/settings', icon: '⚙️', title: 'Réglages',       desc: 'Types de séances, préférences' },
