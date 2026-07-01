@@ -9,6 +9,7 @@ import MemberBoxCard from '@/components/MemberBoxCard'
 import ProgrammingCard from '@/components/ProgrammingCard'
 import ApprovalBanner from '@/components/ApprovalBanner'
 import PendingBanner from '@/components/PendingBanner'
+import StreakBadges from '@/components/StreakBadges'
 
 // ── Helpers ───────────────────────────────────────────────
 function toDateStr(d: Date) {
@@ -251,6 +252,9 @@ export default function Dashboard() {
                 <MemberBoxCard orgId={m.organizationId} orgName={m.organizationName} />
               </div>
             ))}
+
+        {/* Série & badges (ST-108) — motivation depuis les séances loggées. */}
+        {!loading && <StreakBadges sessions={sessions} weeklyTarget={profile?.weekly_target ?? 0} />}
 
         {/* Bannière données démo */}
         {!loading && sessions.some(s => s.is_demo) && (
