@@ -95,10 +95,9 @@ export default function Dashboard() {
   }
 
   useEffect(() => { load() }, [load])
-  useEffect(() => {
-    if (profile?.theme_color)
-      document.documentElement.style.setProperty('--theme-primary', profile.theme_color)
-  }, [profile?.theme_color])
+  // NB: do NOT write --theme-primary here. BoxBranding is the single source of
+  // truth (active box brand, else personal). Writing personal color on every
+  // dashboard mount clobbered the box color right after a box switch (lands on /).
 
   // ── Données semaine courante ──────────────────────────────
   const weekStart   = getWeekStart(0)

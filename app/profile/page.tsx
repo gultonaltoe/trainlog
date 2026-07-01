@@ -52,7 +52,7 @@ const labelCls = "block text-xs font-bold text-[var(--sub)] uppercase tracking-w
 const section  = "bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-5 mb-4"
 
 export default function ProfilePage() {
-  const { memberships, refresh } = useAppContext()
+  const { memberships, refresh, active } = useAppContext()
   const [sharing, setSharing] = useState<Record<string, boolean>>({})
   const [p, setP]     = useState<Profile>(EMPTY)
   const [saved, setSaved] = useState<Profile>(EMPTY)   // last-persisted snapshot
@@ -127,7 +127,9 @@ export default function ProfilePage() {
           avatar_url:    data.avatar_url    ?? '',
         }
         setP(prof); setSaved(prof)
-        if (data.theme_color) {
+        // Only preview the personal color when not inside a box (BoxBranding owns
+        // the accent; the box brand must win when active).
+        if (data.theme_color && active.type === 'personal') {
           document.documentElement.style.setProperty('--theme-primary', data.theme_color)
         }
       } else {
@@ -173,7 +175,7 @@ export default function ProfilePage() {
     const goalsUid = await getSessionUserId()
     if (goalsUid) await supabase.from('user_profile').update({ goals: p.goals.length > 0 ? p.goals : null }).eq('user_id', goalsUid)
 
-    document.documentElement.style.setProperty('--theme-primary', p.theme_color)
+    if (active.type === 'personal') document.documentElement.style.setProperty('--theme-primary', p.theme_color)
     setSaved(p)
     setS(false)
     localStorage.setItem('theme-color', p.theme_color)

@@ -42,14 +42,15 @@ export function cancelDeadline(date: string, startTime: string, cancelCutoffMin:
   return new Date(start.getTime() - Math.max(0, cancelCutoffMin) * 60000)
 }
 
-/** Human deadline: "aujourd'hui à 15:15" / "demain à 18:00" / "dim. 29 juin à 15:15". */
-export function fmtDeadline(d: Date): string {
+/** Cancel-deadline clause with the correct preposition:
+ *  "jusqu'à aujourd'hui à 15:15" / "jusqu'à demain à 05:00" / "jusqu'au dim. 29 juin à 15:15". */
+export function cancelUntilLabel(d: Date): string {
   const midnight = (x: Date) => { const c = new Date(x); c.setHours(0, 0, 0, 0); return c.getTime() }
   const days = Math.round((midnight(d) - midnight(new Date())) / 86400000)
   const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  const day = days === 0 ? "aujourd'hui" : days === 1 ? 'demain'
-    : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
-  return `${day} à ${time}`
+  if (days <= 0) return `jusqu’à aujourd’hui à ${time}`
+  if (days === 1) return `jusqu’à demain à ${time}`
+  return `jusqu’au ${d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} à ${time}`
 }
 
 /** Cancel the current user's reservation for an occurrence. */

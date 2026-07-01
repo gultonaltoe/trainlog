@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { getMyReservations, cancelClass, claimWaitlistSpot, cancelDeadline, fmtDeadline, type MyReservation } from '@/lib/reservations'
+import { getMyReservations, cancelClass, claimWaitlistSpot, cancelDeadline, cancelUntilLabel, type MyReservation } from '@/lib/reservations'
 import { endTime } from '@/lib/classes'
 import { toast } from '@/lib/toast'
 
@@ -66,7 +66,7 @@ export default function MyReservations({ orgId, cancelCutoffMin = 120 }: { orgId
                     </p>
                   ) : (
                     <p className={`text-[11px] font-semibold ${canCancel ? 'text-[var(--sub)]' : 'text-red-500'}`}>
-                      {canCancel ? `Annulation possible jusqu’au ${fmtDeadline(deadline)}` : 'Annulation fermée'}
+                      {canCancel ? `Annulation possible ${cancelUntilLabel(deadline)}` : 'Annulation fermée'}
                     </p>
                   )}
                 </div>

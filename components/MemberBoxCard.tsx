@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getMyReservations, cancelDeadline, fmtDeadline, type MyReservation } from '@/lib/reservations'
+import { getMyReservations, cancelDeadline, cancelUntilLabel, type MyReservation } from '@/lib/reservations'
 import { getOrganization } from '@/lib/orgs'
 import { endTime } from '@/lib/classes'
 
@@ -51,7 +51,7 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
                   {r.status === 'waitlisted'
                     ? <p className="text-[11px] font-bold text-amber-600">{r.notified ? 'Place dispo — confirme !' : 'Liste d’attente'}</p>
                     : <p className={`text-[11px] font-semibold ${canCancel ? 'text-[var(--muted)]' : 'text-red-500'}`}>
-                        {canCancel ? `Annulation jusqu’au ${fmtDeadline(deadline)}` : 'Annulation fermée'}
+                        {canCancel ? `Annulation ${cancelUntilLabel(deadline)}` : 'Annulation fermée'}
                       </p>}
                 </div>
                 <span className="text-xs font-bold text-[var(--sub)] flex-shrink-0 capitalize whitespace-nowrap">
