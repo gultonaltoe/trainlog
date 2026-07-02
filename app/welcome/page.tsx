@@ -60,20 +60,30 @@ export default function WelcomePage() {
     setSaving(true)
     setError('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Non authentifié — réessaie de te connecter.')
+      // getUser() validates with the auth server and guarantees the access token
+      // is attached to PostgREST. getSession() could return a stored session a tick
+      // before the token is wired — the insert's RLS (auth.uid() = user_id) then
+      // rejected it, leaving the user stuck re-onboarding forever (ST-125).
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Non authentifié — réessaie de te connecter.')
 
-      const uid = session.user.id
+      const uid = user.id
 
-      const { error: insertError } = await supabase.from('user_profile').insert({
+      // Idempotent: update an existing row (e.g. a prior partial onboarding),
+      // else insert — never fail on a duplicate / re-run.
+      const { data: existing } = await supabase.from('user_profile').select('id').eq('user_id', uid).maybeSingle()
+      const payload = {
         first_name:    name.trim(),
         sports:        sports,
         level:         level || null,
         goal:          goal  || null,
         weekly_target: weekly,
         user_id:       uid,
-      })
-      if (insertError) throw new Error(insertError.message)
+      }
+      const { error: saveError } = existing
+        ? await supabase.from('user_profile').update(payload).eq('id', existing.id)
+        : await supabase.from('user_profile').insert(payload)
+      if (saveError) throw new Error(saveError.message)
 
       const { count } = await supabase
         .from('sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid)
