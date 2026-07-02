@@ -86,12 +86,12 @@ function AuthForm() {
           <input
             inputMode="numeric"
             autoComplete="one-time-code"
-            maxLength={6}
-            placeholder="000000"
+            maxLength={10}
+            placeholder="Code reçu par email"
             value={code}
-            onChange={e => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }}
+            onChange={e => { setCode(e.target.value.replace(/\D/g, '').slice(0, 10)); setError('') }}
             onKeyDown={e => e.key === 'Enter' && handleVerify()}
-            className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-center text-3xl font-black tracking-[0.4em] text-[var(--ink)] placeholder:text-[var(--border-strong)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]"
+            className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-center text-2xl font-black tracking-[0.25em] text-[var(--ink)] placeholder:text-base placeholder:tracking-normal placeholder:font-semibold placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]"
             autoFocus
           />
           {error && <p className="text-red-500 text-sm">⚠️ {error}</p>}
