@@ -29,11 +29,22 @@ export default function UserInit() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/auth'); return }
       if (pathname === '/welcome') return
-      const { data: profile, error } = await supabase
-        .from('user_profile').select('id')
-        .eq('user_id', user.id).limit(1).maybeSingle()
-      if (error) return                       // transient — never bounce on an error
-      if (!profile) router.replace('/welcome') // genuinely not onboarded
+
+      const fetchProfile = () => supabase.from('user_profile').select('id').eq('user_id', user.id).limit(1).maybeSingle()
+      let res = await fetchProfile()
+      if (res.error) return                    // transient — never bounce on an error
+      // ST-125: on a cold launch (especially a freshly-installed standalone PWA),
+      // the auth token can attach to PostgREST a tick late, so the first profile
+      // query returns empty under RLS. Without a retry that bounced an EXISTING,
+      // onboarded user into /welcome. Retry before concluding they're genuinely new.
+      if (!res.data) {
+        for (const delay of [300, 700]) {
+          await new Promise(r => setTimeout(r, delay))
+          res = await fetchProfile()
+          if (res.error || res.data) return    // has a profile (or transient) → stay put
+        }
+        router.replace('/welcome')             // genuinely not onboarded
+      }
     }
 
     void run()
