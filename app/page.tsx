@@ -151,8 +151,6 @@ export default function Dashboard() {
   const prevDashCal = () => { if (dashCalM === 0) { setDashCalY(y => y - 1); setDashCalM(11) } else setDashCalM(m => m - 1) }
   const nextDashCal = () => { if (isCalNow) return; if (dashCalM === 11) { setDashCalY(y => y + 1); setDashCalM(0) } else setDashCalM(m => m + 1) }
 
-  const today  = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-
   // Wait for the active context before choosing a view — avoids flashing the
   // athlete dashboard before the box/coach view resolves on reload.
   if (ctxLoading) return (
@@ -168,7 +166,7 @@ export default function Dashboard() {
 
   return (
     <div className="bg-[var(--bg)]">
-      <div className="max-w-lg mx-auto px-4 pb-4">
+      <div className="max-w-lg mx-auto px-4 pb-40">
 
         {/* Owner/coach previewing their own box as a member → offer the way back. */}
         {(() => {
@@ -194,22 +192,19 @@ export default function Dashboard() {
         {(() => {
           const box = active.type === 'org' ? memberships.find(m => m.organizationId === active.orgId) : null
           return (
-            <div className="pt-8 pb-4">
+            <div className="pt-6 pb-3 flex items-center justify-between gap-3">
+              {loading
+                ? <Skeleton className="h-7 w-40" />
+                : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight truncate">Bonjour {profile?.first_name} 👋</h1>}
               {box && (
-                <div className="flex items-center gap-2.5 mb-3">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                   {box.logoUrl
-                    ? <img src={box.logoUrl} alt="" className="w-10 h-10 rounded-xl object-cover border border-[color:var(--border)]" />
-                    : <span className="w-10 h-10 rounded-xl grid place-items-center text-base font-black text-white"
+                    ? <img src={box.logoUrl} alt="" className="w-7 h-7 rounded-lg object-cover border border-[color:var(--border)]" />
+                    : <span className="w-7 h-7 rounded-lg grid place-items-center text-xs font-black text-white"
                         style={{ background: 'var(--theme-primary)' }}>{box.organizationName.charAt(0).toUpperCase()}</span>}
-                  <span className="text-base font-black text-[var(--ink)] tracking-tight truncate">
-                    {box.organizationName}
-                  </span>
+                  <span className="text-sm font-black text-[var(--ink)] truncate max-w-[130px]">{box.organizationName}</span>
                 </div>
               )}
-              {loading
-                ? <Skeleton className="h-7 w-40 mb-1.5" />
-                : <h1 className="text-2xl font-black text-[var(--ink)] tracking-tight">Bonjour {profile?.first_name} 👋</h1>}
-              <p className="text-sm text-[var(--muted)] mt-0.5">{capitalize(today)}</p>
             </div>
           )
         })()}
@@ -218,25 +213,27 @@ export default function Dashboard() {
         <PendingBanner />
         <ApprovalBanner />
 
-        {/* Quick actions: Réserver (primary) + Séance (secondary), same line */}
+        {/* Quick actions — floating so they stay visible while scrolling. */}
         {(() => {
           const hasBox = active.type === 'org' || memberships.some(m => m.status === 'active')
           return (
-            <div className="flex gap-2 mb-4">
-              {hasBox && (
-                <Link href="/box/book"
-                  className="flex-1 text-center text-white text-sm font-black py-3.5 rounded-2xl"
-                  style={{ background: 'var(--theme-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent)' }}>
-                  Réserver un cours
+            <div className="fixed left-0 right-0 z-30 pointer-events-none" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}>
+              <div className="max-w-lg mx-auto px-4 flex gap-2 pointer-events-auto">
+                {hasBox && (
+                  <Link href="/box/book"
+                    className="flex-1 text-center text-white text-sm font-black py-3.5 rounded-2xl"
+                    style={{ background: 'var(--theme-primary)', boxShadow: '0 6px 20px color-mix(in srgb, var(--theme-primary) 45%, transparent)' }}>
+                    Réserver un cours
+                  </Link>
+                )}
+                <Link href="/log"
+                  className="flex-1 text-center py-3.5 rounded-2xl text-sm font-black"
+                  style={hasBox
+                    ? { background: 'var(--secondary-bg)', color: 'var(--secondary-fg)', boxShadow: '0 6px 20px rgba(0,0,0,0.18)' }
+                    : { background: 'var(--theme-primary)', color: '#fff', boxShadow: '0 6px 20px color-mix(in srgb, var(--theme-primary) 45%, transparent)' }}>
+                  Enregistrer une séance
                 </Link>
-              )}
-              <Link href="/log"
-                className={`${hasBox ? 'flex-1' : 'flex-1'} text-center py-3.5 rounded-2xl text-sm font-black ${hasBox ? '' : 'text-white'}`}
-                style={hasBox
-                  ? { background: 'var(--secondary-bg)', color: 'var(--secondary-fg)' }
-                  : { background: 'var(--theme-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent)' }}>
-                Enregistrer une séance
-              </Link>
+              </div>
             </div>
           )
         })()}
@@ -245,16 +242,14 @@ export default function Dashboard() {
         {/* Réservations de cours — dans le contexte d'une box, ou dans l'espace
             athlète pour chaque box dont on est membre (owner/coach/membre). */}
         {active.type === 'org'
-          ? <><ProgrammingCard orgId={active.orgId} orgName={active.orgName} /><MemberBoxCard orgId={active.orgId} orgName={active.orgName} /></>
+          ? <><ProgrammingCard orgId={active.orgId} orgName={active.orgName} /><MemberBoxCard orgId={active.orgId} /></>
           : memberships.filter(m => m.status === 'active').map(m => (
               <div key={m.organizationId}>
                 <ProgrammingCard orgId={m.organizationId} orgName={m.organizationName} />
-                <MemberBoxCard orgId={m.organizationId} orgName={m.organizationName} />
+                <MemberBoxCard orgId={m.organizationId} />
               </div>
             ))}
 
-        {/* Série & badges (ST-108) — motivation depuis les séances loggées. */}
-        {!loading && <StreakBadges sessions={sessions} weeklyTarget={profile?.weekly_target ?? 0} />}
 
         {/* Bannière données démo */}
         {!loading && sessions.some(s => s.is_demo) && (
@@ -431,17 +426,6 @@ export default function Dashboard() {
           </div>
         )}
 
-<Link href="/prs"
-  className="flex items-center justify-between bg-[var(--card)] rounded-2xl border border-[color:var(--border)] p-4 mb-4 hover:shadow-sm transition">
-  <div className="flex items-center gap-3">
-    <span className="text-2xl">🏆</span>
-    <div>
-      <p className="text-sm font-bold text-[var(--ink)]">Personal Records</p>
-      <p className="text-xs text-[var(--muted)]">Tes charges maximales par mouvement</p>
-    </div>
-  </div>
-  <span className="text-[var(--border-strong)]">›</span>
-</Link>
 
 
         {/* Distribution par période */}
@@ -485,6 +469,9 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Série & badges (ST-108) — condensé, en bas de page. */}
+        {!loading && <StreakBadges sessions={sessions} weeklyTarget={profile?.weekly_target ?? 0} />}
 
       </div>
     </div>

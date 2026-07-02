@@ -30,30 +30,21 @@ export default function StreakBadges({ sessions, weeklyTarget }: { sessions: Ses
   const thisMon = mondayTs(new Date().toISOString().slice(0, 10))
   const thisWeek = dates.filter(d => mondayTs(d) === thisMon).length
   const badges = computeBadges({ total: sessions.length, current, longest, thisWeek, weeklyTarget, prs })
-  const earnedCount = badges.filter(b => b.earned).length
 
   return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-[var(--card)] p-4 mb-4">
-      <div className="flex items-end justify-between mb-3">
-        <div>
-          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">Ma série</p>
-          <p className="text-2xl font-black text-[var(--ink)] leading-tight">
-            🔥 {current} <span className="text-base font-bold text-[var(--muted)]">{current > 1 ? 'semaines' : 'semaine'}</span>
-          </p>
-        </div>
-        <p className="text-xs text-[var(--muted)] font-semibold">Record : {longest} · {earnedCount}/{badges.length} badges</p>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        {badges.map(b => (
-          <div key={b.key} title={b.hint} className="flex flex-col items-center text-center gap-1">
-            <div className="w-11 h-11 rounded-2xl grid place-items-center text-xl"
-              style={b.earned
-                ? { background: 'var(--accent-soft)', filter: 'none' }
-                : { background: 'var(--track)', filter: 'grayscale(1)', opacity: 0.5 }}>
-              {b.emoji}
-            </div>
-            <span className={`text-[9px] font-bold leading-tight ${b.earned ? 'text-[var(--ink-soft)]' : 'text-[var(--muted)]'}`}>{b.label}</span>
-          </div>
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[var(--card)] px-4 py-3 mb-4 flex items-center justify-between gap-3">
+      <p className="text-sm font-black text-[var(--ink)] flex-shrink-0">
+        🔥 Ma série · {current} <span className="text-[var(--muted)]">sem.</span>
+      </p>
+      <div className="flex gap-1.5">
+        {badges.slice(0, 5).map(b => (
+          <span key={b.key} title={b.hint}
+            className="w-7 h-7 rounded-lg grid place-items-center text-sm flex-shrink-0"
+            style={b.earned
+              ? { background: 'var(--accent-soft)' }
+              : { background: 'var(--track)', filter: 'grayscale(1)', opacity: 0.45 }}>
+            {b.emoji}
+          </span>
         ))}
       </div>
     </div>

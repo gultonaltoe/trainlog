@@ -10,7 +10,7 @@ const fmtDay = (iso: string) =>
 
 // Member's box home card: next bookings + a Réserver CTA. Shown on the
 // dashboard when the active view is a box (member context).
-export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgName: string }) {
+export default function MemberBoxCard({ orgId }: { orgId: string }) {
   const [upcoming, setUpcoming] = useState<MyReservation[]>([])
   const [cancelCutoffMin, setCancelCutoffMin] = useState(120)
 
@@ -30,10 +30,7 @@ export default function MemberBoxCard({ orgId, orgName }: { orgId: string; orgNa
   return (
     <div className="rounded-2xl border border-[color:var(--border)] bg-[var(--card)] p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="min-w-0">
-          <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">Mes prochains cours</p>
-          <p className="text-sm font-bold text-[var(--ink)] truncate">{orgName}</p>
-        </div>
+        <p className="text-xs font-bold text-[var(--sub)] uppercase tracking-wider">Mes prochains cours</p>
         <Link href={`/box/book?org=${orgId}#mine`} className="text-xs font-bold text-[var(--accent-text)] flex-shrink-0">Voir tout</Link>
       </div>
 
