@@ -52,11 +52,9 @@ function AuthForm() {
     setVerifying(true)
     setError('')
     const em = email.trim().toLowerCase()
-    // A code issued via signInWithOtp can be typed as 'email' OR 'magiclink'
-    // depending on how it was created — try both before giving up. A failed
-    // verify doesn't consume the token, so the fallback still has a live code.
-    let { error: err } = await supabase.auth.verifyOtp({ email: em, token, type: 'email' })
-    if (err) { const retry = await supabase.auth.verifyOtp({ email: em, token, type: 'magiclink' }); err = retry.error }
+    // Single documented type for an email OTP from signInWithOtp. (Don't retry a
+    // second type — a failed verify invalidates the OTP, which would burn it.)
+    const { error: err } = await supabase.auth.verifyOtp({ email: em, token, type: 'email' })
     setVerifying(false)
     if (err) { setError('Code invalide ou expiré. Demande un nouveau code.'); return }
     router.replace('/')   // UserInit routes to dashboard or onboarding
