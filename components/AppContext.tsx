@@ -50,9 +50,15 @@ export function AppProvider({ children, initialActive }: { children: ReactNode; 
         if (raw) stored = JSON.parse(raw) as ActiveContext
       } catch {}
       const s = stored
-      // Only restore into a box the user is an ACTIVE member of (not pending).
-      if (s && s.type === 'org' && !mine.some(m => m.organizationId === s.orgId && m.status === 'active')) {
-        stored = null  // left/never-active in that org — fall back below
+      // Only restore into a box the user is an ACTIVE member of (not pending),
+      // and always re-derive the role/name from the LIVE membership — never trust
+      // the stored role, which can be stale (e.g. an old 'owner' choice) and would
+      // otherwise show the coaching view to someone now holding only 'member'.
+      if (s && s.type === 'org') {
+        const live = mine.find(m => m.organizationId === s.orgId && m.status === 'active')
+        stored = live
+          ? { type: 'org', orgId: live.organizationId, orgName: live.organizationName, role: live.role }
+          : null  // left/never-active in that org — fall back below
       }
       // No valid stored choice → auto-select when there's exactly one active box
       // (frictionless single-box entry, ST-8 v2); otherwise personal stays the
