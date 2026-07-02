@@ -1,12 +1,11 @@
 'use client'
 import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Wordmark from '@/components/Wordmark'
 
 function AuthForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const errParam = searchParams.get('error')
   // Show the real reason when Supabase/Google passed one through; fall back to the
@@ -60,7 +59,10 @@ function AuthForm() {
     if (err) { const retry = await supabase.auth.verifyOtp({ email: em, token, type: 'email' }); err = retry.error }
     setVerifying(false)
     if (err) { setError('Code invalide ou expiré. Demande un nouveau code.'); return }
-    router.replace('/')   // UserInit routes to dashboard or onboarding
+    // Full navigation (not client-side) so AppProvider re-initialises with the
+    // fresh session — otherwise it keeps its logged-out state (empty memberships,
+    // personal view) until a manual refresh.
+    window.location.href = '/'
   }
 
   const handleGoogle = async () => {
