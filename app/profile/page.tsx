@@ -429,6 +429,15 @@ export default function ProfilePage() {
             hint="Blessures, dispos, matériel, niveau, objectifs — désormais dans Progression" />
         </div>
 
+        {/* Déconnexion */}
+        <div className="mb-28">
+          <button
+            onClick={async () => { await supabase.auth.signOut(); window.location.href = '/auth' }}
+            className="w-full py-3.5 rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] text-sm font-bold text-red-500 hover:bg-[var(--hover)] cursor-pointer transition">
+            Se déconnecter
+          </button>
+        </div>
+
         <StickyBar>
           {dirty && <p className="text-[11px] text-[var(--muted)] mb-1.5 text-center">Modifications non enregistrées</p>}
           <button onClick={save} disabled={saving || !dirty}
