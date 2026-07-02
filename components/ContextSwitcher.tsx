@@ -21,6 +21,28 @@ export default function ContextSwitcher() {
 
   // Only boxes you're an active member of are switchable.
   const switchable = memberships.filter(m => m.status === 'active')
+
+  // Box icon: the logo if set, else a generic emoji.
+  const boxIcon = (logo: string | null) => logo
+    ? /* eslint-disable-next-line @next/next/no-img-element */
+      <img src={logo} alt="" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
+    : <span className="text-base flex-shrink-0">🏢</span>
+
+  // A plain member of a single box has nothing meaningful to switch between —
+  // "Mon espace" and the box give the same athlete tabs. Show a static box
+  // identity chip (no dropdown) instead of a confusing toggle.
+  if (switchable.length === 1 && switchable[0].role === 'member') {
+    const m = switchable[0]
+    return (
+      <div className="w-full h-10 flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[var(--card)] px-3 min-w-0">
+        {boxIcon(m.logoUrl)}
+        <span className="text-sm font-black text-[var(--ink)] truncate">{m.organizationName}</span>
+        <span className="text-[10px] font-bold rounded-full px-1.5 py-0.5 flex-shrink-0"
+          style={{ background: 'var(--track)', color: 'var(--sub)' }}>Membre</span>
+      </div>
+    )
+  }
+
   const label = active.type === 'personal' ? PERSONAL_LABEL : active.orgName
   const sub   = active.type === 'personal' ? 'Athlète' : ROLE_LABEL[active.role]
   // Management mode (owner/coach/staff) gets a filled brand badge so it's
@@ -28,12 +50,6 @@ export default function ContextSwitcher() {
   const isMgmt = active.type === 'org' && active.role !== 'member'
   const activeLogo = active.type === 'org'
     ? (memberships.find(m => m.organizationId === active.orgId)?.logoUrl ?? null) : null
-
-  // Box icon: the logo if set, else a generic emoji.
-  const boxIcon = (logo: string | null) => logo
-    ? /* eslint-disable-next-line @next/next/no-img-element */
-      <img src={logo} alt="" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
-    : <span className="text-base flex-shrink-0">🏢</span>
 
   const choose = (ctx: ActiveContext) => { setActive(ctx); setOpen(false); router.push('/') }
 

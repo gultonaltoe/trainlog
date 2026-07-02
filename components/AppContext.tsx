@@ -64,10 +64,16 @@ export function AppProvider({ children, initialActive }: { children: ReactNode; 
       // (frictionless single-box entry, ST-8 v2); otherwise personal stays the
       // first-class default (solo athletes + multi-box use the switcher).
       const boxes = mine.filter(m => m.status === 'active')
+      // A plain member of a single box has no switcher (ContextSwitcher hides it)
+      // and no reason to sit in the personal view — pin them to their box so page
+      // scoping (booking, planning) always targets it, ignoring any stale choice.
+      const pinned = boxes.length === 1 && boxes[0].role === 'member' ? boxes[0] : null
       const fallback: ActiveContext = boxes.length === 1
         ? { type: 'org', orgId: boxes[0].organizationId, orgName: boxes[0].organizationName, role: boxes[0].role }
         : PERSONAL
-      setActiveState(stored ?? fallback)
+      setActiveState(pinned
+        ? { type: 'org', orgId: pinned.organizationId, orgName: pinned.organizationName, role: pinned.role }
+        : (stored ?? fallback))
     } catch {
       setMemberships([])           // logged out or no orgs
       setActiveState(PERSONAL)
