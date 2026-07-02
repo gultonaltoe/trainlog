@@ -1,11 +1,12 @@
 'use client'
 import { Suspense, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Wordmark from '@/components/Wordmark'
 
 function AuthForm() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const errParam = searchParams.get('error')
   // Show the real reason when Supabase/Google passed one through; fall back to the
@@ -20,6 +21,8 @@ function AuthForm() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(initialError)
+  const [code, setCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
 
   const handleSubmit = async () => {
     if (!email.trim()) return
@@ -38,6 +41,20 @@ function AuthForm() {
     setSent(true)
   }
 
+  // ST-86: verify the 6-digit code in-context — creates the session right here,
+  // which is the only login that works inside an installed iOS PWA (a magic link
+  // opens Safari, not the standalone app).
+  const handleVerify = async () => {
+    const token = code.replace(/\D/g, '')
+    if (token.length < 6) return
+    setVerifying(true)
+    setError('')
+    const { error: err } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token, type: 'email' })
+    setVerifying(false)
+    if (err) { setError('Code invalide ou expiré. Réessaie.'); return }
+    router.replace('/')   // UserInit routes to dashboard or onboarding
+  }
+
   const handleGoogle = async () => {
     setLoading(true)
     setError('')
@@ -53,15 +70,40 @@ function AuthForm() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center max-w-sm mx-auto w-full">
         <div className="text-6xl mb-5">📧</div>
-        <h1 className="text-2xl font-black text-[var(--ink)] mb-3">Vérifie tes emails</h1>
+        <h1 className="text-2xl font-black text-[var(--ink)] mb-2">Entre ton code</h1>
         <p className="text-sm text-[var(--sub)] leading-relaxed">
-          On a envoyé un lien à <strong className="text-[var(--ink)]">{email}</strong>.<br />
-          Clique dessus pour accéder à Trainlift.
+          On a envoyé un code à <strong className="text-[var(--ink)]">{email}</strong>.
         </p>
-        <p className="text-xs text-[var(--muted)] mt-4">Le lien expire dans 1 heure · Vérifie tes spams</p>
+
+        <div className="w-full mt-6 space-y-3">
+          <input
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            placeholder="000000"
+            value={code}
+            onChange={e => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }}
+            onKeyDown={e => e.key === 'Enter' && handleVerify()}
+            className="w-full rounded-xl border border-[color:var(--border-strong)] bg-[var(--card)] px-4 py-3.5 text-center text-3xl font-black tracking-[0.4em] text-[var(--ink)] placeholder:text-[var(--border-strong)] focus:outline-none focus:ring-2 focus:ring-[color:var(--theme-primary)]"
+            autoFocus
+          />
+          {error && <p className="text-red-500 text-sm">⚠️ {error}</p>}
+          <button
+            onClick={handleVerify}
+            disabled={verifying || code.length < 6}
+            className="w-full py-4 rounded-2xl text-white font-black text-base transition"
+            style={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', opacity: verifying || code.length < 6 ? 0.5 : 1 }}
+          >
+            {verifying ? 'Connexion...' : 'Se connecter'}
+          </button>
+        </div>
+
+        <p className="text-xs text-[var(--muted)] mt-4 leading-relaxed">
+          Ou clique le lien dans l’email (sauf app installée) · expire dans 1 h · vérifie tes spams
+        </p>
         <button
-          onClick={() => { setSent(false); setEmail(''); setError('') }}
-          className="mt-8 text-sm text-[var(--muted)] underline underline-offset-2"
+          onClick={() => { setSent(false); setEmail(''); setCode(''); setError('') }}
+          className="mt-6 text-sm text-[var(--muted)] underline underline-offset-2"
         >
           Utiliser un autre email
         </button>
@@ -99,12 +141,12 @@ function AuthForm() {
             opacity: loading || !email.trim() ? 0.5 : 1,
           }}
         >
-          {loading ? 'Envoi en cours...' : 'Recevoir mon lien →'}
+          {loading ? 'Envoi en cours...' : 'Recevoir mon code →'}
         </button>
       </div>
 
       <p className="text-xs text-[var(--muted)] mt-5 text-center leading-relaxed">
-        Pas de mot de passe — un lien de connexion est envoyé à chaque fois.
+        Pas de mot de passe — on t’envoie un code (et un lien) à chaque connexion.
       </p>
 
       <div className="flex items-center gap-3 my-5">
