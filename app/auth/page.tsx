@@ -34,7 +34,9 @@ function AuthForm() {
       // matches what the user sees. Dot-insensitive matching lives only in the
       // server-side invite logic (normalize_email), which compares without mutating.
       email: email.trim().toLowerCase(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      // No emailRedirectTo → pure email OTP (6-digit code), NO magic-link URL.
+      // A link in the email gets prefetched by mail clients, which consumes the
+      // shared OTP token and makes the typed code fail ("invalid/expired") — ST-86.
     })
     setLoading(false)
     if (err) { setError(err.message); return }
